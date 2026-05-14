@@ -1,0 +1,90 @@
+<!-- HEADER -->
+<div class="container-fluid header-container">
+  <div class="header-custom">
+    <div class="row">
+      <div class="col-12 header-column d-flex flex-column flex-md-row align-items-center justify-content-between"
+           style="height: 100px">
+        <div class="text-start p-2">
+          <h3 class="text-white">
+            {{'::Home:HeaderMessage' | abpLocalization}}
+          </h3>
+        </div>
+        <div class="text-end d-flex justify-content-around align-items-center">
+          <div class="mx-1 nav-right">
+            <div class="d-flex justify-content-around align-items-center">
+              <div class="d-flex justify-content-center align-items-center ">
+                <app-language></app-language>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!isLoggedIn" class="btn-container">
+            <button type="button" class="btn btn-sm btn-light rounded-pill m-1" (click)="login()">
+              {{ '::Login' | abpLocalization }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- HEADER -->
+<!-- MAIN -->
+<div class="container-fluid p-4">
+  <div class="mb-4 font-weight-bold" style="color: #3E4958">
+  <h2>{{'::Home:ProductCodeInformation' | abpLocalization}}</h2>
+  </div>
+  <div class="card main-card border">
+    <div class="card-body">
+      <router-outlet></router-outlet>
+    </div>
+    <div class="card-footer">
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<!-- FOOTER -->
+<div class="container-fluid">
+  <div class="footer-custom">
+    <div class="row container-fluid">
+      <div class="col-md-2 col-sm-12  my-3 d-flex align-items-center justify-content-center">
+          <a href="https://traceverified.com/" class="d-flex align-items-center justify-content-center">
+            <img
+              src="assets/images/logo/logo-footer.png"
+              alt="image"
+            />
+          </a>
+      </div>
+      <div class="col-md-6 col-sm-12 my-3 text-white">
+        <h4 class="mb-4">
+          {{'::Home:ContactInfo' | abpLocalization}}
+        </h4>
+        <p>{{'::Home:ContactMessage' | abpLocalization}}</p>
+        <p>{{'::Home:Address' | abpLocalization}}</p>
+        <p>{{'::Home:Telephone' | abpLocalization}}</p>
+        <p>{{'::Home:Hotline' | abpLocalization}}</p>
+        <p>{{'::Home:Email' | abpLocalization}}</p>
+      </div>
+      <div class="col-md-4 col-sm-12 my-3 text-white">
+        <h4 class="mb-4">{{'::Home:Service' | abpLocalization}}</h4>
+        <p>{{'::Home:TV1/TV2' | abpLocalization}}</p>
+        <p>{{'::Home:TRACEFARM' | abpLocalization}}</p>
+        <p>{{'::Home:TRACECHAIN' | abpLocalization}}</p>
+        <p>{{'::Home:TRACESAFETY' | abpLocalization}}</p>
+        <p>{{'::Home:CARBON' | abpLocalization}}</p>
+      </div>
+    </div>
+    <div class="row container-fluid">
+      <div class="d-flex justify-content-center align-items-center">
+        <hr class="hr divider text-light w-50" />
+      </div>
+      <div class="d-flex justify-content-center align-items-center">
+        <small class="d-block mb-3 text-light">
+          Copyright 2024 © Traceverified </small>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- FOOTER -->
+
+

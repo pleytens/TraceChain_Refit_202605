@@ -1,0 +1,8 @@
+.btn-primary {
+  background-color: #121b41 !important;
+  border-color: #121b41 !important;
+  color: white ;
+  &:hover {
+    background-color: lighten(#121b41, 15) !important;
+  }
+}

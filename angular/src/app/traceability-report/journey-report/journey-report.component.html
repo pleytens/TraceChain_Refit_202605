@@ -1,0 +1,50 @@
+<ng-container *ngIf="isInputLotId; else journeyData">
+  <div class="container vh-100">
+    <h5 class="mb-2 text-center">
+      {{ '::Report:EnterTraceCodeToSee' | abpLocalization }}
+    </h5>
+    <div class="d-flex justify-content-center">
+      <input
+        type="text"
+        class="form-control"
+        [placeholder]="'::Report:EnterCode' | abpLocalization"
+        [(ngModel)]="traceCodeTyping"
+      />
+    </div>
+    <div class="position-fixed bottom-0 start-50 translate-middle-x mb-3">
+      <button class="btn btn-primary px-5" (click)="traceCodeEnter()">
+        {{ '::Report:Continue' | abpLocalization }}
+      </button>
+    </div>
+  </div>
+</ng-container>
+<ng-template #journeyData>
+  <div class="container">
+    <app-map-report [traceCode]="traceCode" [lotId]="lotId" [gtin]="gtin" [userType]="userType"></app-map-report>
+    <div class="row mt-3">
+      <app-company-card [traceCode]="traceCode" [userType]="userType"></app-company-card>
+    </div>
+    <div class="mt-2">
+      <div class="row mb-1 px-2">
+        <button
+          class="btn btn-primary w-100 d-flex justify-content-between"
+          type="button"
+          (click)="Diary.toggle()"
+        >
+          {{ '::Traceability:Report:Diary' | abpLocalization }}
+          <span>
+        <i class="bi bi-caret-down-fill text-white"></i>
+      </span>
+        </button>
+        <div #Diary="ngbCollapse" [ngbCollapse]="false" class="collapse mt-2">
+          <app-diary-report
+            [traceCode]="traceCode"
+            [userType]="userType"
+            [gtin]="gtin"
+            [lotId]="lotId"
+          ></app-diary-report>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

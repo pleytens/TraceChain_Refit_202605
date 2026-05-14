@@ -1,0 +1,29 @@
+::ng-deep .p-timeline-event-connector {
+  background-color: #79818c;
+}
+
+::ng-deep .p-timeline-event-marker {
+  border: 4px solid #011f3f;
+  min-height: 1rem;
+  min-width: 1rem;
+}
+
+::ng-deep .p-timeline-event-opposite {
+  flex: 0.5;
+  text-align: right;
+  padding-left: 0px
+}
+
+::ng-deep .p-timeline-event:last-child .p-timeline-event-separator::after {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 100%;
+  background-color: #79818c;
+  margin: 0 auto;
+}
+
+.link-style {
+  cursor: pointer;
+
+}

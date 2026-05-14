@@ -1,0 +1,15 @@
+::ng-deep abp-chart {
+  div {
+    height: 100%;
+  }
+  canvas{
+    //background: linear-gradient(90deg, #0A4EA1, #098B5D);
+    border-radius: 10px;
+    width: 100%;
+    height: 100%
+  }
+}
+.chart-container {
+  background: linear-gradient(90deg, #0A4EA1, #098B5D);
+  border-radius: 10px;
+}

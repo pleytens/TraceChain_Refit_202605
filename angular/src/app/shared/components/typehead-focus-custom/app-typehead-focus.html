@@ -1,0 +1,25 @@
+<div class="mb-3 row" [id]="id">
+  <div class="col">
+    <div class="input-group">
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="model"
+        [ngbTypeahead]="search"
+        [inputFormatter]="formatter"
+        [resultFormatter]="formatter"
+        (focus)="focus$.next($any($event).target.value)"
+        (click)="click$.next($any($event).target.value)"
+        (ngModelChange)="modelChange()"
+        #instance="ngbTypeahead"
+        [placeholder]="placeholder"
+        [disabled]="disabled"
+      />
+      <button
+        class="btn btn-outline-secondary bi bi-caret-down"
+        type="button"
+        (click)="click$.next($any($event).target.value)"
+      ></button>
+    </div>
+  </div>
+</div>

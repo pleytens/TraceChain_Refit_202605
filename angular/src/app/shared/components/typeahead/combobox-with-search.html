@@ -1,0 +1,15 @@
+<div class="mb-3 row">
+  <div class="col">
+    <input
+      type="text"
+      class="form-control"
+      [placeholder]='placehoder'
+      [(ngModel)]="model"
+      [ngbTypeahead]="search"
+      [inputFormatter]="formatter"
+      [resultFormatter]="formatter"
+      [editable]="false"
+      (ngModelChange)='modelChange()'
+    />
+  </div>
+</div>

@@ -1,0 +1,244 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:CompanyProfile' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button
+            id="create"
+            class="btn btn-primary"
+            type="button"
+            (click)="createCompanyProfile()"
+          >
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewCompanyProfile' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter()"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="market-01"
+          [dataInput]="marketData"
+          (dataReturn)="eventMarketFilterSelectHandle($event)"
+          [placeholder]="'::Market' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="category"
+          [dataInput]="categoryData"
+          (dataReturn)="eventCategoryFilterSelectHandle($event)"
+          [placeholder]="'::Category' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <ngx-datatable [rows]="profile.items" [count]="profile.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="edit(row.id)">
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="deleteCompanyProfile(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::CompanyProfile:Name' | abpLocalization"
+        prop="name"
+        [sortable]="false"
+      ></ngx-datatable-column>
+
+      <ngx-datatable-column
+        [name]="'::CompanyProfile:CategoryName' | abpLocalization"
+        prop="productCategoryName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::CompanyProfile:MarketName' | abpLocalization"
+        prop="marketName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+
+      <abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'xl' }">
+        <ng-template #abpHeader>
+          <h3>
+            {{ (selectedProfile.id ? '::EditProfile' : '::NewCompanyProfile') | abpLocalization }}
+          </h3>
+        </ng-template>
+
+        <ng-template #abpBody>
+          <ng-template #loaderRef>
+            <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+          </ng-template>
+          <form *ngIf="form; else loaderRef" [formGroup]="form">
+            <ul ngbNav #nav="ngbNav" class="nav-tabs">
+              <li ngbNavItem>
+                <a ngbNavLink>{{ '::Company:Information' | abpLocalization }}</a>
+                <ng-template ngbNavContent>
+                  <div class="mt-2">
+                    <label for="profile-name">{{ '::Company:ProfileName' | abpLocalization }}</label
+                    ><span class="style-span"> * </span>
+                    <input
+                      type="text"
+                      id="profile-name"
+                      class="form-control"
+                      formControlName="name"
+                    />
+                  </div>
+
+                  <div class="mt-2">
+                    <label for="market">{{ '::Company:Market' | abpLocalization }}</label
+                    ><span class="style-span"> * </span>
+                    <app-typehead-focus
+                      id="market"
+                      [dataInput]="marketData"
+                      (dataReturn)="eventMarketSelectHandle($event)"
+                      [initialSelected]="marketData.selected"
+                    ></app-typehead-focus>
+                    <div *ngIf="!marketData.selected" class="abp-validation-error">
+                      <small class="text-danger">{{ '::FieldRequired' | abpLocalization }}</small>
+                    </div>
+                  </div>
+
+                  <div class="mt-2">
+                    <label for="category">{{ '::Company:Category' | abpLocalization }}</label
+                    ><span class="style-span"> * </span>
+                    <app-typehead-focus
+                      id="category-01"
+                      [dataInput]="categoryData"
+                      (dataReturn)="eventCategorySelectHandle($event)"
+                      [initialSelected]="categoryData.selected"
+                    ></app-typehead-focus>
+                    <span *ngIf="!categoryData.selected" class="abp-validation-error">
+                      <small class="text-danger">{{ '::FieldRequired' | abpLocalization }}</small>
+                    </span>
+                  </div>
+
+                  <div class="mt-2">
+                    <label for="company-name">{{ '::Company:Name' | abpLocalization }}</label>
+                    <input
+                      type="text"
+                      id="company-name"
+                      class="form-control"
+                      formControlName="companyName"
+                    />
+                  </div>
+                  <div class="mt-2">
+                    <label for="certificate">{{ '::Company:Certificate' | abpLocalization }}</label>
+                  </div>
+                  <div class="mt-2">
+                    <div *ngIf="certificationImages.length > 0" class="custom-image-show">
+                      <div
+                        class="image-container"
+                        *ngFor="let image of certificationImages; let i = index"
+                      >
+                        <img [src]="image" alt="Selected Image" />
+                        <i
+                          class="fas fa-trash delete-btn"
+                          aria-hidden="true"
+                          (click)="deleteImage(i)"
+                        ></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <div class="custom-file-upload">
+                      <label for="certificate">{{
+                        '::Company:ChooseLogo' | abpLocalization
+                      }}</label>
+                      <input
+                        id="certificate"
+                        type="file"
+                        (change)="onFileChange($event)"
+                        multiple
+                        [disabled]="certificationImages.length >= 5"
+                      />
+                    </div>
+                  </div>
+                </ng-template>
+              </li>
+              <li ngbNavItem>
+                <a ngbNavLink>{{ '::Company:Description' | abpLocalization }}</a>
+                <ng-template ngbNavContent>
+                  <app-editor #editor [content]="form.value.description"></app-editor>
+                </ng-template>
+              </li>
+            </ul>
+            <div class="mt-2 fade-in-top" [ngbNavOutlet]="nav"></div>
+          </form>
+        </ng-template>
+
+        <ng-template #abpFooter>
+          <button type="button" class="btn btn-secondary" abpClose>
+            {{ '::Close' | abpLocalization }}
+          </button>
+          <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+            <i class="fa fa-check mr-1"></i>
+            {{ '::Save' | abpLocalization }}
+          </button>
+        </ng-template>
+      </abp-modal>
+    </ngx-datatable>
+  </div>
+</div>

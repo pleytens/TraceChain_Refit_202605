@@ -1,0 +1,422 @@
+<div class="card-body" [ngClass]="{ 'form-blur': isLoading }"
+>
+  <ng-template #loaderRef>
+    <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+  </ng-template>
+  <fieldset >
+  <form *ngIf="form; else loaderRef" [formGroup]="form"  (keydown.enter)="$event.preventDefault()">
+  <div class="row">
+    <div class="col-lg-7 mt-3">
+      <h4>I. {{ '::Home:ProductionInformation' | abpLocalization }} <span class="style-span"> * </span></h4>
+        <div class="mt-2">
+          <label for="gtinCode-name">{{ '::Product:gtinCode' | abpLocalization }}</label
+          ><span class="style-span"> * </span>
+          <input
+            type="text"
+            id="gtinCode-name"
+            class="form-control"
+            [placeholder]="'::Home:GtinCode' | abpLocalization"
+            formControlName="productGTINCode"
+            [readOnly]="this.updateToken"
+            (blur)="checkGtin()"
+          />
+        </div>
+        <div class="mt-2">
+          <label for="product-name">{{ '::Product:ProductName' | abpLocalization }}</label
+          ><span class="style-span"> * </span>
+          <input
+            type="text"
+            id="product-name"
+            class="form-control"
+            [placeholder]="'::Home:ProductName' | abpLocalization"
+            formControlName="productName"
+            [readOnly]="this.updateToken"
+          />
+        </div>
+
+        <div class="mt-2">
+          <label for="category">{{ '::Product:Category' | abpLocalization }}</label><span class="style-span"> * </span>
+          <app-typehead-focus-customer
+            id="category"
+            [dataInput]="categoryData"
+            (dataReturn)="eventCategorySelectHandle($event)"
+            [placeholder]="'::Home:Category' | abpLocalization"
+            [initialSelected]="categoryData.selected"
+            [disabled]="!!updateToken"
+          ></app-typehead-focus-customer>
+          <div
+            *ngIf="!categoryData.selected"
+            class="abp-validation-error"
+          >
+            <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+          </div>
+        </div>
+      <div class="mt-2">
+        <label for="product-image">{{ '::Product:Image' | abpLocalization }}</label>
+      </div>
+      <div class="mt-2">
+        <div *ngIf="productImages.length > 0" class="custom-image-show">
+          <div class="image-container" *ngFor="let image of productImages; let i = index">
+            <img [src]="image" alt="Selected Image" />
+            <i
+              class="fas fa-trash delete-btn"
+              aria-hidden="true"
+              (click)="deleteImage(i,3)"
+            ></i>
+          </div>
+        </div>
+        <div class="custom-file-upload">
+          <label for="product-image">{{ '::Company:ChooseLogo' | abpLocalization }}</label>
+          <input id="product-image"   type="file" (change)="onMultiFileChange($event,3)" (click)= "clearInputValue($event)" accept="image/*"  multiple *ngIf="!updateToken"/>
+        </div>
+
+      </div>
+      <div class="mt-2">
+        <label for="product-certificate">{{ '::Product:Certificate' | abpLocalization }}</label>
+      </div>
+      <div class="mt-2">
+        <div *ngIf="productCertificateImages.length > 0" class="custom-image-show">
+          <div class="image-container" *ngFor="let image of productCertificateImages; let i = index">
+            <img [src]="image" alt="Selected Image" />
+            <i
+              class="fas fa-trash delete-btn"
+              aria-hidden="true"
+              (click)="deleteImage(i,2)"
+            ></i>
+          </div>
+        </div>
+        <div class="custom-file-upload">
+          <label for="product-certificate">{{ '::Company:ChooseLogo' | abpLocalization }}</label>
+          <input *ngIf="!this.updateToken" id="product-certificate" type="file" (click)= "clearInputValue($event)" (change)="onMultiFileChange($event,2)" accept="image/*"  multiple/>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5 mt-3" #qrCode>
+      <div class="box-custom">
+          <h3>
+            {{ '::Home:YourProductQRCode' | abpLocalization }}
+          </h3>
+          <div>
+            <img src="../../../assets/images/logo/LOGO_of_TRACEVERIFIED_No_s.png" width="25%"  alt=""/>
+          </div>
+          <div class="corner-border">
+            <div class="content w-100 h-100">
+              <div id="qrcode1" class="w-100 h-100">
+              </div>
+              <div style="display:none;">
+                <img id="source" src="assets/images/logo/logo-footer.png" width="80" height="80" />
+              </div>
+            </div>
+            <div class="bottom">
+              <span class="d-none d-md-block"><a>{{'::Home:ScanToView' | abpLocalization}}</a></span>
+            </div>
+          </div>
+          <div class="manual" *ngIf="confirmStatus === '::QRCode:CreateSuccess' || confirmStatus === '::QRCode:EmailAlreadyConfirm'">
+            <a   id="downloadLink"
+                 class="btn btn-primary btn-lg" style="background-color: #10228B">{{'::Home:Download' | abpLocalization}}</a>
+          </div>
+        <div class="box-custom-button">
+          <div *ngIf="updateToken">
+            <h4 [class.text-success]="confirmStatus === '::QRCode:CreateSuccess'"
+                [class.text-danger]="confirmStatus === '::QRCode:ExpiredTime'"
+                [class.text-warning]="confirmStatus === '::QRCode:EmailAlreadyConfirm'">
+              {{ confirmStatus | abpLocalization }}
+            </h4>
+          </div>
+          <div *ngIf="updateEmailToken">
+            <h4 class="text-warning">{{'::QRCode:PleaseConfirmEmail' | abpLocalization}}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="mt-2">
+      <label for="productDescription">{{ '::Product:Description' | abpLocalization }}</label>
+    </div>
+    <div class="col-lg-12 mb-4 mt-1" >
+      <div *ngIf="!updateToken">
+      <quill-editor
+        id="productDescription"
+        #quillEditor
+        class="rich-editor"
+        [modules]="modules"
+        formControlName="productDescription"
+        (keydown.enter)="yourFunc($event)"
+        [readOnly]="!!updateToken"
+      ></quill-editor>
+      </div>
+      <div *ngIf="updateToken" class="card border">
+        <div class="card-body">
+          <div class="ql-editor" [innerHTML]="safeProductContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <h4>II. {{ '::Home:CompanyInformation' | abpLocalization }} <span class="style-span"> * </span></h4>
+    <div class="col-lg-6">
+      <div class="mt-2">
+        <label for="company-gs1-code">{{ '::Company:GS1Code' | abpLocalization }}</label>
+        <span class="style-span"> * </span>
+        <div class="input-group" validationTarget>
+          <input
+            id="company-gs1-code"
+            type="text"
+            formControlName="gS1Code"
+            [placeholder]="'::Home:GS1Code' | abpLocalization"
+            class="form-control"
+            (keyup.enter)="gs1CodeFilterClick()"
+            [readOnly]="this.updateToken"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-search"
+            (click)="gs1CodeFilterClick()"
+            [disabled]="updateToken"
+            type="button"
+          ></button>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label for="company-name">{{ '::Home:CompanyName' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <input
+          type="text"
+          id="company-name"
+          class="form-control"
+          [placeholder]="'::Home:Name' | abpLocalization"
+          formControlName="name"
+          [readOnly]="isCompanyDisabled"
+        />
+      </div>
+      <div class="mt-2">
+        <label for="company-email-name">{{ '::Home:CompanyEmail' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <input
+          type="text"
+          id="company-email-name"
+          class="form-control"
+          [placeholder]="'::Company:EmailAddress' | abpLocalization"
+          formControlName="emailAddress"
+          (blur)="this.checkCompMail()"
+          [readOnly]="isCompanyDisabled && !updateEmailToken"
+        />
+      </div>
+      <div class="mt-2">
+        <label for="phone-number">{{ '::Company:PhoneNumber' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <input
+          type="text"
+          id="phone-number"
+          [placeholder]="'::Company:PhoneNumber' | abpLocalization"
+          class="form-control"
+          formControlName="phoneNumber"
+          [readOnly]="isCompanyDisabled"
+        />
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="mt-2">
+        <label for="logo">{{ '::Company:Logo' | abpLocalization }}</label><span class="style-span"> * </span>
+      </div>
+      <div class="mt-2">
+        <div class="custom-file-upload">
+          <div *ngIf="imageCompanyLogoSrc">
+            <img [src]="imageCompanyLogoSrc" alt="Selected Image" />
+          </div>
+          <label for="logo">{{ '::Company:ChooseLogo' | abpLocalization }}</label>
+          <input id="logo" type="file"
+                 (change)="onImageChange($event,1)"
+                 accept="image/*"
+                 *ngIf="!isCompanyDisabled"
+          />
+        </div>
+      </div>
+      <div class="mt-2">
+        <label for="company-certificate">{{ '::Company:Certificate' | abpLocalization }}</label>
+      </div>
+      <div class="mt-2">
+        <div *ngIf="companyCertificateImages.length > 0" class="custom-image-show">
+          <div class="image-container" *ngFor="let image of companyCertificateImages; let i = index">
+            <img [src]="image" alt="Selected Image" />
+            <i
+              class="fas fa-trash delete-btn"
+              aria-hidden="true"
+              (click)="deleteImage(i,1)"
+            ></i>
+          </div>
+        </div>
+        <div class="custom-file-upload">
+          <label for="company-certificate">{{ '::Company:ChooseLogo' | abpLocalization }}</label>
+          <input id="company-certificate" type="file"
+                 (click)= "clearInputValue($event)"
+                 (change)="onMultiFileChange ($event,1)"
+                 accept="image/*"  multiple
+                 *ngIf="!isCompanyDisabled"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="mt-2">
+          <label for="address-name">{{ '::Company:Address' | abpLocalization }}</label>
+          <input
+            type="text"
+            id="address-name"
+            [placeholder]="'::Company:Address' | abpLocalization"
+            class="form-control"
+            formControlName="address"
+            [readOnly]="isCompanyDisabled"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-3">
+        <div class="mt-2">
+          <label for="country">{{ '::Company:Country' | abpLocalization }}</label><span class="style-span"> * </span>
+          <app-typehead-focus-customer
+            id="country"
+            [disabled]="isCompanyDisabled"
+            [dataInput]="countryData"
+            [placeholder]="'::Company:Country' | abpLocalization"
+            (dataReturn)="eventCountrySelectHandle($event)"
+            *ngIf="countryData && countryData.selected !== undefined"
+            [initialSelected]="countryData.selected"
+          ></app-typehead-focus-customer>
+          <div
+            *ngIf="!countryData.selected"
+            class="abp-validation-error"
+          >
+            <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="mt-2">
+          <label for="province">{{ '::Company:Province' | abpLocalization }}</label><span class="style-span"> * </span>
+          <app-typehead-focus-customer
+            id="province"
+            [disabled]="isCompanyDisabled"
+            [dataInput]="provinceData"
+            [placeholder]="'::Company:Province' | abpLocalization"
+            (dataReturn)="eventProvinceSelectHandle($event)"
+            *ngIf="provinceData && provinceData.selected !== undefined"
+            [initialSelected]="provinceData.selected"
+          ></app-typehead-focus-customer>
+
+          <div
+            *ngIf="!provinceData.selected"
+            class="abp-validation-error"
+          >
+            <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="mt-2">
+          <label for="district">{{ '::Company:District' | abpLocalization }}</label><span class="style-span"> * </span>
+          <app-typehead-focus-customer
+            id="district"
+            [disabled]="isCompanyDisabled"
+            [dataInput]="districtData"
+            [placeholder]="'::Company:District' | abpLocalization"
+            (dataReturn)="eventDistrictSelectHandle($event)"
+            *ngIf="districtData && districtData.selected !== undefined"
+            [initialSelected]="districtData.selected"
+          ></app-typehead-focus-customer>
+          <div
+            *ngIf="!districtData.selected"
+            class="abp-validation-error"
+          >
+            <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="mt-2">
+          <label for="ward">{{ '::Company:Ward' | abpLocalization }}</label><span class="style-span"> * </span>
+          <app-typehead-focus-customer
+            id="ward"
+            [disabled]="isCompanyDisabled"
+            [dataInput]="wardData"
+            [placeholder]="'::Company:Ward' | abpLocalization"
+            (dataReturn)="eventWardSelectHandle($event)"
+            *ngIf="wardData && wardData.selected !== undefined"
+            [initialSelected]="wardData.selected"
+          ></app-typehead-focus-customer>
+          <div
+            *ngIf="!wardData.selected"
+            class="abp-validation-error"
+          >
+            <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="mt-2">
+          <label for="website-name">{{ '::Company:Website' | abpLocalization }}</label>
+          <input
+            type="text"
+            id="website-name"
+            [placeholder]="'::Company:WebsitePlaceHolder' | abpLocalization"
+            class="form-control"
+            formControlName="websiteUrl"
+            [readOnly]="isCompanyDisabled"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="mt-2">
+        <label for="company-description">{{ '::Product:Description' | abpLocalization }}</label>
+      </div>
+      <div class="col-lg-12 mb-4 mt-1" >
+        <div *ngIf="!updateToken">
+        <quill-editor
+          id="company-description"
+          #quillEditor
+          class="rich-editor"
+          [modules]="modules"
+          formControlName="companyDescription"
+          [readOnly]="isCompanyDisabled"
+          (keydown.enter)="yourFunc($event)"
+        ></quill-editor>
+        </div>
+        <div *ngIf="updateToken" class="card border">
+          <div class="card-body">
+            <div class="ql-editor" [innerHTML]="safeCompanyContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+  </fieldset>
+  <div class="float-end pb-2">
+    <div class="row">
+      <div class=" col col-md-6 col-sm-12 mt-3 px-1">
+        <button type="button" class=" btn btn-secondary me-2" (click)="cancelClick()">
+          {{ '::Cancel' | abpLocalization }}
+        </button>
+      </div>
+      <div class=" col col-md-6 col-sm-12 mt-3 px-1">
+        <button *ngIf="!this.updateEmailToken" type="submit"  class=" btn btn-primary" (click)="save()" [disabled]="form.invalid || updateToken || isLoading" >
+          {{ '::Save' | abpLocalization }}
+        </button>
+        <button *ngIf="this.updateEmailToken" class="btn btn-primary" (click)="updateEmail()" [disabled]="form.invalid || updateToken">
+          {{ '::Update' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isLoading" class="position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex justify-content-center align-items-center">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">{{'::Loading' | abpLocalization}}</span>
+  </div>
+</div>

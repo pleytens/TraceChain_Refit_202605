@@ -1,0 +1,260 @@
+.custom-btn {
+  border: 2px solid #3498db;
+  background-color: white !important;
+  color: #3498db !important;
+}
+
+.custom-btn.btn-primary {
+  background-color: #3498db !important;
+  border-color: #3498db;
+  color: white !important;
+}
+.margin-custom {
+  padding: 10px 20px;
+}
+.custom-file-upload {
+  display: inline-block;
+  position: relative;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+.custom-file-upload img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+.custom-file-upload label {
+  background-color: #3498db;
+  color: #fff;
+  border: 1px solid #2980b9;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.custom-file-upload input[type='file'] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.rich-editor {
+  width: 100%;
+  height: 40vh;
+}
+
+.custom-image-show {
+  display: flex; /* Enables Flexbox for this container */
+  justify-content: left; /* Aligns items on the main-axis (default: row) */
+  align-items: center; /* Aligns items on the cross-axis */
+  flex-direction: row; /* Defines the direction of flex items (row|row-reverse|column|column-reverse) */
+  flex-wrap: wrap; /* Allows items to wrap as needed (nowrap|wrap|wrap-reverse) */
+  gap: 10px; /* Space between items */
+  padding: 10px;
+}
+.image-container {
+  position: relative;
+  width: fit-content;
+}
+
+.image-container img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+  display: block; /* Removes bottom space/gap */
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px; /* Adjust based on your preference */
+  left: 10px; /* Adjust based on your preference */
+  display: none; /* Hide button initially */
+  /* Add more styling here to beautify the button */
+}
+
+.image-container:hover .delete-btn {
+  color: rgba(255, 0, 0, 0.79);
+  display: block; /* Show button on hover */
+}
+
+.custom-card {
+  border-left: 10px solid #4197e0;
+  padding: 15px;
+  margin: 15px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-footer {
+  border-top: 1px solid #6c757d;
+  margin-top: 15px;
+  padding-top: 10px;
+}
+
+button.btn.btn-link {
+  color: #f61d85;
+}
+
+.flex-container {
+  display: flex;
+}
+
+.flex-item {
+  box-sizing: border-box;
+  padding: 0 15px;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.margin-custom {
+  padding: 10px 20px;
+}
+
+.selected-values-card {
+  border: 2px dashed #007bff;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.selected-value {
+  list-style-type: none;
+  margin-right: 10px;
+  position: relative;
+}
+
+.delete-icon {
+  color: red;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+}
+
+.button-container:first-child {
+  margin-right: auto;
+}
+
+.button-container:not(:first-child) {
+  margin-left: auto;
+  gap: 6px;
+}
+
+@mixin switch($res: 'sm') {
+  $index: 1rem;
+  $mainVal: 1rem;
+
+  @if $res == 'md' {
+    $index: 2rem;
+    $mainVal: 1.5rem;
+  } @else if $res == 'lg' {
+    $index: 3rem;
+    $mainVal: 2rem;
+  } @else if $res == 'xl' {
+    $index: 4rem;
+    $mainVal: 2.5rem;
+  }
+  /* switch css style */
+  margin-bottom: calc($index / 2);
+
+  .form-check-input {
+    height: $mainVal;
+    width: calc(#{$index} + 0.75rem);
+    border-radius: $mainVal * 2;
+  }
+}
+
+.form-check-input {
+  clear: left;
+}
+
+.form-switch.form-switch-sm {
+  @include switch();
+}
+
+.form-switch.form-switch-md {
+  @include switch('md');
+}
+
+.form-switch.form-switch-lg {
+  @include switch('lg');
+}
+
+.form-switch.form-switch-xl {
+  @include switch('xl');
+}
+.add-btn-custom {
+  background: #e23a84;
+  border-color: #e23a84;
+}
+
+.file-container {
+  /* Đảm bảo nút xóa có thể định vị tuyệt đối so với container này */
+  position: relative;
+  /* Đặt kích thước cố định cho mỗi ô (tùy chọn) */
+  width: 120px;
+  height: 120px;
+  margin: 10px;
+  /* Có thể dùng display: inline-block nếu không dùng Flex/Grid ở container ngoài */
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+/* Container cho Icon và Tên file */
+.file-details {
+  /* Quan trọng: Sắp xếp các mục theo chiều dọc (cột) */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Căn giữa theo chiều ngang */
+  text-align: center;
+  /* Chiếm phần lớn không gian của container */
+  height: 100%;
+  justify-content: center; /* Căn giữa theo chiều dọc */
+}
+
+/* Kiểu cho Icon */
+.file-icon {
+  font-size: 40px; /* Kích thước icon lớn */
+  margin-bottom: 5px; /* Khoảng cách giữa icon và tên file */
+}
+
+.pdf-icon {
+  color: #dc3545; /* Màu đỏ cho PDF */
+}
+
+.doc-icon {
+  color: #007bff; /* Màu xanh cho Word */
+}
+
+/* Kiểu cho Tên File */
+.file-name {
+  /* Đảm bảo tên file chỉ hiển thị trên một dòng và bị cắt */
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none; /* Loại bỏ gạch chân của thẻ a */
+}
+
+.file-container:hover .delete-btn {
+  color: rgba(255, 0, 0, 0.79);
+  display: block; /* Show button on hover */
+}

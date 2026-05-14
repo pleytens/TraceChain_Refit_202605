@@ -1,0 +1,121 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Receptacle' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="createReceptacle()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewReceptacle' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter($event)"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter($event)"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card-body">
+  <ngx-datatable [rows]="receptacle.items" [count]="receptacle.totalCount" [list]="list" default>
+    <ngx-datatable-column
+      [name]="'::Actions' | abpLocalization"
+      [maxWidth]="150"
+      [sortable]="false"
+    >
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <div ngbDropdown container="body" class="d-inline-block">
+          <button
+            class="btn btn-primary btn-sm dropdown-toggle"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            ngbDropdownToggle
+          >
+            <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+          </button>
+          <div ngbDropdownMenu>
+            <button ngbDropdownItem (click)="edit(row.id)">
+              {{ '::Edit' | abpLocalization }}
+            </button>
+            <button ngbDropdownItem (click)="delete(row.id)">
+              {{ '::Delete' | abpLocalization }}
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column
+      [name]="'::Receptacle:Code' | abpLocalization"
+      prop="code"
+      [sortable]="false"
+    ></ngx-datatable-column>
+    <ngx-datatable-column
+      [name]="'::Receptacle:Description' | abpLocalization"
+      prop="description"
+      [sortable]="false"
+    ></ngx-datatable-column>
+  </ngx-datatable>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'l' }">
+  <ng-template #abpHeader>
+    <h3>
+      {{ (selectedReceptacle.id ? '::EditReceptacle' : '::NewReceptacle') | abpLocalization }}
+    </h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+    <form *ngIf="form; else loaderRef" [formGroup]="form" (ngSubmit)="save()">
+      <div class="mt-2">
+        <label for="receptacle-code">{{ '::Receptacle:Code' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <input type="text" id="receptacle-code" class="form-control" formControlName="code" />
+      </div>
+      <div class="mt-2">
+        <label for="receptacle-description">{{
+          '::Receptacle:Description' | abpLocalization
+        }}</label>
+        <input
+          type="text"
+          id="receptacle-description"
+          class="form-control"
+          formControlName="description"
+        />
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+    <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

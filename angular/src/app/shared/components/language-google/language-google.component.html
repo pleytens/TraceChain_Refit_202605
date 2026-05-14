@@ -1,0 +1,16 @@
+<div id="google_translate_element" style="display: none"></div>
+<div ngbDropdown class="d-inline-block">
+  <button
+    type="button"
+    class="btn btn-sm btn-secondary"
+    id="dropdownField-btn"
+    ngbDropdownToggle
+  >
+    <span>{{lang}}</span>
+  </button>
+  <div ngbDropdownMenu aria-labelledby="dropdownField">
+    <button type="button" ngbDropdownItem *ngFor="let data of langList" (click)="changeLanguage(data)">
+       {{ data.displayName }}
+    </button>
+  </div>
+</div>

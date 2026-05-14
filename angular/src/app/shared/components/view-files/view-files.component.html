@@ -1,0 +1,24 @@
+<ng-container [ngSwitch]="datatype">
+    <ng-template ngSwitchCase=6>
+        <div *ngIf="fileUrls?.length > 0" class="custom-image-show">
+            <div class="image-container" *ngFor="let image of fileUrls; let i = index">
+                <img [src]="image.url" alt="Selected Image" />
+                <i *ngIf="isEditable" class="fas fa-trash delete-btn" aria-hidden="true"
+                    (click)="deleteDocumentFile(fileUrls,i)"></i>
+            </div>
+        </div>
+
+    </ng-template>
+
+    <ng-template [ngSwitchCase]="7">
+        <div *ngIf="fileUrls?.length > 0" class="custom-image-show">
+            <div class="file-container" *ngFor="let file of fileUrls; let i = index">
+                <div class="file-details" (click)="openFileUrl(file.url)">
+                    <i [class]="getFileIconClass(file.fileName, file)"></i>
+                    <a class="file-name" [title]="file.fileName">{{file.fileNameRaw}}</a>
+                </div>
+                <i *ngIf="isEditable" class="fas fa-trash-alt delete-btn" (click)="deleteDocumentFile(fileUrls,i)"></i>
+            </div>
+        </div>
+    </ng-template>
+</ng-container>

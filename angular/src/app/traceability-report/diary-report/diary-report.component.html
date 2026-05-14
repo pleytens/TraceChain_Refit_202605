@@ -1,0 +1,113 @@
+@if (isCustomReport) {
+<ng-container [ngTemplateOutlet]="customReport"></ng-container>
+} @else {
+<ng-container [ngTemplateOutlet]="defaultReport"></ng-container>
+}
+
+<ng-template #customReport>
+  <div class="container">
+    <ng-container *ngFor="let diary of event">
+      <p *ngIf="diary?.lotId">
+        <span class="fw-bold">{{ '::Record:LotId' | abpLocalization }}: </span>
+        {{ diary?.lotId }}
+      </p>
+      <ng-container *ngFor="let stepRecord of diary.stepRecords">
+        <ng-container *ngFor="let field of stepRecord.fieldRecords">
+          <ng-container *ngIf="field.responseText">
+            <ng-container [ngSwitch]="field.dataType">
+              <ng-template [ngSwitchCase]="6">
+                <p class="fw-bold">{{ field.fieldName }}:</p>
+                <app-view-files
+                  [isEditable]="false"
+                  [datatype]="field.dataType"
+                  [fileIds]="field.responseText"
+                ></app-view-files>
+              </ng-template>
+              <ng-template [ngSwitchCase]="7">
+                <p class="fw-bold">{{ field.fieldName }}:</p>
+                <app-view-files
+                  [isEditable]="false"
+                  [datatype]="field.dataType"
+                  [fileIds]="field.responseText"
+                ></app-view-files>
+              </ng-template>
+              <ng-template [ngSwitchCase]="5">
+                <p>
+                  <span class="fw-bold">{{ field.fieldName }}:</span>
+                  {{ convertDate(field.responseText) }}
+                </p>
+              </ng-template>
+              <ng-template ngSwitchDefault>
+                <p>
+                  <span class="fw-bold">{{ field.fieldName }}:</span>
+                  {{ field.responseText }}
+                </p>
+              </ng-template>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </ng-container>
+  </div>
+</ng-template>
+
+<ng-template #defaultReport>
+  <p-timeline [value]="event">
+    <ng-template pTemplate="content" let-event>
+      <p class="fw-bold">{{ event.stepName }}</p>
+
+      <ng-container *ngFor="let stepRecord of event.stepRecords">
+        <ng-container *ngIf="stepRecord.receptionOrOriginFieldName">
+          <label class="fw-bold"> {{ stepRecord.receptionOrOriginFieldName }}: </label>&nbsp; @if
+          (stepRecord.redirectUrl !== '#') {
+          <a class="pe-auto link-style" (click)="getDomainName(stepRecord.redirectUrl)">{{
+            stepRecord.receptionOrOriginData
+          }}</a>
+          } @else {
+          <a class="pe-auto link-style" *ngIf="stepRecord.redirectUrl === '#'">{{
+            stepRecord.receptionOrOriginData
+          }}</a>
+          }
+        </ng-container>
+
+        <ng-container *ngFor="let field of stepRecord.fieldRecords">
+          <ng-container *ngIf="field.responseText">
+            <ng-container [ngSwitch]="field.dataType">
+              <ng-template [ngSwitchCase]="6">
+                <p class="fw-bold">{{ field.fieldName }}:</p>
+                <app-view-files
+                  [isEditable]="false"
+                  [datatype]="field.dataType"
+                  [fileIds]="field.responseText"
+                ></app-view-files>
+              </ng-template>
+              <ng-template [ngSwitchCase]="7">
+                <p class="fw-bold">{{ field.fieldName }}:</p>
+                <app-view-files
+                  [isEditable]="false"
+                  [datatype]="field.dataType"
+                  [fileIds]="field.responseText"
+                ></app-view-files>
+              </ng-template>
+              <ng-template [ngSwitchCase]="5">
+                <p>{{ field.fieldName }}: {{ convertDate(field.responseText) }}</p>
+              </ng-template>
+              <ng-template ngSwitchDefault>
+                <p class="">{{ field.fieldName }}: {{ field.responseText }}</p>
+              </ng-template>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </ng-template>
+
+    <ng-template pTemplate="opposite" let-event>
+      <div class="fw-bold">
+        {{ event.createdTime | date : 'dd-MM-yyyy' }}
+      </div>
+      <div class="fw-normal">
+        {{ event.createdTime | date : 'HH:mm' }}
+      </div>
+    </ng-template>
+  </p-timeline>
+</ng-template>

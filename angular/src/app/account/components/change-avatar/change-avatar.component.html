@@ -1,0 +1,28 @@
+<form [formGroup]="form" *ngIf="form" (ngSubmit)="submit()" [validateOnSubmit]="true" class="abp-md-form">
+  <div class="mt-2">
+    <label for="avatar">{{ '::Profile:Avatar' | abpLocalization }}</label>
+  </div>
+  <div class="mt-2">
+    <div *ngIf="avatarImages" class="custom-image-show">
+      <div class="image-container">
+        <img [src]="avatarImages" alt="Selected Image" />
+        <i class="fas fa-trash delete-btn" aria-hidden="true" (click)="deleteImage()"></i>
+      </div>
+    </div>
+  </div>
+  <div class="mt-2">
+    <div class="custom-file-upload">
+      <label for="avatar">{{ '::Profile:ChooseAvatar' | abpLocalization }}</label>
+      <input id="avatar" type="file" (change)="onFileChange($event)" />
+    </div>
+  </div>
+
+  <abp-button
+    buttonType="submit"
+    iconClass="fa fa-check"
+    buttonClass="btn btn-primary color-white"
+    [loading]="inProgress"
+  >
+    {{ 'AbpIdentity::Save' | abpLocalization }}</abp-button
+  >
+</form>

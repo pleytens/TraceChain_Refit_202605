@@ -1,0 +1,352 @@
+<main class="main">
+  <!-- MAP -->
+  <div
+    class="title title-map"
+    (click)="isCollapsed = !isCollapsed"
+    [attr.aria-expanded]="!isCollapsed"
+    aria-controls="collapseBasic"
+  >
+    <p class="text-muted">{{ '::Traceability:Report:Map' | abpLocalization }}</p>
+  </div>
+  <div id="collapseBasic" [collapse]="isCollapsed" [isAnimated]="true">
+    <div class="box" id="googleMap"></div>
+  </div>
+  <!-- MAP -->
+  <!-- REPORT -->
+  <div class="title title-report">
+    <p class="text-muted">{{ '::Traceability:Report:DetailReport' | abpLocalization }}</p>
+  </div>
+  <div class="row row-detail-report">
+    <div class="col-12 col-sm-12 col-md-4 col-lg-4 col-xl-4 col-detail-report">
+      <div class="row row-detail-report">
+        <div class="col-12">
+          <div class="carousel-custom">
+            <ngx-slick-carousel
+              class="carousel"
+              #slickProModal="slick-carousel"
+              [config]="slideProConfig"
+            >
+              <ng-template ngFor let-image [ngForOf]="productData.images" let-index="index">
+                <div ngxSlickItem class="slide">
+                  <img [src]="image" alt="" width="100%" class="product-slide" />
+                </div>
+              </ng-template>
+            </ngx-slick-carousel>
+          </div>
+        </div>
+      </div>
+      <div class="row row-detail-report">
+        <div class="col-9">
+          <div class="product-info">
+            <p class="product-info-title">
+              {{ productData.productName }}
+              <span
+                ><i *ngIf="!isExpired" class="bi bi-check-circle-fill text-success"></i
+                ><i *ngIf="isExpired" class="bi bi-x-circle-fill text-danger"></i>
+              </span>
+            </p>
+            <p>
+              {{ '::Traceability:Report:ActivationDate' | abpLocalization }}:
+              {{ productData.activationDate }}
+            </p>
+            <p>{{ '::Traceability:Report:Gtin' | abpLocalization }}: {{ productData.gtinCode }}</p>
+          </div>
+        </div>
+        <div class="col-3">
+          <!--						<img  src="assets/images/product-logo.png" alt="image" class="img-product">-->
+          <img [src]="productData.companyLogo" alt="image" class="img-product" />
+        </div>
+      </div>
+      <div class="row row-detail-report">
+        <div class="col-9">
+          <p class="cer-title">
+            {{ '::Traceability:Report:CertificationOfProduct' | abpLocalization }}
+          </p>
+        </div>
+        <div class="carousel-custom">
+          <ngx-slick-carousel
+            class="carousel"
+            #slickCerModal="slick-carousel"
+            [config]="slideCerConfig"
+          >
+            <ng-template
+              ngFor
+              let-certification
+              [ngForOf]="productData.certificationImages"
+              let-index="index"
+            >
+              <div ngxSlickItem class="slide">
+                <img [src]="certification" alt="" width="100%" class="certification-slide" />
+              </div>
+            </ng-template>
+          </ngx-slick-carousel>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-12 col-md-8 col-lg-8 col-xl-8 col-detail-report px-2">
+      <tabset #staticTabs [justified]="true">
+        <tab heading="{{ '::Traceability:Report:Product' | abpLocalization }}">
+          <div class="tab-box">
+            <div class="tab-title">
+              <p>{{ '::Traceability:Report:DescriptionOfProduct' | abpLocalization }}</p>
+            </div>
+            <!-- <div class="ytb-box">-->
+            <!-- &lt;!&ndash; <iframe height="315" width="100%" src="https://www.youtube.com/embed/BdPk9ipvczM?si=lqk1CHSbd9i-dFrC?rel=0&amp;controls=0&amp;showinfo=0"></iframe> &ndash;&gt;-->
+            <!-- <youtube-player videoId="mVjYG9TSN88" [height]="400" width="100%"/>-->
+            <!-- </div>-->
+            <div class="product-tab-info ql-editor" [innerHTML]="safeProductContent"></div>
+          </div>
+        </tab>
+        <tab heading="{{ '::Traceability:Report:Company' | abpLocalization }}">
+          <div class="tab-box">
+            <div class="tab-title">
+              <p>{{ '::Traceability:Report:ProfileOfCompany' | abpLocalization }}</p>
+            </div>
+            <div class="row company-box">
+              <div class="col-12">
+                <div class="row company-box-row">
+                  <div class="col-4 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Company' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-8 col-sm-9 col-md-9 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content">{{ companyData.name }}</p>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-4 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Gs1' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-8 col-sm-9 col-md-9 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content">{{ companyData.gS1Code }}</p>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-4 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Country' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-8 col-sm-9 col-md-9 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content">{{ companyData.country }}</p>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-4 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Address' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-8 col-sm-9 col-md-9 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content">{{ companyData.address }}</p>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-4 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Phone' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-8 col-sm-9 col-md-9 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content">{{ companyData.phoneNumber }}</p>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-4 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Email' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-8 col-sm-9 col-md-9 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content">{{ companyData.emailAddress }}</p>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-4 col-sm-3 col-md-3 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Website' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-8 col-sm-9 col-md-9 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content">{{ companyData.websiteUrl }}</p>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-12 col-sm-12 col-md-12 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Certification' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-12 col-sm-12 col-md-12 col-lg-9 col-xl-9">
+                    <ngx-slick-carousel
+                      class="carousel"
+                      #slickCompanyModal="slick-carousel"
+                      [config]="slideComConfig"
+                    >
+                      <ng-template
+                        ngFor
+                        let-certification
+                        [ngForOf]="companyData.certificationImages"
+                        let-index="index"
+                      >
+                        <div ngxSlickItem class="slide">
+                          <img
+                            [src]="certification"
+                            (click)="showImage($event, template)"
+                            alt=""
+                            width="100%"
+                            class="company-cer"
+                          />
+                        </div>
+                      </ng-template>
+                    </ngx-slick-carousel>
+                  </div>
+                </div>
+                <div class="row company-box-row">
+                  <div class="col-12 col-sm-12 col-md-12 col-lg-3 col-xl-3">
+                    <p class="company-box-field-title">
+                      <strong>{{ '::Traceability:Report:Description' | abpLocalization }}</strong>
+                    </p>
+                  </div>
+                  <div class="col-12 col-sm-12 col-md-12 col-lg-9 col-xl-9">
+                    <p class="company-box-field-content"></p>
+                    <div [innerHTML]="safeCompanyContent"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </tab>
+        <tab heading="{{ '::Traceability:Report:Diary' | abpLocalization }}">
+          <div class="tab-box">
+            <div class="tab-title">
+              <p>{{ '::Traceability:Report:Traceability' | abpLocalization }}</p>
+            </div>
+            <div class="row" style="padding: 10px 10px 0 10px">
+              <div class="col-md-12">
+                <div class="input-group">
+                  <span class="input-group-text" id="lotId-addon">Lot ID</span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Enter Lot ID"
+                    aria-label="Lot ID"
+                    aria-describedby="lotId-addon"
+                    [(ngModel)]="lotId"
+                  />
+                  <span class="btn btn-primary" id="lotId-addon-end" (click)="searchLotId()">{{
+                    '::Search' | abpLocalization
+                  }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="row process-box">
+              <p class="process-title">{{ '::Traceability:Report:Process' | abpLocalization }}</p>
+              <div class="timeline-wrapper">
+                <ul class="StepProgress">
+                  <ng-template ngFor let-step [ngForOf]="diaryData.steps" let-index="i">
+                    <li class="StepProgress-item is-done">
+                      <div class="detail">
+                        <div class="step-name">
+                          <p class="bold">{{ step.stepName }}</p>
+                        </div>
+                        <ng-template
+                          ngFor
+                          let-stepRecord
+                          [ngForOf]="step.stepRecords"
+                          let-index="ii"
+                        >
+                          <ng-template [ngIf]="stepRecord.receptionOrOriginFieldName">
+                            <label class="step-content record-code"
+                              >{{ stepRecord.receptionOrOriginFieldName }}:</label
+                            >&nbsp;
+
+                            <a
+                              class="trace-code"
+                              (click)="getDomainName(stepRecord.redirectUrl)"
+                              *ngIf="stepRecord.redirectUrl !== '#'"
+                              >{{ stepRecord.receptionOrOriginData }}</a
+                            >
+                            <a
+                              class="trace-code custom-a-tag"
+                              *ngIf="stepRecord.redirectUrl === '#'"
+                              >{{ stepRecord.receptionOrOriginData }}</a
+                            >
+                          </ng-template>
+                          <ng-template
+                            ngFor
+                            let-field
+                            [ngForOf]="stepRecord.fieldRecords"
+                            let-index="iii"
+                          >
+                            <ng-template [ngIf]="field.dataType === 6" [ngIfElse]="other_content">
+                              <p class="step-content">{{ field.fieldName }}:</p>
+                              <img
+                                [src]="field.responseText"
+                                alt="image"
+                                style="display: block; max-width: 80%; margin-bottom: 8px"
+                                (error)="setDefaultImage($event)"
+                              />
+                            </ng-template>
+                            <ng-template #other_content>
+                              <p class="step-content">
+                                {{ field.fieldName }}: {{ field.responseText }}
+                              </p>
+                            </ng-template>
+                          </ng-template>
+                        </ng-template>
+                      </div>
+                    </li>
+                  </ng-template>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </tab>
+      </tabset>
+      <div></div>
+    </div>
+  </div>
+  <!-- REPORT -->
+
+  <!-- Modal -->
+  <ng-template #template>
+    <div class="modal-header">
+      <button
+        type="button"
+        class="btn-close close pull-right"
+        aria-label="Close"
+        (click)="modalRef?.hide()"
+      >
+        <span aria-hidden="true" class="visually-hidden">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <img [src]="imgSrc" style="max-width: 100%; cursor: pointer" class="modal-hover-opacity" />
+    </div>
+  </ng-template>
+  <ng-template #expired>
+    <div class="modal-header">
+      <h4 class="modal-title" id="modal-basic-title">
+        {{ '::Product:Information' | abpLocalization }}
+      </h4>
+    </div>
+    <div class="modal-body">
+      <div class="d-flex justify-content-center align-items-center">
+        <img src="assets/images/expire_modal.png" class="w-75" />
+      </div>
+      <strong class="mt-1">{{ '::Product:ExpiredMessage' | abpLocalization }}</strong>
+    </div>
+    <div class="modal-footer d-flex row">
+      <a href="mailto:INFO&@;TRACEVERIFIED.COM" class="col col-sm-6 btn">{{
+        '::Email' | abpLocalization
+      }}</a>
+      <a href="tel:+840912501139" class="col col-sml-6 btn btn">{{
+        '::Phone' | abpLocalization
+      }}</a>
+    </div>
+  </ng-template>
+</main>

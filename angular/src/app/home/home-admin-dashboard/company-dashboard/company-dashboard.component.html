@@ -1,0 +1,36 @@
+<ngx-datatable [rows]="company" default>
+  <ngx-datatable-column
+    [name]="'::Logo' | abpLocalization"
+    [maxWidth]="90"
+    prop="logoUrl"
+    [sortable]="false"
+  >
+    <ng-template let-value="value" ngx-datatable-cell-template>
+        <img [src]="value" alt="" class="rounded-circle img-table">
+    </ng-template>
+  </ngx-datatable-column>
+  <ngx-datatable-column
+    [name]="'::CompanyProfile:Name' | abpLocalization"
+    prop="name"
+    [sortable]="false"
+  ></ngx-datatable-column>
+  <ngx-datatable-column
+    [name]="'::Home:ParticipantDate' | abpLocalization"
+    prop="participationDate"
+    [sortable]="false"
+  >
+    <ng-template let-value="value" ngx-datatable-cell-template>
+      {{value | date: "dd-MM-yyyy"}}
+    </ng-template>
+  </ngx-datatable-column>
+  <ngx-datatable-column
+    [name]="'::Home:ExpirationDate' | abpLocalization"
+    prop="expirationDate"
+    [sortable]="false"
+  >
+    <ng-template let-value="value" ngx-datatable-cell-template>
+      <div *ngIf="value > 0">{{value}} {{'::Dashboard:Company:Days' | abpLocalization}}</div>
+      <div *ngIf="value <= 0"><p class="text-danger">{{"::Dashboard:Company:Expired" | abpLocalization}}</p></div>
+    </ng-template>
+  </ngx-datatable-column>
+</ngx-datatable>

@@ -1,0 +1,92 @@
+$primary-color: #203643;
+$primary-bg: #121b41;
+
+.nav-tabs .nav-link {
+  color: $primary-color !important;
+  border: 1px solid $primary-color !important;
+  font-size: 0.8rem;
+  padding: 0.5rem;
+  border-radius: 3px;
+}
+
+.nav-tabs .nav-link:hover {
+  color: white !important;
+  background-color: $primary-color !important;
+}
+
+.nav-tabs .nav-item .nav-link.active {
+  color: white !important;
+  border-color: $primary-color !important;
+  background-color: $primary-bg !important;
+}
+
+.btn-jump {
+  animation: jump 2s ease infinite;
+}
+
+@keyframes jump {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(0);
+  }
+  80% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+* {
+  color: #203643;
+}
+.btn-primary {
+  background-color: #121b41 !important;
+  border-color: #121b41 !important;
+  color: white;
+  &:hover {
+    background-color: lighten(#121b41, 15) !important;
+  }
+}
+
+/* component.css */
+::ng-deep .banner-modal .modal-content {
+  background: transparent;
+  border: none;
+  overflow: hidden;
+}
+
+::ng-deep .banner-modal .modal-body {
+  padding: 0;
+}
+
+.banner-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.banner-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* fills the entire modal */
+  display: block;
+  cursor: pointer;
+}
+
+.btn-close {
+  background-color: white;
+  border-radius: 50%;
+  opacity: 0.9;
+  padding: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.btn-close:hover {
+  opacity: 1;
+}

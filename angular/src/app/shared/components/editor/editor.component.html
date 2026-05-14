@@ -1,0 +1,11 @@
+<quill-editor
+  #quillEditor
+  class="rich-editor  mb-3"
+  [formats]="editorFormats"
+  format="html"
+  [(ngModel)]="content"
+  [modules]="quillModules"
+  [customModules]="customModules"
+  (onEditorCreated)="setFocus($event)"
+  (onNativeBlur)="eventBlurHandle($event)"
+></quill-editor>

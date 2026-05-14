@@ -1,0 +1,46 @@
+{
+  "ReferenceCulture": "en",
+  "TargetCulture": "km",
+  "Resources": [
+    {
+      "ResourcePath": "/Users/quanghoang/Projects/TraceVerified/Unido-git-v2/unido/aspnet-core/src/Traceverified.TraceFarm.Domain.Shared/Localization/TraceFarm",
+      "Texts": [
+        {
+          "LocalizationKey": "Tenant",
+          "Reference": "Người thuê",
+          "Target": "aaaaaa"
+        },
+        {
+          "LocalizationKey": "Switch",
+          "Reference": "Chuyển đổi",
+          "Target": "aaaaaa"
+        },
+        {
+          "LocalizationKey": "Name",
+          "Reference": "Tên",
+          "Target": " aaaaaa"
+        },
+        {
+          "LocalizationKey": "SwitchTenantHint",
+          "Reference": "Để trống trường tên để chuyển sang phía máy chủ.",
+          "Target": ""
+        },
+        {
+          "LocalizationKey": "SwitchTenant",
+          "Reference": "Tenant aaaa",
+          "Target": ""
+        },
+        {
+          "LocalizationKey": "NotSelected",
+          "Reference": "Không được chọn",
+          "Target": ""
+        },
+        {
+          "LocalizationKey": "Record:Code",
+          "Reference": "RECORD CODE",
+          "Target": ""
+        }
+      ]
+    }
+  ]
+}

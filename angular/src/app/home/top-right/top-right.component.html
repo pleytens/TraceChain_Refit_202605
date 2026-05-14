@@ -1,0 +1,15 @@
+<ng-container  *ngFor="let data of numberOfData">
+  <div class="col-lg-4 col-md-12 margin-report">
+    <div class="card" style="min-height: 100%">
+      <div class="card-body">
+        <h6>
+          <span [innerHTML]="'::'+data.displayTitle |abpLocalization"></span>
+          <br/>
+          <br/>
+          <h4 class="record-number">{{data.number}}</h4>
+        </h6>
+      </div>
+    </div>
+  </div>
+</ng-container>
+

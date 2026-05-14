@@ -1,0 +1,318 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Partner' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="createPartner()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewPartner' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter($event)"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter($event)"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="country"
+          [dataInput]="countryData"
+          (dataReturn)="eventCountryFilterSelectHandle($event)"
+          [placeholder]="'::Country' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="province-02"
+          [dataInput]="provinceData"
+          (dataReturn)="eventProvinceFilterSelectHandle($event)"
+          [placeholder]="'::Province' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="district"
+          [dataInput]="districtData"
+          (dataReturn)="eventDistrictFilterSelectHandle($event)"
+          [placeholder]="'::District' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="ward-01"
+          [dataInput]="wardData"
+          [placeholder]="'::Ward' | abpLocalization"
+          (dataReturn)="eventWardFilterSelectHandle($event)"
+        ></app-typehead-focus>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable [rows]="partner.items" [count]="partner.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="edit2(row.id)">
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="deletePartner(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Partner:Gs1Code' | abpLocalization"
+        prop="gs1Code"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Partner:Name' | abpLocalization"
+        prop="name"
+        [sortable]="false"
+      ></ngx-datatable-column>
+
+      <ngx-datatable-column
+        [name]="'::Partner:Phone' | abpLocalization"
+        prop="phoneNumber"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Partner:Email' | abpLocalization"
+        prop="email"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Partner:Address' | abpLocalization"
+        prop="address"
+        [sortable]="false"
+      ></ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <h3>{{ (selectedPartner.id ? '::EditPartner' : '::NewPartner') | abpLocalization }}</h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+    <form *ngIf="form; else loaderRef" [formGroup]="form" (ngSubmit)="save()">
+      <div class="mt-2">
+        <label for="partner-code">{{ '::Partner:Code' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <!--        <input type="text" id="partner-code" class="form-control" formControlName="gs1Code" />-->
+        <div class="input-group">
+          <input type="text" id="partner-code" class="form-control" formControlName="gs1Code"
+          [placeholder]= />
+          <button
+            class="btn btn-outline-secondary"
+            [class.bi-check-circle]="isShowCheckSuccess"
+            [class.custom-color-green]="isShowCheckSuccess"
+            (click)="checkGs1Code2($event)"
+            type="button"
+          >
+            {{ isShowCheckSuccess == false ? 'Check' : '' }}
+          </button>
+        </div>
+      </div>
+      <div *ngIf="isShowCheckSuccess">
+        <div class="mt-2">
+          <label for="partner-name">{{ '::Partner:Name' | abpLocalization }}</label
+          ><span class="style-span"> * </span>
+          <input
+            type="text"
+            id="partner-name"
+            class="form-control"
+            formControlName="name"
+            [readonly]="!isShowCheckSuccess"
+          />
+        </div>
+
+        <div class="mt-2">
+          <label for="partner-email">{{ '::Partner:Email' | abpLocalization }}</label>
+          <input
+            type="text"
+            id="partner-email"
+            class="form-control"
+            formControlName="email"
+            [readonly]="!isShowCheckSuccess"
+          />
+        </div>
+        <div class="mt-2">
+          <label for="partner-phone">{{ '::Partner:Phone' | abpLocalization }}</label>
+          <input
+            type="text"
+            id="partner-phone"
+            class="form-control"
+            formControlName="phoneNumber"
+            maxlength="20"
+            minlength="6"
+            pattern="[0-9]*"
+            [readonly]="!isShowCheckSuccess"
+          />
+        </div>
+        <div *ngIf="form?.get('phoneNumber')?.hasError('pattern')" class="abp-validation-error">
+          <small class="text-danger">{{ '::Partner:Error:PhoneNumber:Partner' | abpLocalization }}</small>
+        </div>
+        <div class="mt-2">
+          <label for="partner-address">{{ '::Partner:Address' | abpLocalization }}</label><span class="style-span"> * </span>
+          <input
+            type="text"
+            id="partner-address"
+            class="form-control"
+            formControlName="address"
+            [readonly]="!isShowCheckSuccess"
+          />
+        </div>
+
+        <div class="mt-2">
+          <label for="country">{{ '::Partner:Country' | abpLocalization }}</label
+          >
+          <app-typehead-focus-customer
+            id="country-01"
+            [dataInput]="countryData"
+            (dataReturn)="eventCountrySelectHandle($event)"
+            [disabled]="!isShowCheckSuccess"
+            [initialSelected]="countryData.selected"
+          ></app-typehead-focus-customer>
+        </div>
+
+        <div class="mt-2">
+          <label for="province">{{ '::Partner:Province' | abpLocalization }}</label
+          >
+          <app-typehead-focus-customer
+            id="province"
+            [dataInput]="provinceData"
+            (dataReturn)="eventProvinceSelectHandle($event)"
+            [disabled]="countryData.selected === '0' || !isShowCheckSuccess"
+            [initialSelected]="provinceData.selected"
+          ></app-typehead-focus-customer>
+
+        </div>
+
+        <div class="mt-2">
+          <label for="district">{{ '::Partner:District' | abpLocalization }}</label
+          >
+          <app-typehead-focus-customer
+            id="district-01"
+            [dataInput]="districtData"
+            (dataReturn)="eventDistrictSelectHandle($event)"
+            [disabled]="provinceData.selected === '0' || !isShowCheckSuccess"
+            [initialSelected]="districtData.selected"
+          ></app-typehead-focus-customer>
+
+        </div>
+
+        <div class="mt-2">
+          <label for="ward">{{ '::Partner:Ward' | abpLocalization }}</label
+          >
+          <app-typehead-focus-customer
+            id="ward"
+            [dataInput]="wardData"
+            (dataReturn)="eventWardSelectHandle($event)"
+            [disabled]="districtData.selected === '0' || !isShowCheckSuccess"
+            [initialSelected]="wardData.selected"
+          ></app-typehead-focus-customer>
+
+        </div>
+
+        <div class="mt-2">
+          <label for="partner-website">{{ '::Partner:Website' | abpLocalization }}</label>
+          <input
+            type="text"
+            id="partner-website"
+            class="form-control"
+            formControlName="website"
+            [readonly]="!isShowCheckSuccess"
+          />
+        </div>
+        <div class="mt-2">
+          <label for="partner-latitude">{{ '::Partner:Latitude' | abpLocalization }}</label>
+          <input
+            type="number"
+            id="partner-latitude"
+            class="form-control"
+            formControlName="latitude"
+            [readonly]="!isShowCheckSuccess"
+          />
+        </div>
+        <div class="mt-2">
+          <label for="partner-longitude">{{ '::Partner:Longitude' | abpLocalization }}</label>
+          <input
+            type="number"
+            id="partner-longitude"
+            class="form-control"
+            formControlName="longitude"
+            [readonly]="!isShowCheckSuccess"
+          />
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+    <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

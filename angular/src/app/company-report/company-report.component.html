@@ -1,0 +1,178 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Gov:CompanyTraceabilityReport' | abpLocalization }}
+        </h2>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter()"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-6">
+        <app-typehead-focus
+          [dataInput]="companyData"
+          (dataReturn)="eventCompanyReportSelectHandle($event)"
+          [placeholder]="'::Company' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::FromDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="fromDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #fromDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="fromDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::ToDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="toDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #toDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="toDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable [rows]="company.items" [count]="company.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+<!--        <ng-template let-row="row" ngx-datatable-cell-template>-->
+<!--          <div ngbDropdown container="body" class="d-inline-block">-->
+<!--            <button-->
+<!--              class="btn btn-primary btn-sm dropdown-toggle"-->
+<!--              data-toggle="dropdown"-->
+<!--              aria-haspopup="true"-->
+<!--              ngbDropdownToggle-->
+<!--            >-->
+<!--              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}-->
+<!--            </button>-->
+<!--            <div ngbDropdownMenu>-->
+<!--              <button class="btn btn-brand" (click)="viewTraceability(row.viewTraceabilityUrl)">-->
+<!--                {{ '::View' | abpLocalization }}-->
+<!--              </button>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </ng-template>-->
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button class="btn btn-primary btn-sm" aria-haspopup="true" (click)="viewTraceability(row.viewTraceabilityUrl)">
+              {{ '::View' | abpLocalization }}
+            </button>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:LotId' | abpLocalization"
+        prop="lotId"
+        [sortable]="false">
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:TraceAbilityCode' | abpLocalization"
+        prop="traceabilityCode"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:CompanyName' | abpLocalization"
+        prop="companyName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:ProductName' | abpLocalization"
+        prop="productName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:NumberOfProducts' | abpLocalization"
+        prop="numberOfProducts"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:Supplier' | abpLocalization"
+        [minWidth]="200"
+        prop="suppliers"
+        [sortable]="false"
+      >
+        <ng-template let-value="value" ngx-datatable-cell-template>
+          <a *ngFor="let supplier of value" (click)="redirectUrl(supplier.redirectUrl)" class="a-redirect-custom">{{ supplier.name }}</a>
+        </ng-template></ngx-datatable-column>
+
+      <ngx-datatable-column
+        [name]="'::Gov:Customer' | abpLocalization"
+        prop="customer"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:NumberOfNodes' | abpLocalization"
+        prop="numberOfNotes"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Gov:CreatedBy' | abpLocalization"
+        prop="createdDate"
+        [sortable]="false"
+      >
+        <ng-template let-value="value" ngx-datatable-cell-template>
+         {{ value | date: 'dd/MM/yyyy'}}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>

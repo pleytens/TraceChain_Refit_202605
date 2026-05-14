@@ -1,0 +1,22 @@
+<div ngbDropdown class="d-inline-block">
+  <button
+    type="button"
+    class="btn bg-light fs-5"
+    id="dropdownField-btn"
+    ngbDropdownToggle
+  >
+    <i class="bi bi-translate me-1"></i>
+    <span class="me-1">{{ lang }}</span>
+    <i class="bi bi-caret-down-fill"></i>
+  </button>
+  <div ngbDropdownMenu aria-labelledby="dropdownField">
+    <button
+      type="button"
+      ngbDropdownItem
+      *ngFor="let data of langList"
+      (click)="changeLanguage(data)"
+    >
+      {{ data.displayName }}
+    </button>
+  </div>
+</div>

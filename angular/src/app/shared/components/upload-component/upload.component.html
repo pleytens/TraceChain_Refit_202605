@@ -1,0 +1,23 @@
+<div id="image" class="d-flex gap-1 align-items-center">
+  <ng-container *ngIf="imgSrc && imgSrc.length > 0">
+    <div class="image-box" *ngFor="let img of imgSrc">
+      <img [src]="img.src" class="img-fluid" alt="Images" />
+      <i class="fas fa-trash delete-btn" aria-hidden="true" (click)="deleteImage(img)"></i>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="imgSrc.length < maxFilesNumber">
+    <div class="upload-box" (click)="fileInput.click()">
+      <input
+        type="file"
+        capture="environment"
+        #fileInput
+        class="d-none"
+        multiple
+        (change)="imageSelectHandle($event)"
+      />
+      <div class="plus-icon">
+        <i class="fa fa-plus"></i>
+      </div>
+    </div>
+  </ng-container>
+</div>

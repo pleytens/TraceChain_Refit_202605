@@ -1,0 +1,74 @@
+/* Styles for the home component */
+.margin-home-custom{
+  margin:5px;
+}
+
+.bg-blue {
+  background-color: #0A4EA1;
+}
+
+.card-pie {
+  height: 60%
+}
+
+.card-circle {
+  height: 36%
+}
+
+.progress-container {
+  margin-bottom: 10px;
+}
+
+.progress-info {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.progress-bar {
+  background-color: #ccc;
+  position: relative;
+  height: 20px;
+  width: 100%;
+}
+
+.progress-bar::before {
+  content: '';
+  display: block;
+  background-color: #d9534f;
+  height: 100%;
+}
+
+.product-card {
+  height: 80vh;
+}
+
+.company-status {
+  height: 80vh;
+}
+
+.progress-total {
+  position: absolute;
+  left: 5px;
+}
+
+.progress-achieved {
+  position: absolute;
+  right: 5px;
+}
+.show-more {
+  cursor: pointer;
+  color: #337ab7;
+  font-size: 15px;
+}
+
+.demo{
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  flex-wrap: wrap;
+  padding: 10px;
+}
+
+h4 {
+  text-transform: uppercase;
+}

@@ -1,0 +1,15 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ '::Product:Image' | abpLocalization }}</h5>
+  <button class="btn btn-close" (click)="closeModal()"></button>
+</div>
+<div class="modal-body pb-2">
+  <div class="d-flex justify-content-center">
+    <img
+      [ngSrc]="imgSrc"
+      width="300"
+      height="200"
+      style="width: 90%; height: auto"
+      alt="Image Modal"
+    />
+  </div>
+</div>

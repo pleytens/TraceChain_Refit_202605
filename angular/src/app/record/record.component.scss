@@ -1,0 +1,139 @@
+.custom-btn {
+  border: 2px solid #3498db;
+  background-color: white !important;
+  color: #3498db !important;
+}
+
+.custom-btn.btn-primary {
+  background-color: #3498db !important;
+  border-color: #3498db;
+  color: white !important;
+}
+.custom-file-upload {
+  display: inline-block;
+  position: relative;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+.upload-label {
+  border: 2px dashed #3498db;
+  color: #3498db;
+  border-radius: 4px;
+  width: 150px;
+  height: 150px;
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.custom-file-upload img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.custom-file-upload input[type='file'] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.custom-card {
+  border-left: 10px solid #4197e0;
+  padding: 15px;
+  margin: 15px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-footer {
+  border-top: 1px solid #6c757d;
+  margin-top: 15px;
+  padding-top: 10px;
+}
+
+button.btn.btn-link {
+  color: #f61d85;
+}
+
+.flex-container {
+  display: flex;
+}
+
+.flex-item {
+  box-sizing: border-box;
+  padding: 0 15px;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.custom-file-upload {
+  display: inline-block;
+  position: relative;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+.custom-file-upload img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+.custom-file-upload label {
+  background-color: #3498db;
+  color: #fff;
+  border: 1px solid #2980b9;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.custom-file-upload input[type='file'] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.margin-custom {
+  padding: 10px 20px;
+}
+
+.selected-values-card {
+  border: 2px dashed #007bff;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.selected-value {
+  list-style-type: none;
+  margin-right: 10px;
+  position: relative;
+}
+
+.delete-icon {
+  color: red;
+  cursor: pointer;
+  position: absolute;
+  top: 0;
+  right: 0;
+}

@@ -1,0 +1,173 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Record:Done' | abpLocalization }}
+        </h2>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter($event)"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter($event)"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-3">
+        <ngx-bootstrap-multiselect
+          [options]="productData.data"
+          [(ngModel)]="productData.selected"
+          [settings]="multiSelectSetting"
+          [texts]="multiProductSelectText"
+          (ngModelChange)="filterDateChange()"
+          class="d-flex w-100 mw-100 flex-fill"
+        ></ngx-bootstrap-multiselect>
+      </div>
+      <div class="col col-md-3">
+        <ngx-bootstrap-multiselect
+          [options]="profileData.data"
+          [(ngModel)]="profileData.selected"
+          [settings]="multiSelectSetting"
+          [texts]="multiProfileSelectText"
+          (ngModelChange)="filterDateChange()"
+          class="d-flex w-100 mw-100 flex-fill"
+        ></ngx-bootstrap-multiselect>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::FromDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="fromDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #fromDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="fromDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::ToDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="toDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #toDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="toDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable [rows]="recordDone.items" [count]="recordDone.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="back(row.id)" [disabled]="row.partnerId != null">
+                {{ '::Back' | abpLocalization }}
+              </button>
+              <button
+                ngbDropdownItem
+                (click)="shareToPartner(row.id)"
+                [disabled]="row.partnerId != null"
+              >
+                {{ '::Share' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="viewTraceability(row.viewTraceabilityUrl)">
+                {{ '::View' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="printQrCodeFile(row.id)">
+                {{ '::PrintQrCode' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Record:Code' | abpLocalization"
+        prop="recordCode"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Record:TraceabilityCode' | abpLocalization"
+        prop="traceabilityCode"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Record:ProductName' | abpLocalization"
+        prop="productName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Record:ProfileName' | abpLocalization"
+        prop="profileName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Record:CreatedBy' | abpLocalization"
+        prop="createdBy"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Record:LastModified' | abpLocalization"
+        prop="lastModifiedBy"
+        [sortable]="false"
+      ></ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>

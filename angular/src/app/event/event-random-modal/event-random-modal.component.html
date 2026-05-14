@@ -1,0 +1,29 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    {{ '::Event:RandomWinner' | abpLocalization }}
+  </h5>
+  <button class="btn btn-close" (click)="dismissModal()"></button>
+</div>
+<div class="modal-body p-3">
+  <ul ngbNav #nav="ngbNav" [(activeId)]="activeId" class="nav-tabs" [destroyOnHide]="false">
+    <li [ngbNavItem]="1">
+      <button ngbNavLink>{{ '::Minigame:ParticipantList' | abpLocalization }}</button>
+      <ng-template ngbNavContent>
+        <app-participant-list
+          [eventId]="eventId"
+          (eventInstanceSelected)="onInstanceSelected($event)"
+        ></app-participant-list>
+      </ng-template>
+    </li>
+    <li [ngbNavItem]="2">
+      <button ngbNavLink>{{ '::Minigame:RandomizeParticipant' | abpLocalization }}</button>
+      <ng-template ngbNavContent>
+        <app-random-selection
+          [eventId]="eventId"
+          [participantList]="listSelectedInstance"
+        ></app-random-selection>
+      </ng-template>
+    </li>
+  </ul>
+  <div [ngbNavOutlet]="nav" class="mt-2"></div>
+</div>

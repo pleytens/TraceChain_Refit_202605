@@ -1,0 +1,85 @@
+<div class="card">
+  <div class="card-body">
+    <div class="mb-1">
+      <ngb-pagination
+        class="d-flex justify-content-end"
+        [(page)]="currentPage"
+        [pageSize]="pageSize"
+        [maxSize]="5"
+        [rotate]="true"
+        [collectionSize]="totalPage"
+        (pageChange)="onPageChanged($event)"
+      ></ngb-pagination>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th scope="col" style="width: 100px">
+              <div class="form-check" style="font-size: 0.875rem">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="isSelectAll()"
+                  (change)="onSelectAll($event)"
+                />
+              </div>
+            </th>
+            <th
+              *ngFor="let header of configTable.Header; let i = index"
+              [ngStyle]="{
+                width: configTable.ColWidth[i],
+              }"
+              class="text-nowrap"
+              (click)="eventSortChanged(header.Key)"
+            >
+              <span>{{ header.Name | abpLocalization }}</span>
+              <i
+                class="fa"
+                [ngClass]="{
+                  'fa-sort': !isSort(header.Key),
+                  'fa-sort-up': isSort(header.Key) && sortDirection === 'asc',
+                  'fa-sort-down': isSort(header.Key) && sortDirection === 'desc',
+                }"
+              >
+              </i>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let data of pageItems">
+            <td style="width: 100px">
+              <div class="form-check" style="font-size: 0.875rem">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  [checked]="selectedIds.includes(data.id)"
+                  (change)="onCheckBoxSelect($event, data.id)"
+                />
+              </div>
+            </td>
+            <td
+              *ngFor="let header of configTable.Header; let i = index"
+              [ngStyle]="{ width: configTable.ColWidth[i] }"
+            >
+              @if (header.Type === Types.Hover) {
+                <button
+                  class="btn btn-sm py-1 d-flex align-items-center"
+                  [ngClass]="header.IconContainerClass"
+                  (click)="openImageModal(data[header.Key])"
+                  >
+                  <i class="bi" [ngClass]="header.Icon"></i>
+                </button>
+              } @else {
+                {{ getNestedValue(data, header.Key) | formatData: header }}
+              }
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer pb-0">
+    <p class="fs-6 text-muted">{{ totalPage }} {{ '::Total' | abpLocalization }}</p>
+  </div>
+</div>

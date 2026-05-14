@@ -1,0 +1,199 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Stamp' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button
+            *abpPermission="'TraceFarm.Stamps.Create'"
+            id="create"
+            class="btn btn-primary"
+            type="button"
+            (click)="createStamp()"
+          >
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewStamp' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col col-md-12">
+      <div class="margin-custom">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          placeholder="Search"
+          (keydown)="filter($event)"
+        />
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-4">
+      <div class="input-group">
+        <input
+          class="form-control"
+          placeholder="From date"
+          name="dp"
+          [(ngModel)]="fromDate"
+          (ngModelChange)="filterDateChange()"
+          ngbDatepicker
+          #fromDatePicker="ngbDatepicker"
+        />
+        <button
+          class="btn btn-outline-secondary bi bi-calendar3"
+          (click)="fromDatePicker.toggle()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+    <div class="col col-md-4">
+      <div class="input-group">
+        <input
+          class="form-control"
+          placeholder="To date"
+          name="dp"
+          [(ngModel)]="toDate"
+          (ngModelChange)="filterDateChange()"
+          ngbDatepicker
+          #toDatePicker="ngbDatepicker"
+        />
+        <button
+          class="btn btn-outline-secondary bi bi-calendar3"
+          (click)="toDatePicker.toggle()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+    <div class="col col-md-4">
+      <app-typehead-focus
+        [dataInput]="selectBoxConfig"
+        (dataReturn)="eventSelectHandle($event)"
+        [placeholder]="'::Stamp:CompanyName' | abpLocalization"
+      ></app-typehead-focus>
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable [rows]="stamp.items" [count]="stamp.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <!--              <button ngbDropdownItem (click)='editStamp(row.id)'>-->
+              <!--                {{ '::Edit' | abpLocalization }}-->
+              <!--              </button>-->
+              <button ngbDropdownItem (click)="deleteStamp(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="downloadExcelFile(row.id)">
+                {{ '::Print' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Stamp:CompanyName' | abpLocalization" prop="companyName">
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Stamp:StartLotNumber' | abpLocalization"
+        prop="startLotNumber"
+      >
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Stamp:EndLotNumber' | abpLocalization" prop="endLotNumber">
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Stamp:Quantity' | abpLocalization" prop="quantity">
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Stamp:CreationTime' | abpLocalization">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.createdDate | date }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Stamp:Status' | abpLocalization" prop="statusText">
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+<abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'x' }">
+  <ng-template #abpHeader>
+    <h3>{{ (selectedStamp.id ? '::EditStamp' : '::NewStamp') | abpLocalization }}</h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="mt-2">
+        <label for="stamp-companyId">{{ '::Stamp:CompanyName' | abpLocalization }}</label
+        ><span> * </span>
+        <app-typehead-focus
+          id="stamp-companyId"
+          [dataInput]="editSelectBoxConfig"
+          (dataReturn)="eventEditSelectHandle($event)"
+        ></app-typehead-focus>
+      </div>
+      <div class="mt-2">
+        <label for="quantity">{{ '::Stamp:Quantity' | abpLocalization }}</label
+        ><span> * </span>
+        <input
+          type="text"
+          id="quantity"
+          class="form-control"
+          formControlName="quantity"
+          min="0"
+          (blur)="getStartEndNumber()"
+        />
+      </div>
+      <div class="mt-2">
+        <label for="start-lot-number">{{ '::Stamp:StartLotNumber' | abpLocalization }}</label>
+        <input
+          type="number"
+          id="start-lot-number"
+          class="form-control"
+          formControlName="startLotNumber"
+          readonly
+        />
+      </div>
+      <div class="mt-2">
+        <label for="end-lot-number">{{ '::Stamp:EndLotNumber' | abpLocalization }}</label>
+        <input
+          type="number"
+          id="end-lot-number"
+          class="form-control"
+          formControlName="endLotNumber"
+          readonly
+        />
+      </div>
+      <div class="mt-2">
+        <label for="note">{{ '::Stamp:Note' | abpLocalization }}</label>
+        <textarea rows="3" id="note" class="form-control" formControlName="note"></textarea>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+    <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

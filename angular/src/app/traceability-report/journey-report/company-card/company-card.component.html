@@ -1,0 +1,37 @@
+<div
+  #scrollContainer
+  class="d-flex"
+  id="scrollContainer"
+>
+  <ng-container *ngFor="let node of nodeInfo,let i = index">
+    <div
+      #cardEl
+      class="card border"
+      [attr.id]="node.companyProfileId"
+      [attr.data-index]="i"
+      style="min-width: 300px; min-height: 100%;max-width: 300px; cursor: pointer;"
+      (click)="onClickCompany(node.traceabilityCode, i, $event)"
+    >
+      <div class="d-flex justify-content-center">
+        <div class="ratio" style="--bs-aspect-ratio: 30%;">
+          <img
+            [src]="node?.companyLogoUrl || '/assets/images/logo/company-report-card-logo.png'"
+            class="card-img-top"
+            alt="Company logo"
+
+            style="object-fit: contain;"
+          />
+        </div>
+      </div>
+      <div class="card-body py-1">
+        <h5 class="card-title fs-5">{{ node.companyName }}</h5>
+        <hr class="my-0 border" />
+        <p class="mb-0 fs-6">{{ '::Company:Address' | abpLocalization }}: {{ node.address }}</p>
+        <p class="mb-0 fs-6">{{ '::Company:CreationTime' | abpLocalization }}: {{ node.createdTime | date: 'dd-MM-yyyy' }}</p>
+        <p class="mb-0 fs-6">{{ '::Product:ProductName' | abpLocalization }}: {{ node.productName }}</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <div class="spacer"></div>
+</div>

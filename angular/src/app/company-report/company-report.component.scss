@@ -1,0 +1,11 @@
+.a-redirect-custom{
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+    &:hover{
+        color: #0056b3;
+    }
+  display: flex;
+  //justify-content: center;
+  //align-items: center;
+}

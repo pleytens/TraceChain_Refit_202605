@@ -1,0 +1,77 @@
+<div class="container px-2">
+  <div class="row mb-1 px-2">
+    <div class="col col-4">
+      <p class="fw-bold">{{ '::Traceability:Report:Company' | abpLocalization }}</p>
+    </div>
+    <div class="col col-8">{{ companyModel?.name }}</div>
+  </div>
+
+  <div class="row mb-1 px-2">
+    <div class="col col-4">
+      <p class="fw-bold">{{ '::Traceability:Report:Country' | abpLocalization }}</p>
+    </div>
+    <div class="col col-8">{{ companyModel?.country }}</div>
+  </div>
+
+  <div class="row mb-1 px-2">
+    <div class="col col-4">
+      <p class="fw-bold">{{ '::Traceability:Report:Address' | abpLocalization }}</p>
+    </div>
+    <div class="col col-8">{{ companyModel?.address }}</div>
+  </div>
+  <div class="row mb-1 px-2">
+    <div class="col col-4">
+      <p class="fw-bold">{{ '::Traceability:Report:Phone' | abpLocalization }}</p>
+    </div>
+    <div class="col col-8">
+      <a class="text-decoration-none" [href]="'tel:+64' + companyModel?.phoneNumber">{{
+        companyModel?.phoneNumber
+      }}</a>
+    </div>
+  </div>
+
+  <div class="row mb-1 px-2">
+    <div class="col col-4">
+      <p class="fw-bold">{{ '::Traceability:Report:Email' | abpLocalization }}</p>
+    </div>
+    <div class="col col-8">
+      <a class="text-decoration-none" [href]="'mailto:' + companyModel?.emailAddress">{{
+        companyModel?.emailAddress
+      }}</a>
+    </div>
+  </div>
+
+  <div class="row mb-1 px-2">
+    <div class="col col-4">
+      <p class="fw-bold">{{ '::Traceability:Report:Website' | abpLocalization }}</p>
+    </div>
+    <div class="col col-8">
+      <a class="text-decoration-none" [href]="companyModel?.websiteUrl">{{
+        companyModel?.websiteUrl
+      }}</a>
+    </div>
+  </div>
+  @if(!isCustomReport){
+  <div class="row mb-1 px-2">
+    <p class="fw-bold">{{ '::Company:Certificate' | abpLocalization }}</p>
+    <div class="d-flex justify-content-center align-items-center">
+      <app-list-cert class="w-100" [listCert]="companyModel?.certificationImages"></app-list-cert>
+    </div>
+  </div>
+  <div class="row mb-1 px-2">
+    <button
+      class="btn btn-primary w-100 d-flex justify-content-between"
+      type="button"
+      (click)="Description.toggle()"
+    >
+      {{ '::Traceability:Report:Description' | abpLocalization }}
+      <span>
+        <i class="bi bi-caret-down-fill text-white"></i>
+      </span>
+    </button>
+    <div #Description="ngbCollapse" [ngbCollapse]="false" class="collapse mt-2">
+      <quill-view [content]="companyModel?.description"></quill-view>
+    </div>
+  </div>
+  }
+</div>

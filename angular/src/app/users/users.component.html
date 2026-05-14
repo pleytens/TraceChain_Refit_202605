@@ -1,0 +1,479 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:User' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="createUser()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewUser' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter()"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="country-edit"
+          [dataInput]="countryData"
+          (dataReturn)="eventCountryFilterSelectHandle($event)"
+          [placeholder]="'::Country' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          [dataInput]="provinceData"
+          (dataReturn)="eventProvinceFilterSelectHandle($event)"
+          [placeholder]="'::Province' | abpLocalization"
+          [disabled]="!filterNation"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="district-edit"
+          [dataInput]="districtData"
+          (dataReturn)="eventDistrictFilterSelectHandle($event)"
+          [placeholder]="'::District' | abpLocalization"
+          [disabled]="!filterProvince"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="ward-edit"
+          [dataInput]="wardData"
+          [placeholder]="'::Ward' | abpLocalization"
+          (dataReturn)="eventWardFilterSelectHandle($event)"
+          [disabled]="!filterDistrict"
+        ></app-typehead-focus>
+      </div>
+    </div>
+    <div class="row margin-custom">
+      <div class="col col-md-4">
+        <app-typehead-focus
+          id="roles"
+          [dataInput]="rolesData"
+          (dataReturn)="eventRolesFilterSelectHandle($event)"
+          [placeholder]="'::Roles' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-4">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::FromDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="fromDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #fromDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="fromDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+      <div class="col col-md-4">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::ToDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="toDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #toDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="toDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable [rows]="user.items" [count]="user.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="edit(row.id)">
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="deleteUser(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="openPermissionsModal(row.id, row.name)">
+                {{ '::Permission' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::User:Name' | abpLocalization"
+        prop="name"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::User:UserName' | abpLocalization"
+        prop="userName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::User:Role' | abpLocalization"
+        prop="roleNames"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::User:Phone' | abpLocalization"
+        prop="phoneNumber"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <!--      <ngx-datatable-column-->
+      <!--        [name]="'::User:Address' | abpLocalization"-->
+      <!--        prop="extraProperties.address"-->
+      <!--        [sortable]="false"-->
+      <!--      ></ngx-datatable-column>-->
+      <ngx-datatable-column [name]="'::User:CreationTime' | abpLocalization" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.creationTime | date }}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <h3>{{ (selectedUser.id ? '::EditUser' : '::NewUser') | abpLocalization }}</h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+    <form *ngIf="form; else loaderRef" [formGroup]="form" (ngSubmit)="save()">
+      <ul ngbNav #nav="ngbNav" class="nav-tabs">
+        <li ngbNavItem>
+          <a ngbNavLink>{{ '::User:Information' | abpLocalization }}</a>
+          <ng-template ngbNavContent>
+            <div class="mt-2">
+              <label for="logo">{{ '::User:Image' | abpLocalization }}</label>
+            </div>
+            <div class="mt-2">
+              <div class="custom-file-upload">
+                <div *ngIf="imageSrc">
+                  <img [src]="imageSrc" alt="Selected Image" />
+                </div>
+                <label for="logo">{{ '::Company:ChooseLogo' | abpLocalization }}</label>
+                <input id="logo" type="file" (change)="onFileChange($event)" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="col col-md-6">
+                <div class="mt-2">
+                  <label for="user-code">{{ '::User:Code' | abpLocalization }}</label>
+                  <input type="text" id="user-code" class="form-control" formControlName="code" />
+                </div>
+              </div>
+              <div class="col col-md-6">
+                <div class="mt-2">
+                  <label for="user-name">{{ '::User:Name' | abpLocalization }}</label
+                  ><span class="style-span"> * </span>
+                  <input type="text" id="user-name" class="form-control" formControlName="name" />
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col col-md-6">
+                <div class="mt-2">
+                  <label for="user-email">{{ '::User:Email' | abpLocalization }}</label
+                  ><span class="style-span"> * </span>
+                  <input type="text" id="user-email" class="form-control" formControlName="email" />
+                </div>
+              </div>
+              <div class="col col-md-6">
+                <div class="mt-2">
+                  <label for="user-phone">{{ '::User:Phone' | abpLocalization }}</label>
+                  <input
+                    type="text"
+                    id="user-phone"
+                    class="form-control"
+                    formControlName="phoneNumber"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="mt-2">
+              <label for="user-address">{{ '::User:Address' | abpLocalization }}</label>
+              <input type="text" id="user-address" class="form-control" formControlName="address" />
+            </div>
+            <div class="row">
+              <div class="col col-md-3">
+                <div class="mt-2 mb-0">
+                  <label for="country">{{ '::User:Country' | abpLocalization }}</label
+                  ><span class="style-span"> * </span>
+
+                  <app-typehead-focus
+                    id="country"
+                    [dataInput]="countryData"
+                    [placeholder]="'::Country' | abpLocalization"
+                    (dataReturn)="eventCountrySelectHandle($event)"
+                    [initialSelected]="countryData.selected"
+                  >
+                  </app-typehead-focus>
+                  <div
+                    *ngIf="!countryData.selected"
+                    class="abp-validation-error"
+                  >
+                    <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col col-md-3">
+                <div class="mt-2">
+                  <label for="province">{{ '::User:Province' | abpLocalization }}</label
+                  ><span class="style-span"> * </span>
+                  <app-typehead-focus
+                    id="province"
+                    [dataInput]="provinceData"
+                    (dataReturn)="eventProvinceSelectHandle($event)"
+                    [disabled]="!countryData.selected"
+                    [placeholder]="'::Province' | abpLocalization"
+                    *ngIf="provinceData && provinceData.selected !== undefined"
+                    [initialSelected]="provinceData.selected"
+                  ></app-typehead-focus>
+                  <div *ngIf="!provinceData.selected" class="abp-validation-error">
+                    <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col col-md-3">
+                <div class="mt-2">
+                  <label for="district">{{ '::User:District' | abpLocalization }}</label
+                  ><span class="style-span"> * </span>
+                  <app-typehead-focus
+                    id="district"
+                    [dataInput]="districtData"
+                    (dataReturn)="eventDistrictSelectHandle($event)"
+                    [placeholder]="'::District' | abpLocalization"
+                    [disabled]="!provinceData.selected"
+                    *ngIf="districtData && districtData.selected !== undefined"
+                    [initialSelected]="districtData.selected"
+                  ></app-typehead-focus>
+                  <div *ngIf="!districtData.selected" class="abp-validation-error">
+                    <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col col-md-3">
+                <div class="mt-2">
+                  <label for="ward">{{ '::User:Ward' | abpLocalization }}</label
+                  ><span class="style-span"> * </span>
+                  <app-typehead-focus
+                    id="ward"
+                    [dataInput]="wardData"
+                    (dataReturn)="eventWardSelectHandle($event)"
+                    [placeholder]="'::Ward' | abpLocalization"
+                    [disabled]="!districtData.selected"
+                    *ngIf="wardData && wardData.selected !== undefined"
+                    [initialSelected]="wardData.selected"
+                  ></app-typehead-focus>
+                  <div *ngIf="!wardData.selected" class="abp-validation-error">
+                    <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+        <li ngbNavItem>
+          <a ngbNavLink>{{ '::User:Account' | abpLocalization }}</a>
+          <ng-template ngbNavContent>
+            <div *ngIf="!selectedUser.id">
+              <div class="mt-2">
+                <label for="displayname">{{ '::User:DisplayName' | abpLocalization }}</label
+                ><span class="style-span"> * </span>
+                <input
+                  type="text"
+                  id="displayname"
+                  class="form-control"
+                  formControlName="displayName"
+                />
+              </div>
+            </div>
+            <div class="mt-2">
+              <label for="username">{{ '::User:UserName' | abpLocalization }}</label
+              ><span class="style-span"> * </span>
+              <input type="text" id="username" class="form-control" formControlName="userName" />
+            </div>
+            <div class="mt-2">
+              <label for="password">{{ '::User:Password' | abpLocalization }}</label
+              ><span class="style-span"> * </span>
+              <div class="input-group" validationStyle validationTarget>
+                <input
+                  type="{{ passwordVisible ? 'text' : 'password' }}"
+                  id="password"
+                  class="form-control"
+                  [placeholder]="'Password::Enter' | abpLocalization"
+                  formControlName="password"
+                />
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="togglePasswordVisibility()"
+                >
+                  <i [class]="passwordVisible ? 'fa fa-eye' : 'fa fa-eye-slash'"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-2">
+              <div class="form-check mb-2">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value=""
+                    id="isActive"
+                    formControlName="isActive"
+                  />
+                  <label class="form-check-label" for="isActive">
+                    {{ 'User::IsActive' | abpLocalization }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="mt-2">
+              <div class="form-check mb-2">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value=""
+                    id="lockoutEnabled"
+                    formControlName="lockoutEnabled"
+                  />
+                  <label class="form-check-label" for="lockoutEnabled">
+                    {{ 'User::Lockout' | abpLocalization }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+        <li ngbNavItem>
+          <a ngbNavLink
+            >{{ 'AbpIdentity::Roles' | abpLocalization }}({{ getSelectedRoleCount() }})</a
+          >
+          <ng-template ngbNavContent>
+            @for (roleGroup of roleGroups; track $index; let i = $index) {
+              <div class="form-check mb-2">
+                <abp-checkbox
+                  *abpReplaceableTemplate="{
+                    inputs: {
+                    checkboxId: { value: 'roles-' + i },
+                    label: { value: roles[i].name },
+                    formControl: roleGroup.controls[roles[i].name]
+                    },
+                    componentKey: inputKey
+                  }"
+                  [checkboxId]="'roles-' + i"
+                  [formControl]="getFormControl(roleGroup, roles[i].name)"
+                  [label]="roles[i].name"
+                >
+                </abp-checkbox>
+              </div>
+            }
+          </ng-template>
+        </li>
+      </ul>
+      <div class="mt-2 fade-in-top" [ngbNavOutlet]="nav"></div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+    <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
+
+<abp-permission-management
+  #abpPermissionManagement="abpPermissionManagement"
+  *abpReplaceableTemplate="
+    {
+      inputs: {
+        providerName: { value: 'U' },
+        providerKey: { value: providerKey },
+        visible: { value: visiblePermissions, twoWay: true },
+        hideBadges: { value: true }
+      },
+      outputs: { visibleChange: onVisiblePermissionChange },
+      componentKey: permissionManagementKey
+    };
+    let init = initTemplate
+  "
+  [entityDisplayName]="entityDisplayName"
+  (abpInit)="init(abpPermissionManagement)"
+>
+</abp-permission-management>

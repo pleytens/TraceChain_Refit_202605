@@ -1,0 +1,15 @@
+.btn-primary {
+  background-color: #121b41 !important;
+  border-color: #121b41 !important;
+  &:hover {
+    background-color: lighten(#121b41, 15) !important;
+  }
+}
+.btn-outline-primary {
+  border-color: #121b41 !important;
+  color: #121b41 !important;
+  &:hover {
+    background-color: #121b41 !important;
+    color: white !important;
+  }
+}

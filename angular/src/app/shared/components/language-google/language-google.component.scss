@@ -1,0 +1,18 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css");
+.flag-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+::ng-deep  .flag-icon:before {
+  display: none;
+}
+
+::ng-deep .dropdown-toggle::after {
+  display: none;
+}

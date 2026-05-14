@@ -1,0 +1,28 @@
+<div class="container">
+  <h3>{{ "::Contact:FeelFreeToContact" | abpLocalization }}</h3>
+  <form>
+    <label for="name" class="form-label mt-2">{{
+      "::Contact:Name" | abpLocalization
+    }}</label>
+    <input id="name" class="form-control" type="text" />
+
+    <label for="phone-number" class="form-label mt-2">{{
+      "::Contact:Phone" | abpLocalization
+    }}</label>
+    <input id="phone-number" class="form-control" type="number" />
+
+    <label for="content" class="form-label mt-2">{{
+      "::Contact:Content" | abpLocalization
+    }}</label>
+    <textarea id="content" class="form-control" rows="5"></textarea>
+
+    <label for="email" class="form-label mt-2">{{
+      "::Contact:Email" | abpLocalization
+    }}</label>
+    <input id="email" class="form-control" type="email" />
+
+    <button class="btn btn-primary mt-3 w-100">
+      {{ "::Submit" | abpLocalization }}
+    </button>
+  </form>
+</div>

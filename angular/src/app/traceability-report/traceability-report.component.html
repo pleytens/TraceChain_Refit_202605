@@ -1,0 +1,223 @@
+<div class="container-fluid mx-0">
+  <div class="row d-flex justify-content-center">
+    <div class="col col-sm-12 col-md-8 col-lg-6 px-0">
+      @if (isLoading) {
+      <div class="position-fixed top-50 start-50 translate-middle">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      } @else{
+      <div class="card">
+        <div class="card-header d-flex align-items-center position-relative">
+          <div
+            class="flex-grow-1 d-flex"
+            [ngClass]="isCustomReport ? 'justify-content-center' : 'justify-content-start'"
+          >
+            <img
+              [ngSrc]="
+                isCustomReport
+                  ? 'assets/images/logo/kbf_logo.png'
+                  : 'assets/images/logo/LOGO_of_TRACEVERIFIED_khongs.png'
+              "
+              width="200"
+              height="50"
+              style="max-width: 200px; height: auto"
+            />
+          </div>
+
+          <app-select-language class="position-absolute" style="right: 10px"></app-select-language>
+        </div>
+
+        <div class="card-body p-1">
+          @if (isCustomReport) {
+
+          <ng-template [ngTemplateOutlet]="customReport"></ng-template>
+          } @else {
+          <ng-template [ngTemplateOutlet]="traceabilityCodeType"></ng-template>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</div>
+
+<ng-template #traceabilityCodeType>
+  <div class="row w-100 mx-1">
+    <h5 style="color: #203643">
+      <i class="bi bi-qr-code me-1"></i>
+      <span>{{ traceCode }}</span>
+    </h5>
+    <h5 class="text-black">{{ productName }}</h5>
+  </div>
+  <div class="overflow-auto mx-2 sticky-top bg-white">
+    <ul
+      ngbNav
+      #nav="ngbNav"
+      [(activeId)]="activeId"
+      [destroyOnHide]="false"
+      (activeIdChange)="visitedIds.add($event)"
+      class="nav-tabs flex-nowrap"
+    >
+      <li [ngbNavItem]="1">
+        <button class="btn btn-outline-primary text-nowrap" ngbNavLink>
+          {{ '::Traceability:Report:Journey' | abpLocalization }}
+        </button>
+        <ng-template ngbNavContent>
+          <app-journey-report
+            [traceCode]="traceCode"
+            [userType]="userType"
+            [lotId]="lotId"
+            [gtin]="gtin"
+            (lotIdEmit)="lotIdChange($event)"
+          ></app-journey-report>
+        </ng-template>
+      </li>
+
+      <li [ngbNavItem]="2">
+        <button class="btn btn-outline-primary text-nowrap" ngbNavLink>
+          {{ '::Traceability:Report:Company' | abpLocalization }}
+        </button>
+        <ng-template ngbNavContent>
+          <app-company-report
+            [traceCode]="traceCode"
+            [gtin]="gtin"
+            [qrType]="qrCodeType"
+          ></app-company-report>
+        </ng-template>
+      </li>
+
+      <li [ngbNavItem]="3">
+        <button class="btn btn-outline-primary text-nowrap" ngbNavLink>
+          {{ '::Traceability:Report:Product' | abpLocalization }}
+        </button>
+        <ng-template ngbNavContent>
+          <app-product-report
+            [traceCode]="this.traceCode"
+            [gtin]="gtin"
+            [qrType]="qrCodeType"
+            (productNameEmit)="productNameChange($event)"
+            (productCodeEmit)="productCodeChange($event)"
+          ></app-product-report>
+        </ng-template>
+      </li>
+    </ul>
+  </div>
+  <div [ngbNavOutlet]="nav" class="mt-2 modal-body"></div>
+</ng-template>
+
+<ng-template #customReport>
+  <div class="row w-100 mx-1 mt-2">
+    <h5 style="color: #203643">
+      <i class="bi bi-qr-code me-1"></i>
+      <span>{{ traceCode }}</span>
+    </h5>
+  </div>
+  <div class="text-center">
+    <h4 class="text-black">{{ productName }}</h4>
+  </div>
+  <div class="row mb-1 px-2">
+    <button
+      class="btn btn-primary w-100 d-flex justify-content-between"
+      type="button"
+      (click)="diaryInfo.toggle()"
+    >
+      {{ '::Product:Information' | abpLocalization }}
+      <span>
+        <i class="bi bi-caret-down-fill text-white"></i>
+      </span>
+    </button>
+    <div #diaryInfo="ngbCollapse" [ngbCollapse]="false" class="collapse mt-2">
+      <app-diary-report
+        [isCustomReport]="isCustomReport"
+        [traceCode]="traceCode"
+        [userType]="userType"
+        [gtin]="gtin"
+        [lotId]="lotId"
+      ></app-diary-report>
+    </div>
+  </div>
+  <div class="row mb-1 px-2">
+    <button
+      class="btn btn-primary w-100 d-flex justify-content-between"
+      type="button"
+      (click)="ProductInfo.toggle()"
+    >
+      {{ '::Product:DocumentFile' | abpLocalization }}
+      <span>
+        <i class="bi bi-caret-down-fill text-white"></i>
+      </span>
+    </button>
+    <div #ProductInfo="ngbCollapse" [ngbCollapse]="false" class="collapse mt-2">
+      <app-product-report
+        [traceCode]="this.traceCode"
+        [isCustomReport]="isCustomReport"
+        [gtin]="gtin"
+        [qrType]="qrCodeType"
+        (productNameEmit)="productNameChange($event)"
+        (productCodeEmit)="productCodeChange($event)"
+      ></app-product-report>
+    </div>
+  </div>
+  <div class="row mb-1 px-2">
+    <button
+      class="btn btn-primary w-100 d-flex justify-content-between"
+      type="button"
+      (click)="CompanyInfo.toggle()"
+    >
+      {{ '::Home:CompanyInformation' | abpLocalization }}
+      <span>
+        <i class="bi bi-caret-down-fill text-white"></i>
+      </span>
+    </button>
+    <div #CompanyInfo="ngbCollapse" [ngbCollapse]="false" class="collapse mt-2">
+      @if (traceCode) {
+        <app-company-report
+          [isCustomReport]="isCustomReport"
+          [traceCode]="traceCode"
+          [gtin]="gtin"
+          [qrType]="qrCodeType"
+        ></app-company-report>
+      }
+    </div>
+  </div>
+</ng-template>
+
+@if (isHasMinigame) {
+<button
+  class="btn p-0 position-fixed bottom-0 end-0 m-3 btn-jump"
+  (click)="navigateMiniGame()"
+  style="border: none; background: transparent"
+>
+  <div
+    class="rounded-circle d-flex align-items-center justify-content-center"
+    style="width: 70px; height: 70px; background-color: #002145; padding: 10px"
+  >
+    <div
+      class="rounded-circle d-flex align-items-center justify-content-center bg-white"
+      style="width: 50px; height: 50px"
+    >
+      <i class="bi bi-controller fs-3" style="color: #002145"></i>
+    </div>
+  </div>
+</button>
+}
+<ng-template #bannerTemplate>
+  <div class="banner-container">
+    <button
+      type="button"
+      class="btn-close position-absolute top-0 end-0 m-3"
+      aria-label="Close"
+      (click)="closeBanner()"
+      style="z-index: 1;">
+    </button>
+
+    <img
+      [src]="bannerMinigame"
+      (click)="navigateMiniGame()"
+      alt="Mini Game Banner"
+      class="banner-image">
+  </div>
+</ng-template>
+

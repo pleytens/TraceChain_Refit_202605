@@ -1,0 +1,20 @@
+<div class="modal-header">
+  <h3 class="modal-title text-wrap">
+    {{ "::View" | abpLocalization }}
+  </h3>
+  <button class="btn-close" type="button" (click)="dismissModal()"></button>
+</div>
+<div class="modal-body">
+  <div class="col d-flex align-items-center gap-1">
+    <ng-container *ngIf="imgSrc && imgSrc.length > 0">
+      <div  *ngFor="let img of imgSrc">
+        <img [src]="img" class="img-fluid h-100" alt="Fertilizer Images" />
+      </div>
+    </ng-container>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-danger" type="button" (click)="dismissModal()">
+    {{ "::Close" | abpLocalization }}
+  </button>
+</div>

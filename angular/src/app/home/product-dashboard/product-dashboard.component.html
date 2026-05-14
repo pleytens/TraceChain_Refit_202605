@@ -1,0 +1,134 @@
+<div class="row mb-2">
+  <div class="col col-md-3">
+    <div class="input-group">
+      <input
+        class="form-control"
+        [placeholder]="'::FromDate' | abpLocalization"
+        name="dp"
+        [(ngModel)]="fromDate"
+        (ngModelChange)="filterDateChange()"
+        ngbDatepicker
+        #fromDatePicker="ngbDatepicker"
+      />
+      <button
+        class="btn btn-outline-secondary bi bi-calendar3"
+        (click)="fromDatePicker.toggle()"
+        type="button"
+      ></button>
+    </div>
+  </div>
+  <div class="col col-md-3">
+    <div class="input-group">
+      <input
+        class="form-control"
+        [placeholder]="'::ToDate' | abpLocalization"
+        name="dp"
+        [(ngModel)]="toDate"
+        (ngModelChange)="filterDateChange()"
+        ngbDatepicker
+        #toDatePicker="ngbDatepicker"
+      />
+      <button
+        class="btn btn-outline-secondary bi bi-calendar3"
+        (click)="toDatePicker.toggle()"
+        type="button"
+      ></button>
+    </div>
+  </div>
+  <div class="col col-md-3">
+    <app-typehead-focus-customer
+      [dataInput]="status"
+      [placeholder]="'::Product:Status' | abpLocalization"
+      (dataReturn)="eventStatusSelectHandle($event)"
+    ></app-typehead-focus-customer>
+  </div>
+</div>
+
+<ngx-datatable [rows]="product" default style="height: 75%;"
+               [scrollbarV]="true">
+  <ngx-datatable-column
+    [name]="'::Actions' | abpLocalization"
+    [maxWidth]="150"
+    [sortable]="false"
+  >
+    <ng-template let-row="row" ngx-datatable-cell-template>
+      <div ngbDropdown container="body" class="d-inline-block">
+        <button
+          class="btn btn-primary btn-sm dropdown-toggle"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          ngbDropdownToggle
+        >
+          <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+        </button>
+        <div ngbDropdownMenu>
+          <button ngbDropdownItem (click)="viewTraceability(row.gtinCode)">
+            {{ '::View' | abpLocalization }}
+          </button>
+          <button ngbDropdownItem (click)="showExtendTimeModel(row.gtinCode, row.creationTime, row.id)">
+            {{ '::Home:Admin:Dashboard:ExtendTime' | abpLocalization }}
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ngx-datatable-column>
+  <ngx-datatable-column
+    [name]="'::Product:gtinCode' | abpLocalization"
+    prop="gtinCode"
+    [sortable]="false"
+  >
+    <ng-template ngx-datatable-cell-template let-value="value" let-row="row">
+      <div>
+        <p style="font-weight: bold">{{ value }}</p>
+        <div style="font-size: small; color: gray;">{{ row.productName }}</div>
+      </div>
+    </ng-template>
+  </ngx-datatable-column>
+  <ngx-datatable-column
+    [name]="'::Home:CompanyName' | abpLocalization"
+    prop="companyName"
+    [sortable]="false"
+  >
+    <ng-template ngx-datatable-cell-template let-value="value" let-row="row">
+      <div>
+        <p style="font-weight: bold">{{ value }}</p>
+        <div style="font-size: small; color: gray;">{{ row.email }}</div>
+      </div>
+    </ng-template>
+  </ngx-datatable-column>
+  <ngx-datatable-column
+    [name]="'::Company:CreationTime' | abpLocalization"
+    prop="creationTime"
+    [sortable]="false"
+  >
+    <ng-template let-value="value" ngx-datatable-cell-template>
+      {{value | date: "dd-MM-yyyy"}}
+    </ng-template>
+  </ngx-datatable-column>
+  <ngx-datatable-column
+    [name]="'::Company:Status' | abpLocalization"
+    prop="isExpired"
+    [sortable]="false"
+  >
+    <ng-template let-value="value" ngx-datatable-cell-template>
+      <div *ngIf="!value"><p class="text-success">{{ "::Dashboard:Company:Active" | abpLocalization }}</div>
+      <div *ngIf="value"><p class="text-danger">{{ "::Dashboard:Company:Expired" | abpLocalization }}</p></div>
+    </ng-template>
+  </ngx-datatable-column>
+</ngx-datatable>
+
+<abp-modal [(visible)]="isExtendTimeModalOpen">
+  <ng-template #abpHeader>
+    <h3>{{"::Admin:Dashboard:ModalExtendTimeTitle" | abpLocalization}}</h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <p>{{ "::Admin:Dashboard:ModalExtendContent"| abpLocalization}}</p>
+    <p>Gtin: <b>{{extendTimeModel.gtinCode}}</b></p>
+    <p>Expired date: <b>{{extendTimeModel.newExpiredDate | date: "dd-MM-yyyy" }}</b></p>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>{{ "::Close" | abpLocalization }}</button>
+    <button type="button" class="btn btn-primary" (click)="extendActiveTime()">{{"::Admin:Dashboard:ModalExtendTime:Confirm" | abpLocalization }}</button>
+  </ng-template>
+</abp-modal>

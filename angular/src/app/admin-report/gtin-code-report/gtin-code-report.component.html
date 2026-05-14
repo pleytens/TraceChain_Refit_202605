@@ -1,0 +1,117 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6 mb-3">
+        <a class="link-danger"> Gtin </a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col col-md-6">
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="filterModel.filterText"
+            [placeholder]="'::Search' | abpLocalization"
+          />
+
+          <button class="btn btn-primary bi bi-search" (click)="filter()" type="button"></button>
+        </div>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control text-muted"
+            [placeholder]="'::FromDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="filterModel.fromDate"
+            (ngModelChange)="filter()"
+            ngbDatepicker
+            #fromDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-primary bi bi-calendar3"
+            (click)="fromDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control text-muted"
+            [placeholder]="'::ToDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="filterModel.toDate"
+            (ngModelChange)="filter()"
+            ngbDatepicker
+            #toDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-primary bi bi-calendar3"
+            (click)="toDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable
+      [rows]="gtinCodeReportModel?.items"
+      [count]="gtinCodeReportModel?.totalCount"
+      [list]="listService"
+      default
+      [sorts]="[{ prop: 'position', dir: 'asc' }]"
+    >
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="viewReport(row.traceabilityCode)">
+                {{ '::AdminReport:ViewReport' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="viewInMap(row.traceabilityCode)">
+                {{ '::AdminReport:ViewInMap' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::AdminReport:Time' | abpLocalization" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.scanDate | date }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::AdminReport:TraceCode' | abpLocalization"
+        prop="traceabilityCode"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::AdminReport:NumberOfScans' | abpLocalization"
+        [maxWidth]="100"
+        prop="numberOfScans"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::AdminReport:numberOfDevices' | abpLocalization"
+        [maxWidth]="100"
+        prop="numberOfDevices"
+        [sortable]="false"
+      ></ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>

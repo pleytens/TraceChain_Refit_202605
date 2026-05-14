@@ -1,0 +1,124 @@
+.btn-primary {
+  background-color: #121b41 !important;
+  border-color: #121b41 !important;
+  &:hover {
+    background-color: lighten(#121b41, 15) !important;
+  }
+}
+
+.carousel-control-prev, .carousel-control-next {
+  top: 40% !important;
+  height: 2rem !important;
+}
+
+.document-files-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.file-container {
+  /* Đảm bảo nút xóa có thể định vị tuyệt đối so với container này */
+  position: relative;
+  /* Đặt kích thước cố định cho mỗi ô (tùy chọn) */
+  width: 120px;
+  height: 120px;
+  margin: 10px;
+  /* Có thể dùng display: inline-block nếu không dùng Flex/Grid ở container ngoài */
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.document-files-list .file-container {
+  position: static;
+  width: 100%;
+  height: auto;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Container cho Icon và Tên file */
+.file-details {
+  /* Quan trọng: Sắp xếp các mục theo chiều dọc (cột) */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Căn giữa theo chiều ngang */
+  text-align: center;
+  /* Chiếm phần lớn không gian của container */
+  height: 100%;
+  justify-content: center; /* Căn giữa theo chiều dọc */
+}
+
+.document-files-list .file-details {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  height: auto;
+  justify-content: flex-start;
+}
+
+/* Kiểu cho Icon */
+.file-icon {
+  font-size: 40px; /* Kích thước icon lớn */
+  margin-bottom: 5px; /* Khoảng cách giữa icon và tên file */
+}
+
+.document-files-list .file-icon {
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
+.pdf-icon {
+  color: #dc3545; /* Màu đỏ cho PDF */
+}
+
+.doc-icon {
+  color: #007bff; /* Màu xanh cho Word */
+}
+
+/* Kiểu cho Tên File */
+.file-name {
+  /* Đảm bảo tên file chỉ hiển thị trên một dòng và bị cắt */
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none; /* Loại bỏ gạch chân của thẻ a */
+}
+
+.document-files-list .file-name {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 576px) {
+  .document-files-list .file-details {
+    align-items: flex-start;
+  }
+
+  .document-files-list .file-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+.file-container:hover .delete-btn {
+  color: rgba(255, 0, 0, 0.79);
+  display: block; /* Show button on hover */
+}

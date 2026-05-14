@@ -1,0 +1,29 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    {{ (eventId ? '::Minigame:Edit' : '::Minigame:Create') | abpLocalization }}
+  </h5>
+  <button class="btn btn-close" (click)="dismissModal()"></button>
+</div>
+<div class="modal-body">
+  <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs" [destroyOnHide]="false">
+    <li [ngbNavItem]="1">
+      <button ngbNavLink>{{ '::Minigame:Information' | abpLocalization }}</button>
+      <ng-template ngbNavContent>
+        <app-event-information #eventInfoComponent></app-event-information>
+      </ng-template>
+    </li>
+    <li [ngbNavItem]="2">
+      <button ngbNavLink>{{ '::Minigame:Question' | abpLocalization }}</button>
+      <ng-template ngbNavContent>
+        <app-event-questions #eventQuestionsComponent></app-event-questions>
+      </ng-template>
+    </li>
+  </ul>
+  <div [ngbNavOutlet]="nav" class="mt-2"></div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-danger" (click)="dismissModal()">
+    {{ '::Cancel' | abpLocalization }}
+  </button>
+  <button class="btn btn-primary" (click)="save()">{{ '::Save' | abpLocalization }}</button>
+</div>

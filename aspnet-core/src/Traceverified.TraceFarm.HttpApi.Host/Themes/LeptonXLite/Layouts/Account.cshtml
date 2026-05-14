@@ -1,0 +1,159 @@
+﻿@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using Microsoft.Extensions.Options
+@using Traceverified.TraceFarm.Localization
+@using Volo.Abp.AspNetCore.MultiTenancy
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Alert
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Blockquote
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Grid
+@using Volo.Abp.AspNetCore.Mvc.UI.Bundling.TagHelpers
+@using Volo.Abp.AspNetCore.Mvc.UI.Components.LayoutHook
+@using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite.Bundling
+@using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite.Themes.LeptonXLite.Components.MainToolbar
+@using Volo.Abp.AspNetCore.Mvc.UI.Theme.LeptonXLite.Themes.LeptonXLite.Components.PageAlerts
+@using Volo.Abp.AspNetCore.Mvc.UI.Theming
+@using Volo.Abp.AspNetCore.Mvc.UI.Widgets.Components.WidgetScripts
+@using Volo.Abp.AspNetCore.Mvc.UI.Widgets.Components.WidgetStyles
+@using Volo.Abp.Localization
+@using Volo.Abp.MultiTenancy
+@using Volo.Abp.Ui.Branding
+@using Volo.Abp.Ui.LayoutHooks
+@inject IBrandingProvider BrandingProvider
+@inject IOptions<AbpMultiTenancyOptions> MultiTenancyOptions
+@inject ICurrentTenant CurrentTenant
+@inject IStringLocalizer<TraceFarmResource> MultiTenancyStringLocalizer
+@inject ITenantResolveResultAccessor TenantResolveResultAccessor
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *, Volo.Abp.AspNetCore.Mvc.UI
+@addTagHelper *, Volo.Abp.AspNetCore.Mvc.UI.Bootstrap
+@addTagHelper *, Volo.Abp.AspNetCore.Mvc.UI.Bundling
+@{
+    Layout = null;
+    var containerClass = ViewBag.FluidLayout == true ? "container-fluid" : "container"; //TODO: Better and type-safe options
+    var rtl = CultureHelper.IsRtl ? "rtl" : string.Empty;
+}
+
+<html lang="@CultureInfo.CurrentCulture.Name" dir="@rtl">
+<head>
+    @await Component.InvokeLayoutHookAsync(LayoutHooks.Head.First, StandardLayouts.Account)
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>@(ViewBag.Title == null ? BrandingProvider.AppName : ViewBag.Title)</title>
+
+    @if (ViewBag.Description != null)
+    {
+        <meta name="description" content="@(ViewBag.Description as string)"/>
+    }
+    <abp-style-bundle name="@LeptonXLiteThemeBundles.Styles.Global"/>
+
+    @await RenderSectionAsync("styles", false)
+
+    @await Component.InvokeAsync(typeof(WidgetStylesViewComponent))
+
+    @await Component.InvokeLayoutHookAsync(LayoutHooks.Head.Last, StandardLayouts.Account)
+</head>
+<body class="abp-account-layout lpx-content-container @rtl" style="margin-left: 0; padding-left: 10px">
+@* > *@
+@* > *@
+@await Component.InvokeLayoutHookAsync(LayoutHooks.Body.First, StandardLayouts.Account)
+@(await Component.InvokeAsync<ToolbarItemsViewComponent>())
+
+<div class="@containerClass mt-5">
+    <abp-row>
+        <abp-column class="col-md-5 col-sm-12">
+            @if (MultiTenancyOptions.Value.IsEnabled &&
+                 (TenantResolveResultAccessor.Result?.AppliedResolvers?.Contains(CookieTenantResolveContributor.ContributorName) == true ||
+                  TenantResolveResultAccessor.Result?.AppliedResolvers?.Contains(QueryStringTenantResolveContributor.ContributorName) == true))
+            {
+                <div class="card mt-6 shadow-sm rounded">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-9">
+                                <span style="font-size: .8em;" class="text-uppercase text-muted">@MultiTenancyStringLocalizer["Tenant"]</span><br/>
+                                <h6 class="m-0 d-inline-block">
+                                    @if (CurrentTenant.Id == null)
+                                    {
+                                        <span>
+                                            @MultiTenancyStringLocalizer["NotSelected"]
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <strong>@(CurrentTenant.Name ?? CurrentTenant.Id.Value.ToString())</strong>
+                                    }
+                                </h6>
+                            </div>
+                            <div class="col-3">
+                                <a id="AbpTenantSwitchLink" href="javascript:;" class="btn btn-sm btn-outline-primary">@MultiTenancyStringLocalizer["Add"]</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </abp-column>
+        @* <abp-column class="col-md-7"> *@
+        @* </abp-column> *@
+    </abp-row>
+    <abp-row>
+        <abp-column class="col-md-5">
+            @(await Component.InvokeAsync<PageAlertsViewComponent>())
+            @await Component.InvokeLayoutHookAsync(LayoutHooks.PageContent.First, StandardLayouts.Account)
+            @RenderBody()
+            @await Component.InvokeLayoutHookAsync(LayoutHooks.PageContent.Last, StandardLayouts.Account)
+        </abp-column>
+        <abp-column class="col-md-7">
+            <div class="card login-custom-left" style="min-height: 535px">
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-12 text-center justify-content-md-center custom-image-display">
+                            <img src="~/images/LOGO_of_TRACEVERIFIED.png" alt="Traceverified 2.0">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12 text-center justify-content-md-center">
+                            <h4>
+                                @MultiTenancyStringLocalizer["Traceability:Intro"]
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p>
+                                @MultiTenancyStringLocalizer["Traceability:Part1"]
+                            </p>
+                            <p>
+                                @MultiTenancyStringLocalizer["Traceability:Part2"]
+                            </p>
+                            <p>
+                                @MultiTenancyStringLocalizer["Traceability:Part3"]
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </abp-column>
+    </abp-row>
+    <abp-row>
+        <div class="login-footer">
+            <a>©@DateTime.Now.Year Traceability Solutions and Services JSC -</a> <a HREF="https://traceverified.com/" style="color: #1C3D93">Traceverified</a>
+        </div>
+    </abp-row>
+</div>
+
+<abp-script-bundle name="@LeptonXLiteThemeBundles.Scripts.Global"/>
+
+<script src="~/Abp/ApplicationLocalizationScript?cultureName=@CultureInfo.CurrentUICulture.Name"></script>
+<script src="~/Abp/ApplicationConfigurationScript"></script>
+<script src="~/Abp/ServiceProxyScript"></script>
+
+@await RenderSectionAsync("scripts", false)
+
+@await Component.InvokeAsync(typeof(WidgetScriptsViewComponent))
+
+@await Component.InvokeLayoutHookAsync(LayoutHooks.Body.Last, StandardLayouts.Account)
+</body>
+</html>

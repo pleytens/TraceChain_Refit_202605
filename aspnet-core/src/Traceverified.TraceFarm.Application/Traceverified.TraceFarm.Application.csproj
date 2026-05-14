@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <Import Project="..\..\common.props" />
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Traceverified.TraceFarm</RootNamespace>
+        <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="Emailing\Templates\ConfirmCreateQRLink.tpl" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Emailing\Templates\ConfirmCreateQRLink.tpl" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.4" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Traceverified.TraceFarm.Domain\Traceverified.TraceFarm.Domain.csproj" />
+        <ProjectReference Include="..\Traceverified.TraceFarm.Application.Contracts\Traceverified.TraceFarm.Application.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+        <PackageReference Include="NPOI" Version="2.7.0" />
+        <PackageReference Include="Volo.Abp.Account.Application" Version="7.3.3" />
+        <PackageReference Include="Volo.Abp.Identity.Application" Version="7.3.3" />
+        <PackageReference Include="Volo.Abp.PermissionManagement.Application" Version="7.3.3" />
+        <PackageReference Include="Volo.Abp.TenantManagement.Application" Version="7.3.3" />
+        <PackageReference Include="Volo.Abp.FeatureManagement.Application" Version="7.3.3" />
+        <PackageReference Include="Volo.Abp.SettingManagement.Application" Version="7.3.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.AspNetCore.Hosting.Abstractions">
+            <HintPath>..\..\..\..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\7.0.10\Microsoft.AspNetCore.Hosting.Abstractions.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.AspNetCore.Http.Abstractions">
+            <HintPath>..\..\..\..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\7.0.10\Microsoft.AspNetCore.Http.Abstractions.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.AspNetCore.Http.Features">
+            <HintPath>..\..\..\..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\7.0.10\Microsoft.AspNetCore.Http.Features.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+</Project>

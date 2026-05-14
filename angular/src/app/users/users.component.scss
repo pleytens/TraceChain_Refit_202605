@@ -1,0 +1,40 @@
+.margin-custom {
+  padding: 10px 20px;
+}
+.custom-file-upload {
+  display: inline-block;
+  position: relative;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+.custom-file-upload img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+.custom-file-upload label {
+  background-color: #3498db;
+  color: #fff;
+  border: 1px solid #2980b9;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.custom-file-upload input[type='file'] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.style-span {
+  vertical-align: middle;
+  font-size: 1.2em;
+  color: red;
+  margin-left: 3px;
+}

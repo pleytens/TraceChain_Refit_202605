@@ -1,0 +1,92 @@
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes, mapToCanActivate } from '@angular/router';
+
+import {
+  AuthGuard,
+  ReplaceableComponents,
+  ReplaceableRouteContainerComponent,
+  RouterOutletComponent,
+} from '@abp/ng.core';
+
+import { ForgotPasswordComponent } from './components';
+import { LoginComponent } from './components';
+import { ManageProfileComponent } from './components';
+import { RegisterComponent } from './components';
+import { ResetPasswordComponent } from './components';
+import { eAccountComponents } from './enums';
+import { AccountExtensionsGuard, AuthenticationFlowGuard } from './guards';
+
+const canActivate = mapToCanActivate([AuthenticationFlowGuard]);
+
+const routes: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  {
+    path: '',
+    component: RouterOutletComponent,
+    children: [
+      {
+        path: 'login',
+        component: ReplaceableRouteContainerComponent,
+        canActivate,
+        data: {
+          replaceableComponent: {
+            key: eAccountComponents.Login,
+            defaultComponent: LoginComponent,
+          } as ReplaceableComponents.RouteData<LoginComponent>,
+        },
+      },
+      {
+        path: 'register',
+        component: ReplaceableRouteContainerComponent,
+        canActivate,
+        data: {
+          replaceableComponent: {
+            key: eAccountComponents.Register,
+            defaultComponent: RegisterComponent,
+          } as ReplaceableComponents.RouteData<RegisterComponent>,
+        },
+      },
+      {
+        path: 'forgot-password',
+        component: ReplaceableRouteContainerComponent,
+        canActivate,
+
+        data: {
+          replaceableComponent: {
+            key: eAccountComponents.ForgotPassword,
+            defaultComponent: ForgotPasswordComponent,
+          } as ReplaceableComponents.RouteData<ForgotPasswordComponent>,
+        },
+      },
+      {
+        path: 'reset-password',
+        component: ReplaceableRouteContainerComponent,
+        canActivate: [],
+        data: {
+          tenantBoxVisible: false,
+          replaceableComponent: {
+            key: eAccountComponents.ResetPassword,
+            defaultComponent: ResetPasswordComponent,
+          } as ReplaceableComponents.RouteData<ResetPasswordComponent>,
+        },
+      },
+      {
+        path: 'manage',
+        component: ReplaceableRouteContainerComponent,
+        canActivate: mapToCanActivate([AuthGuard, AccountExtensionsGuard]),
+        data: {
+          replaceableComponent: {
+            key: eAccountComponents.ManageProfile,
+            defaultComponent: ManageProfileComponent,
+          } as ReplaceableComponents.RouteData<ManageProfileComponent>,
+        },
+      },
+    ],
+  },
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule],
+})
+export class AccountRoutingModule {}

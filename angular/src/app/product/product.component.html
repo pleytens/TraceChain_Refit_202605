@@ -1,0 +1,311 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Product' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="createProduct()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewProduct' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter($event)"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter($event)"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="category-1"
+          [dataInput]="categoryData"
+          (dataReturn)="eventCategoryFilterSelectHandle($event)"
+          [placeholder]="'::Category' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <ngx-datatable [rows]="product.items" [count]="product.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="edit(row.id)">
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="deleteProduct(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="printQrCodeClick(row.gtinCode)">
+                {{ '::PrintQrCode' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Product:GtinCode' | abpLocalization"
+        prop="gtinCode"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Product:Name' | abpLocalization"
+        prop="productName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+
+      <ngx-datatable-column
+        [name]="'::Product:CategoryName' | abpLocalization"
+        prop="productCategoryName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+
+      <abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'xl' }">
+        <ng-template #abpHeader>
+          <h3>
+            {{ (selectedProduct.id ? '::EditProduct' : '::NewProduct') | abpLocalization }}
+          </h3>
+        </ng-template>
+
+        <ng-template #abpBody>
+          <ng-template #loaderRef>
+            <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+          </ng-template>
+          <form *ngIf="form; else loaderRef" [formGroup]="form">
+            <ul ngbNav #nav="ngbNav" class="nav-tabs">
+              <li ngbNavItem>
+                <a ngbNavLink>{{ '::Product:Information' | abpLocalization }}</a>
+                <ng-template ngbNavContent>
+                  <div class="mt-2">
+                    <label for="certificate">{{ '::Product:Image' | abpLocalization }}</label>
+                  </div>
+                  <div class="mt-2">
+                    <div *ngIf="images.length > 0" class="custom-image-show">
+                      <div class="image-container" *ngFor="let image of images; let i = index">
+                        <img [src]="image" alt="Selected Image" />
+                        <i
+                          class="fas fa-trash delete-btn"
+                          aria-hidden="true"
+                          (click)="deleteImage(i)"
+                        ></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <div class="custom-file-upload">
+                      <label for="certificate">{{
+                        '::Company:ChooseLogo' | abpLocalization
+                      }}</label>
+                      <input
+                        id="image"
+                        type="file"
+                        (change)="onFileChangeImage($event)"
+                        multiple
+                        [disabled]="images.length >= 5"
+                        accept="image/*"
+                      />
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <label for="gtinCode-name">{{ '::Product:gtinCode' | abpLocalization }}</label
+                    ><span class="style-span"> * </span>
+                    <input
+                      type="text"
+                      id="gtinCode-name"
+                      class="form-control"
+                      formControlName="gtinCode"
+                    />
+                  </div>
+                  <div class="mt-2">
+                    <label for="product-name">{{ '::Product:ProductName' | abpLocalization }}</label
+                    ><span class="style-span"> * </span>
+                    <input
+                      type="text"
+                      id="product-name"
+                      class="form-control"
+                      formControlName="productName"
+                    />
+                  </div>
+
+                  <div class="mt-2">
+                    <label for="category">{{ '::Product:Category' | abpLocalization }}</label
+                    ><span class="style-span"> * </span>
+                    <app-typehead-focus
+                      id="category"
+                      [dataInput]="categoryData"
+                      (dataReturn)="eventCategorySelectHandle($event)"
+                      [initialSelected]="categoryData.selected"
+                    ></app-typehead-focus>
+                    <div *ngIf="!categoryData.selected" class="abp-validation-error">
+                      <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+                    </div>
+                  </div>
+
+                  <div class="mt-2">
+                    <label for="video-url">{{ '::Product:VideoUrls' | abpLocalization }}</label>
+                  </div>
+                  <div class="mt-2" formArrayName="videoUrls" id="video-url">
+                    @for (url of videoUrls.controls; let i = $index; track i) {
+                      <div class="d-flex justify-content-between mt-1">
+                        <input class="form-control" [formControlName]="i" />
+                        <button
+                          class="btn btn-link text-danger p-0 ms-2"
+                          [disabled]="i === 0"
+                          (click)="removeUrl(i)"
+                        >
+                          <span>
+                            <i class="bi bi-trash"></i>
+                          </span>
+                        </button>
+                        <button class="btn btn-link text-success p-0 ms-2" (click)="addUrl()">
+                          <span>
+                            <i class="bi bi-plus-circle"></i>
+                          </span>
+                        </button>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="mt-2">
+                    <label for="certificate">{{ '::Product:Certificate' | abpLocalization }}</label>
+                  </div>
+                  <div class="mt-2">
+                    <div *ngIf="certificationImages.length > 0" class="custom-image-show">
+                      <div
+                        class="image-container"
+                        *ngFor="let image of certificationImages; let i = index"
+                      >
+                        <img [src]="image" alt="Selected Image" />
+                        <i
+                          class="fas fa-trash delete-btn"
+                          aria-hidden="true"
+                          (click)="deleteCertificationImage(i)"
+                        ></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <div class="custom-file-upload">
+                      <label for="certificate">{{
+                        '::Company:ChooseLogo' | abpLocalization
+                      }}</label>
+                      <input
+                        id="certificate"
+                        type="file"
+                        (change)="onFileChange($event)"
+                        multiple
+                        [disabled]="certificationImages.length >= 5"
+                        accept="image/*"
+                      />
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <label for="certificate">{{ '::Product:DocumentFile' | abpLocalization }}</label>
+                  </div>
+                  <div class="mt-2">
+                    <div *ngIf="documentFiles.length > 0" class="custom-image-show document-files-list">
+                      <div
+                        class="file-container"
+                        *ngFor="let file of documentFiles; let i = index"
+                      >
+                        <i class="fas fa-times delete-btn" (click)="deleteDocumentFile(i)"></i>
+                        <div class="file-details">
+                          <i [class]="getFileIconClass(file.name)"></i>
+                          <a class="file-name" [title]="file.name">{{file.name}}</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-2">
+                    <div class="custom-file-upload">
+                      <label for="document">
+                        {{
+                          '::Product:ChooseFile' | abpLocalization
+                        }}
+                      </label>
+                      <input
+                        id="document"
+                        type="file"
+                        (change)="onDocumentFileChange($event)"
+                        multiple
+                        [disabled]="documentFiles.length >= 10"
+                        accept=".pdf, .doc, .docx"
+                      />
+                    </div>
+                  </div>
+                </ng-template>
+              </li>
+              <li ngbNavItem>
+                <a ngbNavLink>{{ '::Product:Description' | abpLocalization }}</a>
+                <ng-template ngbNavContent>
+                  <app-editor #editor [content]="form.value.description"></app-editor>
+                </ng-template>
+              </li>
+            </ul>
+            <div class="mt-2 fade-in-top" [ngbNavOutlet]="nav"></div>
+          </form>
+        </ng-template>
+
+        <ng-template #abpFooter>
+          <button type="button" class="btn btn-secondary" abpClose>
+            {{ '::Close' | abpLocalization }}
+          </button>
+          <button type="button" class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+            <i class="fa fa-check mr-1"></i>
+            {{ '::Save' | abpLocalization }}
+          </button>
+        </ng-template>
+      </abp-modal>
+    </ngx-datatable>
+  </div>
+</div>

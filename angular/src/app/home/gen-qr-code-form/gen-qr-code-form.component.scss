@@ -1,0 +1,227 @@
+$blue-color: #10228B;
+$text-color: #3E4958;
+
+.form-blur {
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(3px);
+}
+h4 {
+  color: $text-color;
+  font-weight: bold;
+}
+label {
+  color: $text-color;
+  font-weight: bold;
+}
+.margin-custom {
+  padding: 10px 20px;
+}
+.custom-file-upload {
+  display: inline-block;
+  position: relative;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+.custom-file-upload img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.custom-file-upload label {
+  background-color: $blue-color;
+  color: #fff;
+  border: 1px solid $blue-color;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.custom-file-upload input[type='file'] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.rich-editor {
+  width: 100%;
+  height: 40vh;
+}
+
+.custom-image-show {
+  display: flex; /* Enables Flexbox for this container */
+  justify-content: left; /* Aligns items on the main-axis (default: row) */
+  align-items: center; /* Aligns items on the cross-axis */
+  flex-direction: row; /* Defines the direction of flex items (row|row-reverse|column|column-reverse) */
+  flex-wrap: wrap; /* Allows items to wrap as needed (nowrap|wrap|wrap-reverse) */
+  gap: 10px; /* Space between items */
+  padding: 10px;
+}
+.image-container {
+  position: relative;
+  width: fit-content;
+}
+
+.image-container img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+  display: block; /* Removes bottom space/gap */
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px; /* Adjust based on your preference */
+  left: 10px; /* Adjust based on your preference */
+  display: none; /* Hide button initially */
+  /* Add more styling here to beautify the button */
+}
+
+.image-container:hover .delete-btn {
+  color: rgba(255, 0, 0, 0.79);
+  display: block; /* Show button on hover */
+}
+
+.style-span {
+  vertical-align: middle;
+  font-size: 1.2em;
+  color: red;
+  margin-left: 3px;
+}
+
+.box-custom{
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  height: auto;
+  border-radius: 10px;
+  //margin: 50px 50px;
+  text-align: center;
+}
+
+.box-custom h3{
+  padding: 10px;
+  display: inline-block;
+}
+
+.box-custom-button{
+  padding: 5%;
+}
+.box-custom button{
+  color: #fff;
+  border: 1px solid;
+  border-radius:10px;
+  cursor: pointer;
+  display: inline-block;
+  width: 100%;
+  font-size: 25px;
+  padding: 5px 0;
+  background-color: $blue-color !important;
+  border-color: $blue-color !important;
+
+}
+.manual{
+  padding: 10px;
+  width: 100%;
+  font-size: 20px;
+  color: #1d62d3;
+
+  i {
+    margin-right: 10px;
+  }
+  p {
+    text-decoration: underline;
+  }
+}
+
+.corner-border {
+  display: inline-block;
+  position: relative;
+  padding: 30px;
+  width: 50%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  margin-bottom: 30px;
+}
+
+/* Top left and right corners */
+.corner-border::before,
+.corner-border::after {
+  content: '';
+  position: absolute;
+  width: 20%;
+  height: 20%;
+}
+
+.corner-border::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid #3965f4;
+  border-left: 2px solid #3965f4;
+}
+
+.corner-border::after {
+  top: 0;
+  right: 0;
+  border-top: 2px solid #3965f4;
+  border-right: 2px solid #3965f4;
+}
+
+/* Bottom corners and text */
+.corner-border .bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  border-bottom: 2px solid #3965f4;
+}
+
+.corner-border .bottom::before,
+.corner-border .bottom::after {
+  content: '';
+  position: absolute;
+  width: 20%;
+  height: 25%;
+  bottom: -2px;
+}
+
+.corner-border .bottom::before {
+  left: 0;
+  border-left: 2px solid #3965f4;
+}
+
+.corner-border .bottom::after {
+  right: 0;
+  border-right: 2px solid #3965f4;
+
+}
+
+.corner-border .bottom span {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 0 10px;
+  font-size: 14px;
+  color: #1d62d3;
+  font-style: italic;
+}
+
+::ng-deep #qrcode1 canvas {
+  width: 100%;
+
+}
+
+::ng-deep .abp-toast-info {
+  background-color: $blue-color !important;
+  border-color: $blue-color !important;
+
+
+}

@@ -1,0 +1,289 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:PublicTemplate' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="createTemplate()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewTemplate' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter($event)"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter($event)"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable
+      [rows]="publicTemplate.items"
+      [count]="publicTemplate.totalCount"
+      [list]="list"
+      default
+    >
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="edit(row.id)">
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="deleteTemplate(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Template:Name' | abpLocalization"
+        prop="name"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Template:UserType' | abpLocalization"
+        prop="userTypeName"
+        [sortable]="false"
+      ></ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <h3>
+      {{ (selectedPublicTemplate.id ? '::EditTemplate' : '::NewTemplate') | abpLocalization }}
+    </h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+    <form *ngIf="form; else loaderRef" [formGroup]="form" (ngSubmit)="save()">
+      <ul ngbNav class="nav-tabs" #nav="ngbNav">
+        <li ngbNavItem>
+          <a ngbNavLink>{{ '::Template:TemplateInformation' | abpLocalization }}</a>
+          <ng-template ngbNavContent>
+            <div class="mt-2">
+              <label for="template-name">{{ '::Template:Name' | abpLocalization }}</label
+              ><span class="style-span"> * </span>
+              <input type="text" id="template-name" class="form-control" formControlName="name" />
+            </div>
+
+            <div class="mt-2">
+              <label for="user-type">{{ '::Template:UserType' | abpLocalization }}</label
+              ><span class="style-span"> * </span>
+              <app-typehead-focus
+                id="user-type"
+                [dataInput]="userTypeData"
+                (dataReturn)="eventUserTypeSelectHandle($event)"
+                [initialSelected]="userTypeData.selected"
+              ></app-typehead-focus>                  <div
+              *ngIf="!userTypeData.selected"
+              class="abp-validation-error"
+            >
+              <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+            </div>
+            </div>
+          </ng-template>
+        </li>
+        <li ngbNavItem>
+          <a ngbNavLink>{{ '::Template:Detail' | abpLocalization }}</a>
+          <ng-template ngbNavContent>
+            <div class="mt-2">
+              <div class="form-check mb-2">
+                <input
+                  type="checkbox"
+                  id="allow-to-show-front-node-on-the-map"
+                  name="allowShowFrontNode"
+                  class="form-check-input"
+                  formControlName="allowShowFrontNode"
+                  (change)="allowShowFrontNodeCheck()"
+                />
+                <label class="form-check-label" for="allow-to-show-front-node-on-the-map">{{
+                  '::Template:AllowToShowFrontNodeOnTheMap' | abpLocalization
+                }}</label>
+
+                <div class="form-check ml-4 mt-2">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="options"
+                    id="full-info"
+                    [checked]="form.get('allowShowFullInfo').value"
+                    (change)="updateFormControl('allowShowFullInfo', $event)"
+                    [disabled]="!form.get('allowShowFrontNode').value"
+                  />
+                  <label class="form-check-label" for="full-info">
+                    {{ '::Template:FullInformation' | abpLocalization }}
+                  </label>
+                </div>
+                <div class="form-check ml-4 mt-2">
+                  <input
+                    class="form-check-input"
+                    type="radio"
+                    name="options"
+                    id="showArea"
+                    [checked]="form.get('allowOnlyArea').value"
+                    (change)="updateFormControl('allowOnlyArea', $event)"
+                    [disabled]="!form.get('allowShowFrontNode').value"
+                  />
+                  <label class="form-check-label" for="showArea">
+                    {{ '::Template:OnlyShowArea' | abpLocalization }}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-2">
+              <div class="form-check mb-2">
+                <input
+                  type="checkbox"
+                  id="allow-to-show-follow-node-on-the-map"
+                  name="allowShowFollowNode"
+                  class="form-check-input"
+                  formControlName="allowShowFollowNode"
+                />
+                <label class="form-check-label" for="allow-to-show-follow-node-on-the-map">{{
+                  '::Template:AllowToShowFollowNodeOnTheMap' | abpLocalization
+                }}</label>
+              </div>
+            </div>
+            <div class="mt-2">
+              <div class="form-check mb-2">
+                <input
+                  type="checkbox"
+                  id="allow-to-show-link-to-material-document-on-the-report"
+                  name="allowShowLink"
+                  class="form-check-input"
+                  formControlName="allowShowLink"
+                />
+                <label
+                  class="form-check-label"
+                  for="allow-to-show-link-to-material-document-on-the-report"
+                  >{{
+                    '::Template:AllowToShowLinkToMaterialDocumentOnTheReport' | abpLocalization
+                  }}</label
+                >
+              </div>
+            </div>
+            <hr class="mt-2 mb-2" />
+            <div class="row">
+              <div class="col-md-3">
+                <ul class="nav nav-pills flex-column">
+                  <li *ngFor="let data of processData" class="nav-item">
+                    <a
+                      class="nav-link pointer"
+                      [class.active]="selectedProduct?.name === data?.name"
+                      (click)="onChangeData(data)"
+                    >
+                      <div>
+                        {{ data?.name }}
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-md-9">
+                <h4>{{ selectedProduct?.name }}</h4>
+                <hr class="mt-2 mb-3" />
+                <div class="pl-1 pt-1">
+                  <div class="form-check mb-2">
+                    <input
+                      [checked]="selectAllChecked"
+                      type="checkbox"
+                      id="select-all-in-this-tabs"
+                      name="select-all-in-this-tabs"
+                      class="form-check-input"
+                      (change)="onClickSelectThisTab()"
+                    />
+                    <label class="form-check-label" for="select-all-in-this-tabs">{{
+                      '::SelectAll' | abpLocalization
+                    }}</label>
+                  </div>
+                  <hr class="mb-3" />
+                  <div *ngFor="let template of stepData; let i = index" class="form-check mb-2">
+                    <input
+                      type="checkbox"
+                      [checked]="template.isChecked"
+                      [value]="getChecked(template.name)"
+                      [attr.id]="template.name"
+                      (change)="onTemplateCheckboxChange(template.id)"
+                      [attr.disabled]="selectAllChecked ? true : null"
+                      class="form-check-input"
+                    />
+                    <label class="form-check-label" [attr.for]="template.name"
+                      >{{ template.name }}
+                    </label>
+                    <div
+                      *ngFor="let field of template.fields; let i = index"
+                      class="form-check mb-2"
+                    >
+                      <input
+                        type="checkbox"
+                        [checked]="field.isChecked"
+                        (change)="onCheckboxChange(template.id, field.id)"
+                        [attr.disabled]="selectAllChecked ? true : null"
+                        [attr.id]="field.id"
+                        class="form-check-input"
+                      />
+                      <label class="form-check-label" [attr.for]="field.id"
+                        >{{ field.name }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+      </ul>
+      <div class="mt-2 fade-in-top" [ngbNavOutlet]="nav"></div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+    <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

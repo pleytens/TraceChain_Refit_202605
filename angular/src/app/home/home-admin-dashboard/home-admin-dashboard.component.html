@@ -1,0 +1,64 @@
+<div class="row">
+  <div class="col col-md-5 col-sm-12">
+    <div class="h-100">
+      <ng-container>
+        <!--        <app-record-v2 [isShowHome]="true"></app-record-v2>-->
+        <!--        <div class="row text-center justify-content-md-center show-more">-->
+        <!--          <p (click)="goToRecord()">Show more <i class="fa fa-angle-down"></i></p>-->
+        <!--        </div>-->
+        <app-chart-demo class="h-100"></app-chart-demo>
+      </ng-container>
+    </div>
+  </div>
+  <div class="col col-md-7 col-sm-12">
+    <div class="row">
+      <div class="card h-100 mb-0">
+        <div class="card-title my-3 text-start">
+          <h4>{{"::Home:CompanyInfo" | abpLocalization}}</h4>
+        </div>
+        <div class="card-body">
+          <app-company-dashboard ></app-company-dashboard>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row my-5">
+  <div class="col col-md-3 col-sm-12 company-status">
+    <div class="card card-pie">
+      <div class="card-title m-3 text-start">
+        <h4>{{'::Home:CompanyStatus' | abpLocalization}}</h4>
+      </div>
+      <div class="card-body h-50 d-flex justify-content-center align-items-center">
+        <app-pie-chart [dataPie]="companyProfit.companyStatuses"></app-pie-chart>
+      </div>
+    </div>
+    <div class="card bg-blue card-circle mb-0">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-6">
+            <app-circular-progress [progress]="companyProfit?.profitYear?.percentage"></app-circular-progress>
+            <h5 class="text-center text-light mt-1">{{'::EachYear' | abpLocalization}}   <span>{{ companyProfit?.profitYear?.profit | currency:'USD':'symbol':'1.2-2' }}</span>
+            </h5>
+          </div>
+          <div class="col-6">
+            <app-circular-progress [progress]="companyProfit?.profitMonth?.percentage"></app-circular-progress>
+            <h5 class="text-center text-light mt-1">{{'::EachMonth' | abpLocalization}}   <span>{{ companyProfit?.profitMonth?.profit | currency:'USD':'symbol':'1.2-2' }}</span>
+            </h5>          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col col-md-9 col-sm-12">
+    <div class="card product-card mh-75">
+      <div class="card-title m-3 text-start">
+        <h4>{{"::Home:ProductInfo" | abpLocalization}}</h4>
+      </div>
+      <div class="card-body">
+        <app-product-dashboard ></app-product-dashboard>
+      </div>
+    </div>
+  </div>
+</div>
+
+

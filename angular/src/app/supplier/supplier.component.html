@@ -1,0 +1,247 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h5 class="card-title">
+          {{ '::Menu:Supplier' | abpLocalization }}
+        </h5>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="createSupplier()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::Supplier:NewSupplier' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter($event)"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter($event)"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="countryFilter"
+          [dataInput]="countryData"
+          (dataReturn)="eventCountryFilterSelectHandle($event)"
+          [placeholder]="'::Country' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="provinceFilter"
+          [dataInput]="provinceData"
+          (dataReturn)="eventProvinceFilterSelectHandle($event)"
+          [placeholder]="'::Supplier:Province' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="districtFilter"
+          [dataInput]="districtData"
+          (dataReturn)="eventDistrictFilterSelectHandle($event)"
+          [placeholder]="'::Supplier:District' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          id="wardFilter"
+          [dataInput]="wardData"
+          [placeholder]="'::Supplier:Ward' | abpLocalization"
+          (dataReturn)="eventWardFilterSelectHandle($event)"
+        ></app-typehead-focus>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <ngx-datatable [rows]="supplier.items" [count]="supplier.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="edit(row.id)">
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="delete(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Supplier:Code' | abpLocalization"
+        prop="code"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Supplier:Name' | abpLocalization"
+        prop="name"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Supplier:PhoneNumber' | abpLocalization"
+        prop="phoneNumber"
+        [sortable]="false"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Supplier:Address' | abpLocalization"
+        prop="address"
+        [sortable]="false"
+      ></ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isModalOpen">
+  <ng-template #abpHeader>
+    <h3>
+      {{
+        (selectedSupplier.id ? '::Supplier:EditSupplier' : '::Supplier:NewSupplier')
+          | abpLocalization
+      }}
+    </h3>
+  </ng-template>
+
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+    <form *ngIf="form; else loaderRef" [formGroup]="form" (ngSubmit)="save()">
+      <div class="mt-2">
+        <label for="supplier-code">{{ '::Supplier:Code' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <input type="text" id="supplier-code" class="form-control" formControlName="code" />
+      </div>
+      <div class="mt-2">
+        <label for="supplier-name">{{ '::Supplier:Name' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <input type="text" id="supplier-name" class="form-control" formControlName="name" />
+      </div>
+      <div class="mt-2">
+        <label for="supplier-phoneNumber">{{ '::Supplier:PhoneNumber' | abpLocalization }}</label>
+        <input
+          type="text"
+          id="supplier-phoneNumber"
+          class="form-control"
+          formControlName="phoneNumber"
+        />
+      </div>
+      <div class="mt-2">
+        <label for="supplier-address">{{ '::Supplier:Address' | abpLocalization }}</label>
+        <input type="text" id="supplier-address" class="form-control" formControlName="address" />
+      </div>
+      <div class="mt-2">
+        <label for="country">{{ '::Supplier:Country' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <app-typehead-focus
+          id="country"
+          [dataInput]="countryData"
+          (dataReturn)="eventCountrySelectHandle($event)"
+          [initialSelected]="countryData.selected"
+        ></app-typehead-focus>
+        <div *ngIf="!countryData.selected" class="abp-validation-error">
+          <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label for="province">{{ '::Supplier:Province' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <app-typehead-focus
+          id="province"
+          [dataInput]="provinceData"
+          (dataReturn)="eventProvinceSelectHandle($event)"
+          [initialSelected]="provinceData.selected"
+        ></app-typehead-focus>
+        <div *ngIf="!provinceData.selected" class="abp-validation-error">
+          <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label for="district">{{ '::Supplier:District' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <app-typehead-focus
+          id="district"
+          [dataInput]="districtData"
+          (dataReturn)="eventDistrictSelectHandle($event)"
+          [disabled]="!provinceData.selected"
+          *ngIf="districtData && districtData.selected !== undefined"
+          [initialSelected]="districtData.selected"
+        ></app-typehead-focus>
+        <div *ngIf="!districtData.selected" class="abp-validation-error">
+          <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+        </div>
+      </div>
+      <div class="mt-2">
+        <label for="ward">{{ '::Supplier:Ward' | abpLocalization }}</label
+        ><span class="style-span"> * </span>
+        <app-typehead-focus
+          id="ward"
+          [dataInput]="wardData"
+          (dataReturn)="eventWardSelectHandle($event)"
+          [disabled]="!districtData.selected"
+          *ngIf="wardData && wardData.selected !== undefined"
+          [initialSelected]="wardData.selected"
+        ></app-typehead-focus>
+        <div *ngIf="!wardData.selected" class="abp-validation-error">
+          <small class="text-danger">{{ '::Fieldrequired' | abpLocalization }}</small>
+        </div>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+    <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

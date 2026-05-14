@@ -1,0 +1,384 @@
+.title {
+    background-color: #DAEEE7;
+    height: 50px;
+    line-height: 50px;
+    padding-left: 10px;
+}
+
+.title > p {
+    font-weight: 900;
+    color: black;
+}
+
+.title-map {
+    cursor: pointer;
+}
+
+.title-report {
+    margin-top: 10px;
+}
+
+.box {
+    width: 100%;
+    height: 550px;
+    // position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0.9;
+}
+
+.row-detail-report {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.col-detail-report {
+    background-color: #ffffff;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.carousel-custom {
+    padding-top: 15px;
+}
+
+.product-info {
+    padding: 20px;
+}
+
+.product-info-title {
+    display: inline-block;
+}
+
+.icon-check {
+    display: inline-block;
+    height: 18px;
+    margin-bottom: 4px;
+    margin-left: 10px;
+}
+
+.img-product {
+    width: 100%;
+    margin-top: 10px;
+    max-width: 140px;
+}
+
+.product-info > p {
+    font-weight: 600;
+    color: #000000;
+}
+
+.cer-title {
+    padding-left: 20px;
+    margin-bottom: 0;
+    font-weight: 600;
+    color: #000000;
+}
+
+.cer-slide-box {
+    height: 300px;
+    // width: 100%;
+    // border: 1px solid;
+    width: 96%;
+    margin: 0 auto;
+}
+
+.cer-slide-box > img {
+    width: 100%; /* or any custom size */
+    height: 100%;
+    object-fit: contain;
+}
+
+// REPORT TAB
+::ng-deep.nav-tabs {
+    background: #fff !important;
+    border-radius: 0px;
+    margin-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+::ng-deep.tab-content {
+    border-radius: 0px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+::ng-deep.nav-tabs .nav-item .nav-link.active {
+    border-bottom: 3px solid blue;
+}
+
+::ng-deep.nav-tabs .nav-link.active {
+    color: blue;
+}
+
+::ng-deep.nav-justified .nav-item .nav-link > span {
+    font-weight: bold;
+    color: black;
+}
+
+::ng-deep.tab-container > ul {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+// @media screen and (max-width: 767px) {
+//     ::ng-deep.tab-container > ul {
+//         position: sticky;
+//         top: 0;
+//         z-index: 1;
+//     }
+// }
+
+.tab-title {
+    background-color: #098b5d;
+    height: 30px;
+    line-height: 30px;
+    padding-left: 10px;
+}
+
+.tab-title > p {
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.tab-box {
+    border: 1px solid #098b5d;
+}
+
+.ytp-title-channel {
+    display: none !important;
+}
+
+.ytb-box {
+    padding-top: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.company-box {
+    padding: 20px;
+}
+
+.company-box-row {
+    padding-bottom: 10px;
+}
+
+.company-box-field-title {
+    color: #000000;
+}
+
+.company-box-field-content {
+    color: #000000;
+    font-weight: 500;
+}
+
+.product-tab-info {
+    padding-top: 10px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+// TIMELINE
+.process-box {
+    padding-top: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.process-title {
+    color: #000000;
+    font-weight: bold;
+}
+
+.trace-code {
+    color: #1d62d3;
+    font-weight: bold;
+  cursor: pointer;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.time {
+    position: absolute;
+    left: -110px;
+}
+
+.time > p:last-child {
+    text-align: right;
+}
+
+.time > p {
+    line-height: 25px;
+}
+
+.timeline-wrapper {
+    // padding-left: 80px;
+    min-width: 400px;
+    /* font-family: 'Helvetica'; */
+    font-size: 14px;
+    /*border: 1px solid #CCC;*/
+}
+
+.detail > p {
+    line-height: 25px;
+}
+
+.detail > img {
+    margin-top: 10px;
+}
+
+@media screen and (min-width: 400px) {
+    .timeline-wrapper {
+        min-width: 400px;
+    }
+}
+
+@media screen and (max-width: 399px) {
+    .timeline-wrapper {
+        min-width: 0;
+    }
+}
+
+.StepProgress {
+    position: relative;
+    // padding-left: 45px;
+    list-style: none;
+}
+
+.StepProgress::before {
+    display: inline-block;
+    content: '';
+    position: absolute;
+    top: 7px;
+    left: 12px;
+    width: 10px;
+    height: 100%;
+    border-left: 2px solid #79818c;
+}
+
+.StepProgress-item {
+    position: relative;
+    counter-increment: list;
+    margin-bottom: 20px;
+    padding-left: 0px;
+    color: #000000;
+}
+
+.StepProgress-item > div > p:not(:last-child) {
+    margin-bottom: 0;
+    color: #000000;
+}
+
+.StepProgress-item:not(:last-child) {
+    /* padding-bottom: 20px; */
+}
+
+.StepProgress-item::before {
+    display: inline-block;
+    content: '';
+    position: absolute;
+    left: -20px;
+    height: 110%;
+    width: 10px;
+    top: 7px;
+}
+
+.StepProgress-item::after {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    top: 7px;
+    left: -26px;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #79818c;
+    border-radius: 50%;
+    background-color: #FFF;
+}
+
+.StepProgress-item.is-done::before {
+    border-left: 2px solid #79818c;
+}
+
+.StepProgress-item.is-done::after {
+    font-size: 10px;
+    color: #FFF;
+    text-align: center;
+    border: 3px solid #2052ca;
+}
+
+.StepProgress strong {
+    display: block;
+}
+
+.step-name {
+    background-color: #DAEEE7;
+    height: 30px;
+    line-height: 30px;
+    padding-left: 10px;
+}
+
+.record-code {
+    font-weight: bold;
+}
+
+.step-content {
+    padding-left: 15px;
+}
+
+// slick carousel
+::ng-deep.slick-prev {
+    left: 5px !important;
+    z-index: 999;
+}
+
+::ng-deep.slick-next {
+    right: 15px !important;
+}
+
+::ng-deep.slick-prev:before, ::ng-deep.slick-next:before {
+    // color: black !important;
+    font-size: 30px;
+}
+
+::ng-deep.slick-prev:before:hover, ::ng-deep.slick-next:before:hover {
+    color: black !important;
+    font-size: 30px;
+}
+
+.slide > img {
+    width: 96%;
+    margin: auto;
+}
+
+/* bootstrap hack: fix content width inside hidden tabs */
+::ng-deep.tab-content > .tab-pane, ::ng-deep.pill-content > .pill-pane {
+    display: block;    /* undo display:none          */
+    height: 0;         /* height:0 is also invisible */
+    overflow: hidden;  /* no-overflow                */
+}
+::ng-deep.tab-content > .active, ::ng-deep.pill-content > .active {
+    height: auto;      /* let the content decide it  */
+} /* bootstrap hack end */
+
+.product-slide {
+    height: 300px;
+    object-fit: contain;
+}
+
+.certification-slide {
+    height: 250px;
+    object-fit: contain;
+}
+
+.company-cer {
+    object-fit: contain;
+}
+.custom-a-tag{
+  text-decoration: none;
+  color: #000000;
+}

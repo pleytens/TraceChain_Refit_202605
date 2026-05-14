@@ -1,0 +1,95 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h5 class="card-title">
+          {{ '::Minigame' | abpLocalization }}
+        </h5>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="openEventModal()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::Minigame:Create' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-2">
+      <div class="input-group mb-3">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+        />
+        <button class="btn btn-primary px-3 bi bi-search" (click)="filter()" type="button"></button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-body">
+    <ngx-datatable [rows]="eventList?.items" [count]="eventList?.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem (click)="openRandomModal(row.id)">
+                {{ '::Minigame:RandomizeParticipant' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="openEventModal(row.id)">
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button ngbDropdownItem (click)="deleteEvent(row.id)">
+                {{ '::Delete' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Minigame:Code' | abpLocalization"
+        prop="code"
+      ></ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Minigame:Name' | abpLocalization"
+        prop="title"
+      ></ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Minigame:Question' | abpLocalization" prop="questionCount">
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Minigame:Participant' | abpLocalization"
+        prop="participantCount"
+      >
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Minigame:StartDate' | abpLocalization" prop="creationTime">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.startDate | date }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Minigame:EndDate' | abpLocalization">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.endDate | date }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Minigame:CreatedTime' | abpLocalization">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.creationTime | date }}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="row">
+  <div class="col-8">
+    <div class="p-4 border rounded shadow mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0">{{ '::Minigame:RandomizeParticipant' | abpLocalization }}</h5>
+
+        <button
+          class="btn btn-primary"
+          (click)="spin(1500)"
+          [disabled]="spinning || !participantList || participantList.length <= 0"
+        >
+          {{ spinning ? 'Spinning...' : 'Spin' }}
+        </button>
+      </div>
+
+      <div
+        class="border rounded-3 bg-light d-grid place-items-center mb-3 overflow-hidden"
+        style="height: 70px"
+      >
+        <div #slot class="fw-bold fs-4 slot-value animate-flip">
+          @if (participantList && participantList.length > 0) {
+            {{ participantList[index].email }}
+          }
+        </div>
+
+
+      </div>
+
+      <div class="row">
+        <div class="col-auto fw-semibold">
+          {{"::Minigame:LatestResult" | abpLocalization}}:
+        </div>
+        <div class="col">
+          <ng-container *ngIf="latestWinnerList?.length > 0; else noData">
+            <div *ngFor="let item of latestWinnerList; let i = index">
+              <span [class.ms-auto]="i > 0">{{ item.email }}</span>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <ng-template #noData>
+        <span><i>{{"::Minigame:NotHaveData" | abpLocalization}}</i></span>
+      </ng-template>
+
+    </div>
+    @if (latestWinnerList?.length > 0) {
+      <label for="reason" class="form-label required">{{ '::Minigame:Reason' | abpLocalization }}</label>
+      <textarea name="reason" class="form-control" rows="3" [(ngModel)]="reason"></textarea>
+    }
+  </div>
+
+  <div class="col-4">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">{{ '::Minigame:ListResource' | abpLocalization }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (participant of participantList; track index) {
+          <tr>
+            <td>{{ participant.email }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="mt-4 row">
+  <div class="col">
+    <div class="d-flex justify-content-end gap-2">
+      <button class="btn btn-secondary" (click)="dismissModal()">
+        {{ '::Cancel' | abpLocalization }}
+      </button>
+      <button class="btn btn-primary" (click)="save()">{{ '::Save' | abpLocalization }}</button>
+    </div>
+  </div>
+</div>

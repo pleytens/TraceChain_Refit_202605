@@ -1,0 +1,2197 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Record' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button id="create" class="btn btn-primary" type="button" (click)="createRecord()">
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::Record:NewData' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter()"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-6">
+      <a
+        type="button"
+        class="link-primary ms-2"
+        (click)="isCollapsed = !isCollapsed"
+        [attr.aria-expanded]="!isCollapsed"
+        aria-controls="collapseExample"
+      >
+        {{ '::AdvanceFilter' | abpLocalization }}
+      </a>
+    </div>
+  </div>
+  <div #collapse="ngbCollapse" [(ngbCollapse)]="isCollapsed">
+    <div class="row margin-custom">
+      <div class="col col-md-3">
+        <app-typehead-focus
+          [dataInput]="statusData"
+          (dataReturn)="eventStatusFilterSelectHandle($event)"
+          [placeholder]="'::Status' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <app-typehead-focus
+          [dataInput]="userData"
+          (dataReturn)="eventCreateByFilterSelectHandle($event)"
+          [placeholder]="'::CreatedBy' | abpLocalization"
+        ></app-typehead-focus>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::FromDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="fromDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #fromDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="fromDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+      <div class="col col-md-3">
+        <div class="input-group">
+          <input
+            class="form-control"
+            [placeholder]="'::ToDate' | abpLocalization"
+            name="dp"
+            [(ngModel)]="toDate"
+            (ngModelChange)="filterDateChange()"
+            ngbDatepicker
+            #toDatePicker="ngbDatepicker"
+          />
+          <button
+            class="btn btn-outline-secondary bi bi-calendar3"
+            (click)="toDatePicker.toggle()"
+            type="button"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <ul ngbNav class="nav-tabs" #nav="ngbNav" [(activeId)]="activeStepId">
+      <li *ngFor="let step of stepData; let i = index" [ngbNavItem]="i + 1">
+        <a ngbNavLink (click)="getRecordData(step.id)">{{ step.name }}</a>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="card">
+      <ng-container *ngIf="activeStepId === 1">
+        <div class="card-content">
+          <ngx-datatable [rows]="record.items" [count]="record.totalCount" [list]="list" default>
+            <ngx-datatable-column
+              [name]="'::Actions' | abpLocalization"
+              [maxWidth]="150"
+              [sortable]="false"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div ngbDropdown container="body" class="d-inline-block">
+                  <button
+                    class="btn btn-primary btn-sm dropdown-toggle"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    ngbDropdownToggle
+                  >
+                    <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+                  </button>
+                  <div ngbDropdownMenu>
+                    <button
+                      ngbDropdownItem
+                      (click)="delete(row.id)"
+                      [disabled]="row.recordStatusEnumValue !== 1"
+                    >
+                      {{ '::Delete' | abpLocalization }}
+                    </button>
+                    <button
+                      ngbDropdownItem
+                      (click)="firstStepModalOpen(row.id, false)"
+                      [disabled]="row.isEditEnabled"
+                    >
+                      {{ '::Edit' | abpLocalization }}
+                    </button>
+                    <button ngbDropdownItem (click)="firstStepViewModalOpen(row.id)">
+                      {{ '::View' | abpLocalization }}
+                    </button>
+                    <button
+                      ngbDropdownItem
+                      (click)="recordingSetDone(row.id)"
+                      [disabled]="row.recordStatusEnumValue !== 1"
+                    >
+                      {{ '::Done' | abpLocalization }}
+                    </button>
+                  </div>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:Code' | abpLocalization"
+              prop="code"
+              [sortable]="false"
+            >
+            </ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:Reception' | abpLocalization"
+              prop="receptionOrOrigin"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:Status' | abpLocalization"
+              prop="recordStatus"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:CreatedBy' | abpLocalization"
+              prop="createdBy"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:LastModified' | abpLocalization"
+              prop="lastModifiedBy"
+              [sortable]="false"
+            ></ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="activeStepId !== 1">
+        <div class="card-content">
+          <ngx-datatable [rows]="record.items" [count]="record.totalCount" [list]="list" default>
+            <ngx-datatable-column
+              [name]="'::Actions' | abpLocalization"
+              [maxWidth]="150"
+              [sortable]="false"
+            >
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div ngbDropdown container="body" class="d-inline-block">
+                  <button
+                    class="btn btn-primary btn-sm dropdown-toggle"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    ngbDropdownToggle
+                  >
+                    <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+                  </button>
+                  <div ngbDropdownMenu>
+                    <button
+                      ngbDropdownItem
+                      (click)="delete(row.id)"
+                      [disabled]="row.recordStatusEnumValue !== 1"
+                    >
+                      {{ '::Delete' | abpLocalization }}
+                    </button>
+                    <button
+                      ngbDropdownItem
+                      (click)="
+                        selectedStep.isSpecial === 10
+                          ? normalStepModalOpen(row.id, row.stepRecordCodeUsed, row.useAll)
+                          : lastStepModalOpen(row.id, row.stepRecordCodeUsed, row.useAll)
+                      "
+                      [disabled]="row.recordStatusEnumValue !== 1"
+                    >
+                      {{ '::Edit' | abpLocalization }}
+                    </button>
+                    <button
+                      ngbDropdownItem
+                      (click)="
+                        selectedStep.isSpecial === 10
+                          ? normalStepViewModalOpen(row.id, row.stepRecordCodeUsed, row.useAll)
+                          : lastStepViewModalOpen(row.id, row.stepRecordCodeUsed, row.useAll)
+                      "
+                    >
+                      {{ '::View' | abpLocalization }}
+                    </button>
+                    <button
+                      ngbDropdownItem
+                      (click)="recordingSetDone(row.id)"
+                      [disabled]="row.recordStatusEnumValue !== 1"
+                    >
+                      {{ '::Done' | abpLocalization }}
+                    </button>
+                  </div>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:Code' | abpLocalization"
+              prop="code"
+              [sortable]="false"
+            >
+            </ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:UsedCode' | abpLocalization"
+              prop="entityCodeStr"
+              [sortable]="false"
+            >
+            </ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:Status' | abpLocalization"
+              prop="recordStatus"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:CreatedBy' | abpLocalization"
+              prop="createdBy"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:LastModified' | abpLocalization"
+              prop="lastModifiedBy"
+              [sortable]="false"
+            ></ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<abp-modal [(visible)]="isFirstStepModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <div class="row">
+      <div class="col-md-12">
+        <h3>{{ selectedStep.name }}</h3>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+
+    <div *ngIf="receptionData.data.length > 0" class="row margin-custom">
+      <div class="selected-values-card">
+        <ul>
+          <li
+            *ngFor="let value of receptionData.data; let isFirst = first"
+            class="selected-value fw-bold"
+          >
+            <button
+              type="button"
+              class="btn btn-link text-primary"
+              (click)="getFieldData(selectedStep.id, saveRecordId, value)"
+            >
+              <i class="fa fa-file-text fa-2x"></i>
+            </button>
+            {{ value?.displayCode }}
+            <button
+              *ngIf="!isFirst"
+              type="button"
+              class="btn btn-link text-danger"
+              (click)="removeValue(value.id)"
+            >
+              <i class="fa fa-times"></i>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div
+      *ngIf="receptionData.data.length === 0 && fieldData.length === 0"
+      class="row margin-custom"
+    >
+      <div class="selected-values-card">
+        {{ '::NoDataAvailable' | abpLocalization }}
+      </div>
+    </div>
+
+    <div *ngIf="fieldData.length > 0">
+      <div class="row margin-custom">
+        <div class="col col-md-3">
+          <div ngbDropdown>
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-block w-100 mw-100"
+              id="dropdownField-btn-1"
+              ngbDropdownToggle
+            >
+              {{ selectedReception?.receptionName }}
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownField">
+              <button
+                type="button"
+                ngbDropdownItem
+                *ngFor="let data of lotDropDown.data"
+                (click)="eventLotSelectHandle(data)"
+              >
+                {{ data.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="selectedReception?.receptionType === 1" class="col col-md-9">
+          <app-typehead-focus
+            [dataInput]="receptionDropdown"
+            (dataReturn)="eventReceptionSelectHandle($event)"
+            [initialSelected]="receptionDropdown.selected"
+          ></app-typehead-focus>
+        </div>
+        <div *ngIf="selectedReception?.receptionType === 5" class="col col-md-9">
+          <div class="row">
+            <div class="col col-md-4">
+              <app-typehead-focus
+                [dataInput]="countryData"
+                (dataReturn)="eventCountrySelectHandle($event)"
+                [placeholder]="'::Country' | abpLocalization"
+                [initialSelected]="countryData.selected"
+                [id]="'countryTypehead'"
+              ></app-typehead-focus>
+            </div>
+            <div class="col col-md-4">
+              <app-typehead-focus
+                [dataInput]="provinceData"
+                (dataReturn)="eventProvinceSelectHandle($event)"
+                [id]="'provinceTypehead'"
+                [disabled]="!selectedReception.countryId"
+                [placeholder]="'::Province' | abpLocalization"
+              ></app-typehead-focus>
+            </div>
+            <div class="col col-md-4">
+              <app-typehead-focus
+                [dataInput]="districtData"
+                (dataReturn)="eventDistrictSelectHandle($event)"
+                [disabled]="!selectedReception.provinceId"
+                [id]="'districtTypehead'"
+                [placeholder]="'::District' | abpLocalization"
+              ></app-typehead-focus>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngFor="let field of fieldData; let i = index">
+        <div class="custom-card">
+          <div class="card-body" *ngIf="field; else loaderRef">
+            <div class="mt-2">
+              <h5 class="mb-2" style="display: inline-block; font-weight: bold">
+                {{ i + 1 }}. {{ field.name }}
+              </h5>
+              <span
+                *ngIf="field.isObligatory"
+                style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                >*</span
+              >
+            </div>
+
+            <div *ngIf="field.dataType === 1">
+              <app-typehead-focus-custom
+                id="option-typehead"
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [initialSelected]="getSelectedOption(field)"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType >= 10 && field.dataType <= 19">
+              <app-typehead-focus-custom
+                id="option-typehead"
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [initialSelected]="getSelectedOption(field)"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType === 2">
+              <ngx-bootstrap-multiselect
+                [options]="field.options"
+                [ngModel]="selectedOptionsMap.get(field.processFieldId)"
+                (ngModelChange)="updateSelectedOptions(field, $event)"
+              ></ngx-bootstrap-multiselect>
+            </div>
+            <div *ngIf="field.dataType === 3">
+              <div class="form-group purple-border">
+                <textarea
+                  class="form-control"
+                  id="{{ field.options }}"
+                  [(ngModel)]="field.options[0].responseText"
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 4">
+              <input
+                type="number"
+                class="form-control"
+                min="0"
+                [(ngModel)]="field.options[0].responseText"
+              />
+            </div>
+            <div *ngIf="field.dataType === 5">
+              <div class="col col-md-3">
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    [placeholder]="'::SelecteDate' | abpLocalization"
+                    name="dp"
+                    ngbDatepicker
+                    #fromDatePicker="ngbDatepicker"
+                    [(ngModel)]="field.options[0].responseText"
+                  />
+                  <button
+                    class="btn btn-outline-secondary bi bi-calendar3"
+                    (click)="fromDatePicker.toggle()"
+                    type="button"
+                  ></button>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 6">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:Image' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedImages?.length > 0" class="custom-image-show">
+                  <div
+                    class="image-container"
+                    *ngFor="let image of field.tempSelectedImages; let i = index"
+                  >
+                    <img [src]="image.url" alt="Selected Image" />
+                    <i
+                      class="fas fa-trash delete-btn"
+                      aria-hidden="true"
+                      (click)="deleteImage(field, i)"
+                    ></i>
+                  </div>
+                </div>
+              </div>
+              <ng-container *ngIf="field.options[0].responseText">
+                <app-view-files
+                  [datatype]="field.dataType"
+                  [fileIds]="field.options[0].responseText"
+                  (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                  [isLoad]="!isSaving"
+                ></app-view-files>
+              </ng-container>
+              <div class="mt-2">
+                <div class="custom-file-upload">
+                  <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                  <input
+                    id="image"
+                    type="file"
+                    (change)="handleImageSelect($event, field)"
+                    multiple
+                    [disabled]="images.length >= 5"
+                  />
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 7">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:File' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedFiles?.length > 0" class="custom-image-show">
+                  <div
+                    class="file-container"
+                    *ngFor="let file of field.tempSelectedFiles; let i = index"
+                  >
+                    <div class="file-details">
+                      <i [class]="getFileIconClass(file.name, file)"></i>
+                      <a class="file-name" [title]="file.name">{{ file.name }}</a>
+                    </div>
+                    <i
+                      class="fas fa-trash-alt delete-btn"
+                      (click)="deleteDocumentFile(field, i)"
+                    ></i>
+                  </div>
+                </div>
+                <ng-container *ngIf="field.options[0]?.responseText">
+                  <app-view-files
+                    [datatype]="field.dataType"
+                    [fileIds]="field.options[0].responseText"
+                    (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                    [isLoad]="!isSaving"
+                  ></app-view-files>
+                </ng-container>
+                <div class="mt-2">
+                  <div class="custom-file-upload">
+                    <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                    <input
+                      id="image"
+                      type="file"
+                      (change)="onDocumentFileChange($event, field)"
+                      multiple
+                      [disabled]="field.tempSelectedFiles && field.tempSelectedFiles.length >= 5"
+                      accept=".pdf, .doc, .docx"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer" *ngIf="checkUserAdmin(currentUser.name)">
+            <div class="flex-container">
+              <div class="flex-item">
+                <label for="executor">{{ '::Record:Executor' | abpLocalization }}</label
+                ><span
+                  *ngIf="field.isObligatory"
+                  style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                  >*</span
+                >
+              </div>
+              <div class="flex-item flex-grow">
+                <app-typehead-focus
+                  id="executor"
+                  [dataInput]="executorData"
+                  (dataReturn)="eventExecutorSelectHandle($event, field)"
+                  [placeholder]="'::Record:Executor' | abpLocalization"
+                  [initialSelected]="findItemById(executorData.data, field.executorId)"
+                  [disabled]="!checkUserAdmin"
+                ></app-typehead-focus>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <div class="button-container">
+      <button
+        *ngIf="fieldData.length > 0"
+        class="btn btn-primary mr-10 add-btn-custom"
+        (click)="saveAndRenew(false)"
+      >
+        {{ '::Record:AddLot' | abpLocalization }}
+      </button>
+      <button
+        *ngIf="fieldData.length === 0"
+        class="btn btn-primary mr-10 add-btn-custom"
+        (click)="getFieldData(selectedStep.id, null, null)"
+      >
+        {{ '::Record:AddLot' | abpLocalization }}
+      </button>
+    </div>
+
+    <div class="button-container">
+      <button type="button" class="btn btn-secondary" abpClose>
+        {{ '::Close' | abpLocalization }}
+      </button>
+
+      <button
+        *ngIf="fieldData.length > 0"
+        class="btn btn-primary"
+        (click)="saveRecordResponse(false, false, saveRecordId).subscribe()"
+      >
+        {{ '::Save' | abpLocalization }}
+      </button>
+
+      <button
+        *ngIf="fieldData.length > 0"
+        class="btn btn-primary"
+        (click)="saveRecordResponse(true, false, saveRecordId).subscribe()"
+      >
+        <i class="fa fa-check mr-1"></i>
+        {{ '::Done' | abpLocalization }}
+      </button>
+    </div>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isNormalStepModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <div class="row">
+      <div class="col-md-12">
+        <h3>{{ selectedStep.name }}</h3>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+
+    <div>
+      <div class="row margin-custom">
+        <div class="col col-md-12">
+          <label class="form-label mb-2"> {{ '::Record:RecordCode' | abpLocalization }}</label>
+          <ngx-bootstrap-multiselect
+            [options]="recordCodeDropdown.data"
+            [(ngModel)]="normalStepRecordCode.recordCodeIds"
+            [settings]="multiSelectSetting"
+            [texts]="multiSelectText"
+            (ngModelChange)="normalStepRecordCodeChange($event)"
+            class="d-flex w-100 mw-100 flex-fill"
+          ></ngx-bootstrap-multiselect>
+        </div>
+      </div>
+      <div
+        *ngFor="let record of normalStepRecordCode.stepRecordSelected; let i = index"
+        class="row me-2 ms-2"
+      >
+        <div class="col col-md-10">
+          <span>{{ record.name }}</span>
+          <button class="btn" style="color: red" (click)="removeRecordCodeNormalStep(record)">
+            <i class="fa fa-remove"></i>
+          </button>
+        </div>
+        <div class="col col-md-2">
+          <div class="d-flex flex-column align-items-center">
+            <div class="form-check form-switch form-switch-md">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                [checked]="record.useAll"
+                [(ngModel)]="record.useAll"
+                id="useAllSwitch-normal"
+              /><i class="flex-column align-items-center">&nbsp; Empty</i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngFor="let field of fieldData; let i = index">
+        <div class="custom-card">
+          <div class="card-body" *ngIf="field; else loaderRef">
+            <div class="mt-2">
+              <h5 class="mb-2" style="display: inline-block; font-weight: bold">
+                {{ i + 1 }}. {{ field.name }}
+              </h5>
+              <span
+                *ngIf="field.isObligatory"
+                style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                >*</span
+              >
+            </div>
+
+            <div *ngIf="field.dataType === 1">
+              <app-typehead-focus-custom
+                id="option-typehead"
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [initialSelected]="getSelectedOption(field)"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType >= 10 && field.dataType <= 19">
+              <app-typehead-focus-custom
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [initialSelected]="getSelectedOption(field)"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType === 2">
+              <ngx-bootstrap-multiselect
+                [options]="field.options"
+                [ngModel]="selectedOptionsMap.get(field.processFieldId)"
+                (ngModelChange)="updateSelectedOptions(field, $event)"
+              ></ngx-bootstrap-multiselect>
+            </div>
+            <div *ngIf="field.dataType === 3">
+              <div class="form-group purple-border">
+                <textarea
+                  class="form-control"
+                  id="{{ field.options }}"
+                  [(ngModel)]="field.options[0].responseText"
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 4">
+              <input
+                type="number"
+                class="form-control"
+                min="0"
+                [(ngModel)]="field.options[0].responseText"
+              />
+            </div>
+            <div *ngIf="field.dataType === 5">
+              <div class="col col-md-3">
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    [placeholder]="'::SelecteDate' | abpLocalization"
+                    name="dp"
+                    ngbDatepicker
+                    #fromDatePicker="ngbDatepicker"
+                    [(ngModel)]="field.options[0].responseText"
+                  />
+                  <button
+                    class="btn btn-outline-secondary bi bi-calendar3"
+                    (click)="fromDatePicker.toggle()"
+                    type="button"
+                  ></button>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 6">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:Image' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedImages?.length > 0" class="custom-image-show">
+                  <div
+                    class="image-container"
+                    *ngFor="let image of field.tempSelectedImages; let i = index"
+                  >
+                    <img [src]="image.url" alt="Selected Image" />
+                    <i
+                      class="fas fa-trash delete-btn"
+                      aria-hidden="true"
+                      (click)="deleteImage(field, i)"
+                    ></i>
+                  </div>
+                </div>
+              </div>
+              <ng-container *ngIf="field.options[0].responseText">
+                <app-view-files
+                  [datatype]="field.dataType"
+                  [fileIds]="field.options[0].responseText"
+                  (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                  [isLoad]="!isSaving"
+                ></app-view-files>
+              </ng-container>
+              <div class="mt-2">
+                <div class="custom-file-upload">
+                  <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                  <input
+                    id="image"
+                    type="file"
+                    (change)="handleImageSelect($event, field)"
+                    multiple
+                    [disabled]="images.length >= 5"
+                  />
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 7">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:File' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedFiles?.length > 0" class="custom-image-show">
+                  <div
+                    class="file-container"
+                    *ngFor="let file of field.tempSelectedFiles; let i = index"
+                  >
+                    <div class="file-details">
+                      <i [class]="getFileIconClass(file.name, file)"></i>
+                      <a class="file-name" [title]="file.name">{{ file.name }}</a>
+                    </div>
+                    <i
+                      class="fas fa-trash-alt delete-btn"
+                      (click)="deleteDocumentFile(field, i)"
+                    ></i>
+                  </div>
+                </div>
+                <ng-container *ngIf="field.options[0].responseText">
+                  <app-view-files
+                    [datatype]="field.dataType"
+                    [fileIds]="field.options[0].responseText"
+                    (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                    [isLoad]="!isSaving"
+                  ></app-view-files>
+                </ng-container>
+                <div class="mt-2">
+                  <div class="custom-file-upload">
+                    <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                    <input
+                      id="image"
+                      type="file"
+                      (change)="onDocumentFileChange($event, field)"
+                      multiple
+                      [disabled]="field.tempSelectedFiles && field.tempSelectedFiles.length >= 5"
+                      accept=".pdf, .doc, .docx"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-footer" *ngIf="checkUserAdmin">
+            <div class="flex-container">
+              <div class="flex-item">
+                <label for="executor">{{ '::Record:Executor' | abpLocalization }}</label
+                ><span
+                  *ngIf="field.isObligatory"
+                  style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                  >*</span
+                >
+              </div>
+              <div class="flex-item flex-grow">
+                <app-typehead-focus
+                  id="executor"
+                  [dataInput]="executorData"
+                  (dataReturn)="eventExecutorSelectHandle($event, field)"
+                  [placeholder]="'::Record:Executor' | abpLocalization"
+                  [initialSelected]="findItemById(executorData.data, field.executorId)"
+                  [disabled]="!checkUserAdmin(currentUser.name)"
+                ></app-typehead-focus>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+
+    <button class="btn btn-primary" (click)="saveNormalStepResponse(false, false, saveRecordId)">
+      {{ '::Save' | abpLocalization }}
+    </button>
+
+    <button class="btn btn-primary" (click)="saveNormalStepResponse(true, false, saveRecordId)">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Done' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isLastStepModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <div class="row">
+      <div class="col-md-12">
+        <h3>{{ selectedStep.name }}</h3>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+
+    <div ngbNavContent *ngIf="selectedStep?.isSpecial === 20">
+      <div *ngIf="recordShareData.data.length > 0" class="row margin-custom">
+        <div class="selected-values-card">
+          <ngx-datatable
+            [rows]="recordShareData.data"
+            default
+            (activate)="recordShareRowClick($event)"
+          >
+            <ngx-datatable-column
+              [name]="'::Record:TraceAbilityCode' | abpLocalization"
+              prop="traceabilityCode"
+              [cellClass]="'text-primary'"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:ProfileName' | abpLocalization"
+              prop="profileName"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:ProductName' | abpLocalization"
+              prop="productName"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:CreatedBy' | abpLocalization"
+              prop="createdBy"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column [sortable]="false">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <button
+                  type="button"
+                  class="btn btn-link text-danger"
+                  (click)="removeRecordShare($event, row.id)"
+                >
+                  <i class="fa fa-times"></i>
+                </button>
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+      </div>
+      <div *ngIf="recordShareData.data.length === 0" class="row margin-custom">
+        <div class="selected-values-card">{{ '::NoDataAvailable' | abpLocalization }}</div>
+      </div>
+
+      <div *ngIf="fieldData.length > 0">
+        <div class="row mt-2">
+          <div class="col col-md-12">
+            <label class="form-label mb-2"> {{ '::Record:RecordCode' | abpLocalization }}</label>
+            <span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+              >*</span
+            >
+            <ngx-bootstrap-multiselect
+              [options]="recordCodeDropdown.data"
+              [(ngModel)]="selectedlastStep.recordCodeIds"
+              [settings]="multiSelectSetting"
+              [texts]="multiSelectText"
+              (ngModelChange)="lastStepRecordCodeChange($event)"
+              class="d-flex w-100 mw-100 flex-fill mb-3"
+            ></ngx-bootstrap-multiselect>
+          </div>
+        </div>
+        <div
+          *ngFor="let record of selectedlastStep.stepRecordSelected; let i = index"
+          class="row me-2 ms-2"
+        >
+          <div class="col col-md-10">
+            <span>{{ record.name }}</span>
+            <button class="btn" style="color: red" (click)="removeRecordCodeLastStep(record)">
+              <i class="fa fa-remove"></i>
+            </button>
+          </div>
+          <div class="col col-md-2">
+            <div class="d-flex flex-column align-items-center">
+              <div class="form-check form-switch form-switch-md">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  role="switch"
+                  [(ngModel)]="record.useAll"
+                  id="useAllSwitch-last"
+                /><i class="flex-column align-items-center">&nbsp; Empty</i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2">
+          <div class="row">
+            <div class="col-md-6">
+              <label>{{ '::Record:LotId' | abpLocalization }}</label>
+              <input type="text" class="form-control" [(ngModel)]="selectedlastStep.lotId" />
+            </div>
+            <div class="col-md-6">
+              <label>{{ '::Record:Product' | abpLocalization }}</label
+              ><span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                >*</span
+              >
+              <div>
+                <app-typehead-focus
+                  [dataInput]="productData"
+                  (dataReturn)="eventProductSelectHandle($event)"
+                  [initialSelected]="productData.selected"
+                ></app-typehead-focus>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          <div class="row">
+            <div class="col-md-6">
+              <label>{{ '::Record:ProfileName' | abpLocalization }}</label>
+              <span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                >*</span
+              >
+              <div>
+                <app-typehead-focus
+                  [dataInput]="profileNameData"
+                  (dataReturn)="eventProfileSelectHandle($event)"
+                  [initialSelected]="profileNameData.selected"
+                ></app-typehead-focus>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label>{{ '::Record:PartnerName' | abpLocalization }}</label>
+              <div>
+                <app-typehead-focus
+                  [id]="'partnerTypehead'"
+                  [dataInput]="partnerData"
+                  (dataReturn)="eventPartnerSelectHandle($event)"
+                  [initialSelected]="partnerData.selected"
+                ></app-typehead-focus>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2"></div>
+        <div class="row">
+          <div class="col-md-4">
+            <label>{{ '::Record:NumberOfStamps' | abpLocalization }}</label>
+            <span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+              >*</span
+            >
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="selectedlastStep.numberOfStamp"
+              min="0"
+              (blur)="getStartEndNumber()"
+            />
+          </div>
+          <div class="col col-md-4">
+            <div class="mt-2">
+              <label>{{ '::Record:StartNumber' | abpLocalization }}</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="selectedlastStep.startNumber"
+                (blur)="validateStampNumber(selectedlastStep.startNumber)"
+              />
+            </div>
+          </div>
+          <div class="col col-md-4">
+            <div class="mt-2">
+              <label>{{ '::Record:EndNumber' | abpLocalization }}</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="selectedlastStep.endNumber"
+                (blur)="validateStampNumber(selectedlastStep.endNumber)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div *ngFor="let field of fieldData; let i = index">
+          <div class="custom-card">
+            <div class="card-body" *ngIf="field; else loaderRef">
+              <div class="mt-2">
+                <h5 class="mb-2" style="display: inline-block; font-weight: bold">
+                  {{ i + 1 }}. {{ field.name }}
+                </h5>
+                <span
+                  *ngIf="field.isObligatory"
+                  style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                  >*</span
+                >
+              </div>
+
+              <div *ngIf="field.dataType === 1">
+                <app-typehead-focus-custom
+                  id="option-typehead"
+                  [dataInput]="field.options"
+                  (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                  [initialSelected]="getSelectedOption(field)"
+                ></app-typehead-focus-custom>
+              </div>
+              <div *ngIf="field.dataType >= 10 && field.dataType <= 19">
+                <app-typehead-focus-custom
+                  [dataInput]="field.options"
+                  (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                  [initialSelected]="getSelectedOption(field)"
+                ></app-typehead-focus-custom>
+              </div>
+              <div *ngIf="field.dataType === 2">
+                <ngx-bootstrap-multiselect
+                  [options]="field.options"
+                  [ngModel]="selectedOptionsMap.get(field.processFieldId)"
+                  (ngModelChange)="updateSelectedOptions(field, $event)"
+                ></ngx-bootstrap-multiselect>
+              </div>
+              <div *ngIf="field.dataType === 3">
+                <div class="form-group purple-border">
+                  <textarea
+                    class="form-control"
+                    id="{{ field.options }}"
+                    [(ngModel)]="field.options[0].responseText"
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+              <div *ngIf="field.dataType === 4">
+                <input
+                  type="number"
+                  class="form-control"
+                  min="0"
+                  [(ngModel)]="field.options[0].responseText"
+                />
+              </div>
+              <div *ngIf="field.dataType === 5">
+                <div class="col col-md-3">
+                  <div class="input-group">
+                    <input
+                      class="form-control"
+                      [placeholder]="'::SelecteDate' | abpLocalization"
+                      name="dp"
+                      ngbDatepicker
+                      #fromDatePicker="ngbDatepicker"
+                      [(ngModel)]="field.options[0].responseText"
+                    />
+                    <button
+                      class="btn btn-outline-secondary bi bi-calendar3"
+                      (click)="fromDatePicker.toggle()"
+                      type="button"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="field.dataType === 6">
+                <div class="mt-2">
+                  <label for="image">{{ '::Record:Image' | abpLocalization }}</label>
+                </div>
+                <div class="mt-2">
+                  <div *ngIf="field.tempSelectedImages?.length > 0" class="custom-image-show">
+                    <div
+                      class="image-container"
+                      *ngFor="let image of field.tempSelectedImages; let i = index"
+                    >
+                      <img [src]="image.url" alt="Selected Image" />
+                      <i
+                        class="fas fa-trash delete-btn"
+                        aria-hidden="true"
+                        (click)="deleteImage(field, i)"
+                      ></i>
+                    </div>
+                  </div>
+                </div>
+                <ng-container *ngIf="field.options[0].responseText">
+                  <app-view-files
+                    [datatype]="field.dataType"
+                    [fileIds]="field.options[0].responseText"
+                    (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                    [isLoad]="!isSaving"
+                  ></app-view-files>
+                </ng-container>
+                <div class="mt-2">
+                  <div class="custom-file-upload">
+                    <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                    <input
+                      id="image"
+                      type="file"
+                      (change)="handleImageSelect($event, field)"
+                      multiple
+                      [disabled]="images.length >= 5"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="field.dataType === 7">
+                <div class="mt-2">
+                  <label for="image">{{ '::Record:File' | abpLocalization }}</label>
+                </div>
+                <div class="mt-2">
+                  <div *ngIf="field.tempSelectedFiles?.length > 0" class="custom-image-show">
+                    <div
+                      class="file-container"
+                      *ngFor="let file of field.tempSelectedFiles; let i = index"
+                    >
+                      <div class="file-details">
+                        <i [class]="getFileIconClass(file.name, file)"></i>
+                        <a class="file-name" [title]="file.name">{{ file.name }}</a>
+                      </div>
+                      <i
+                        class="fas fa-trash-alt delete-btn"
+                        (click)="deleteDocumentFile(field, i)"
+                      ></i>
+                    </div>
+                  </div>
+                  <ng-container *ngIf="field.options[0].responseText">
+                    <app-view-files
+                      [datatype]="field.dataType"
+                      [fileIds]="field.options[0].responseText"
+                      (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                      [isLoad]="!isSaving"
+                    ></app-view-files>
+                  </ng-container>
+                  <div class="mt-2">
+                    <div class="custom-file-upload">
+                      <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                      <input
+                        id="image"
+                        type="file"
+                        (change)="onDocumentFileChange($event, field)"
+                        multiple
+                        [disabled]="field.tempSelectedFiles && field.tempSelectedFiles.length >= 5"
+                        accept=".pdf, .doc, .docx"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer" *ngIf="checkUserAdmin(currentUser.name)">
+                <div class="flex-container">
+                  <div class="flex-item">
+                    <label for="executor">{{ '::Record:Executor' | abpLocalization }}</label
+                    ><span
+                      *ngIf="field.isObligatory"
+                      style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                      >*</span
+                    >
+                  </div>
+                  <div class="flex-item flex-grow">
+                    <app-typehead-focus
+                      id="executor-2"
+                      [dataInput]="executorData"
+                      (dataReturn)="eventExecutorSelectHandle($event, field)"
+                      [placeholder]="'::Record:Executor' | abpLocalization"
+                      [initialSelected]="findItemById(executorData.data, field.executorId)"
+                      [disabled]="!checkUserAdmin(currentUser.name)"
+                    ></app-typehead-focus>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <div class="button-container">
+      <button
+        *ngIf="fieldData.length > 0"
+        class="btn btn-primary mr-10 add-btn-custom"
+        (click)="saveAndRenew(false)"
+      >
+        {{ '::Record:AddLot' | abpLocalization }}
+      </button>
+      <button
+        *ngIf="fieldData.length === 0"
+        class="btn btn-primary mr-10 add-btn-custom"
+        (click)="getFieldData(selectedStep.id, null, null)"
+      >
+        {{ '::Record:AddLot' | abpLocalization }}
+      </button>
+    </div>
+
+    <div class="button-container">
+      <button type="button" class="btn btn-secondary" abpClose>
+        {{ '::Close' | abpLocalization }}
+      </button>
+
+      <button
+        *ngIf="fieldData.length > 0"
+        class="btn btn-primary"
+        (click)="saveLastStepResponse(false, false, saveRecordId)"
+      >
+        {{ '::Save' | abpLocalization }}
+      </button>
+
+      <button
+        *ngIf="fieldData.length > 0"
+        class="btn btn-primary"
+        (click)="saveLastStepResponse(true, false, saveRecordId)"
+      >
+        <i class="fa fa-check mr-1"></i>
+        {{ '::Done' | abpLocalization }}
+      </button>
+    </div>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isFirstStepViewModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <div class="row">
+      <div class="col-md-12">
+        <h3>{{ selectedStep.name }}</h3>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+
+    <div *ngIf="receptionData.data.length > 0" class="row margin-custom">
+      <div class="selected-values-card">
+        <ul>
+          <li *ngFor="let value of receptionData.data" class="selected-value fw-bold">
+            <button
+              type="button"
+              class="btn btn-link text-primary"
+              (click)="getFieldData(selectedStep.id, saveRecordId, value)"
+            >
+              <i class="fa fa-file-text fa-2x"></i>
+            </button>
+            {{ value?.displayCode }}
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div
+      *ngIf="receptionData.data.length === 0 && fieldData.length === 0"
+      class="row margin-custom"
+    >
+      <div class="selected-values-card">
+        {{ '::NoDataAvailable' | abpLocalization }}
+      </div>
+    </div>
+
+    <div *ngIf="fieldData.length > 0">
+      <div class="row margin-custom">
+        <div class="col col-md-2">
+          <div ngbDropdown class="d-inline-block">
+            <button
+              type="button"
+              class="btn btn-outline-primary btn-block"
+              id="dropdownField-btn"
+              ngbDropdownToggle
+              disabled
+            >
+              {{ selectedReception?.receptionName }}
+            </button>
+            <div ngbDropdownMenu aria-labelledby="dropdownField">
+              <button type="button" ngbDropdownItem *ngFor="let data of lotDropDown.data" disabled>
+                {{ data.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="selectedReception?.receptionType === 1" class="col col-md-10">
+          <app-typehead-focus
+            [dataInput]="receptionDropdown"
+            (dataReturn)="eventReceptionSelectHandle($event)"
+            [disabled]="true"
+            [initialSelected]="receptionDropdown.selected"
+          ></app-typehead-focus>
+        </div>
+        <div *ngIf="selectedReception?.receptionType === 5" class="col col-md-10">
+          <div class="row">
+            <div class="col col-md-4">
+              <app-typehead-focus
+                [dataInput]="countryData"
+                (dataReturn)="eventCountrySelectHandle($event)"
+                [placeholder]="'::Country' | abpLocalization"
+                [initialSelected]="countryData.selected"
+                [disabled]="true"
+                [id]="'countryTypehead'"
+              ></app-typehead-focus>
+            </div>
+            <div class="col ol-md-4">
+              <app-typehead-focus
+                [dataInput]="provinceData"
+                (dataReturn)="eventProvinceSelectHandle($event)"
+                [id]="'provinceTypehead'"
+                [placeholder]="'::Province' | abpLocalization"
+                [disabled]="true"
+              ></app-typehead-focus>
+            </div>
+            <div class="col col-md-4">
+              <app-typehead-focus
+                [dataInput]="districtData"
+                (dataReturn)="eventDistrictSelectHandle($event)"
+                [id]="'districtTypehead'"
+                [placeholder]="'::District' | abpLocalization"
+                [disabled]="true"
+              ></app-typehead-focus>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngFor="let field of fieldData; let i = index">
+        <div class="custom-card">
+          <div class="card-body" *ngIf="field; else loaderRef">
+            <div class="mt-2">
+              <h5 class="mb-2" style="display: inline-block; font-weight: bold">
+                {{ i + 1 }}. {{ field.name }}
+              </h5>
+              <span
+                *ngIf="field.isObligatory"
+                style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                >*</span
+              >
+            </div>
+
+            <div *ngIf="field.dataType === 1">
+              <app-typehead-focus-custom
+                id="option-typehead"
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [initialSelected]="getSelectedOption(field)"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType >= 10 && field.dataType <= 19">
+              <app-typehead-focus-custom
+                id="option-typehead"
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [initialSelected]="getSelectedOption(field)"
+                [disabled]="true"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType === 2">
+              <ngx-bootstrap-multiselect
+                [options]="field.options"
+                [ngModel]="selectedOptionsMap.get(field.processFieldId)"
+                [disabled]="true"
+                (ngModelChange)="updateSelectedOptions(field, $event)"
+              ></ngx-bootstrap-multiselect>
+            </div>
+            <div *ngIf="field.dataType === 3">
+              <div class="form-group purple-border">
+                <textarea
+                  class="form-control"
+                  id="{{ field.options }}"
+                  [(ngModel)]="field.options[0].responseText"
+                  disabled
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 4">
+              <input
+                type="number"
+                class="form-control"
+                min="0"
+                [(ngModel)]="field.options[0].responseText"
+                disabled
+              />
+            </div>
+            <div *ngIf="field.dataType === 5">
+              <div class="col col-md-3">
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    [placeholder]="'::SelecteDate' | abpLocalization"
+                    name="dp"
+                    ngbDatepicker
+                    #fromDatePicker="ngbDatepicker"
+                    [(ngModel)]="field.options[0].responseText"
+                    disabled
+                  />
+                  <button
+                    class="btn btn-outline-secondary bi bi-calendar3"
+                    (click)="fromDatePicker.toggle()"
+                    type="button"
+                    disabled
+                  ></button>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 6">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:Image' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedImages?.length > 0" class="custom-image-show">
+                  <div
+                    class="image-container"
+                    *ngFor="let image of field.tempSelectedImages; let i = index"
+                  >
+                    <img [src]="image.url" alt="Selected Image" />
+                    <i
+                      class="fas fa-trash delete-btn"
+                      aria-hidden="true"
+                      (click)="deleteImage(field, i)"
+                    ></i>
+                  </div>
+                </div>
+              </div>
+              <ng-container *ngIf="field.options[0].responseText">
+                <app-view-files
+                  [datatype]="field.dataType"
+                  [fileIds]="field.options[0].responseText"
+                  [isEditable]="false"
+                  (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                ></app-view-files>
+              </ng-container>
+              <div class="mt-2">
+                <div class="custom-file-upload">
+                  <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                  <input
+                    id="image"
+                    type="file"
+                    (change)="handleImageSelect($event, field)"
+                    multiple
+                    [disabled]="images.length >= 5"
+                  />
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 7">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:File' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedFiles?.length > 0" class="custom-image-show">
+                  <div
+                    class="file-container"
+                    *ngFor="let file of field.tempSelectedFiles; let i = index"
+                  >
+                    <div class="file-details">
+                      <i [class]="getFileIconClass(file.name, file)"></i>
+                      <a class="file-name" [title]="file.name">{{ file.name }}</a>
+                    </div>
+                    <i
+                      class="fas fa-trash-alt delete-btn"
+                      (click)="deleteDocumentFile(field, i)"
+                    ></i>
+                  </div>
+                </div>
+                <ng-container *ngIf="field.options[0].responseText">
+                  <app-view-files
+                    [datatype]="field.dataType"
+                    [fileIds]="field.options[0].responseText"
+                    (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                    [isEditable]="false"
+                  ></app-view-files>
+                </ng-container>
+                <div class="mt-2">
+                  <div class="custom-file-upload">
+                    <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                    <input
+                      id="image"
+                      type="file"
+                      (change)="onDocumentFileChange($event, field)"
+                      multiple
+                      [disabled]="field.tempSelectedFiles && field.tempSelectedFiles.length >= 5"
+                      accept=".pdf, .doc, .docx"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer" *ngIf="checkUserAdmin(currentUser.name)">
+            <div class="flex-container">
+              <div class="flex-item">
+                <label for="executor">{{ '::Record:Executor' | abpLocalization }}</label
+                ><span
+                  *ngIf="field.isObligatory"
+                  style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                  >*</span
+                >
+              </div>
+              <div class="flex-item flex-grow">
+                <app-typehead-focus
+                  id="executor"
+                  [dataInput]="executorData"
+                  (dataReturn)="eventExecutorSelectHandle($event, field)"
+                  [placeholder]="'::Record:Executor' | abpLocalization"
+                  [initialSelected]="findItemById(executorData.data, field.executorId)"
+                  [disabled]="true"
+                ></app-typehead-focus>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isNormalStepViewModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <div class="row">
+      <div class="col-md-12">
+        <h3>{{ selectedStep.name }}</h3>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+    <div>
+      <div class="row margin-custom">
+        <div class="row d-flex">
+          <div class="col col-md-10">
+            <label class="form-label mb-2"> {{ '::Record:RecordCode' | abpLocalization }}</label>
+            <ngx-bootstrap-multiselect
+              [options]="recordCodeDropdown.data"
+              [(ngModel)]="normalStepRecordCode.recordCodeIds"
+              [settings]="multiSelectSetting"
+              [texts]="multiSelectText"
+              class="d-flex w-100 mw-100 flex-fill"
+              [disabled]="true"
+            ></ngx-bootstrap-multiselect>
+          </div>
+          <div class="col-md-2 d-flex flex-column align-items-center">
+            <label class="mb-2" for="useAllSwitch">
+              {{ '::Record:UseAll' | abpLocalization }}</label
+            >
+            <div class="form-check form-switch form-switch-md">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                [checked]="selectedStep.useAll === 1"
+                id="useAllSwitch"
+                (change)="onCheckboxChange()"
+                disabled
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngFor="let field of fieldData; let i = index">
+        <div class="custom-card">
+          <div class="card-body" *ngIf="field; else loaderRef">
+            <div class="mt-2">
+              <h5 class="mb-2" style="display: inline-block; font-weight: bold">
+                {{ i + 1 }}. {{ field.name }}
+              </h5>
+              <span
+                *ngIf="field.isObligatory"
+                style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                >*</span
+              >
+            </div>
+            <div *ngIf="field.dataType === 1">
+              <app-typehead-focus-custom
+                id="option-typehead"
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [initialSelected]="getSelectedOption(field)"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType >= 10 && field.dataType <= 19">
+              <app-typehead-focus-custom
+                [dataInput]="field.options"
+                (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                [disabled]="true"
+                [initialSelected]="getSelectedOption(field)"
+              ></app-typehead-focus-custom>
+            </div>
+            <div *ngIf="field.dataType === 2">
+              <ngx-bootstrap-multiselect
+                [options]="field.options"
+                [ngModel]="selectedOptionsMap.get(field.processFieldId)"
+                (ngModelChange)="updateSelectedOptions(field, $event)"
+                [disabled]="true"
+              ></ngx-bootstrap-multiselect>
+            </div>
+            <div *ngIf="field.dataType === 3">
+              <div class="form-group purple-border">
+                <textarea
+                  class="form-control"
+                  id="{{ field.options }}"
+                  [(ngModel)]="field.options[0].responseText"
+                  disabled
+                  rows="3"
+                ></textarea>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 4">
+              <input
+                type="number"
+                class="form-control"
+                min="0"
+                [(ngModel)]="field.options[0].responseText"
+                disabled
+              />
+            </div>
+            <div *ngIf="field.dataType === 5">
+              <div class="col col-md-3">
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    [placeholder]="'::SelecteDate' | abpLocalization"
+                    name="dp"
+                    disabled
+                    ngbDatepicker
+                    #fromDatePicker="ngbDatepicker"
+                    [(ngModel)]="field.options[0].responseText"
+                  />
+                  <button
+                    class="btn btn-outline-secondary bi bi-calendar3"
+                    disabled
+                    (click)="fromDatePicker.toggle()"
+                    type="button"
+                  ></button>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 6">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:Image' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedImages?.length > 0" class="custom-image-show">
+                  <div
+                    class="image-container"
+                    *ngFor="let image of field.tempSelectedImages; let i = index"
+                  >
+                    <img [src]="image.url" alt="Selected Image" />
+                    <i
+                      class="fas fa-trash delete-btn"
+                      aria-hidden="true"
+                      (click)="deleteImage(field, i)"
+                    ></i>
+                  </div>
+                </div>
+              </div>
+              <ng-container *ngIf="field.options[0].responseText">
+                <app-view-files
+                  [datatype]="field.dataType"
+                  [fileIds]="field.options[0].responseText"
+                  [isEditable]="false"
+                  (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                ></app-view-files>
+              </ng-container>
+              <div class="mt-2">
+                <div class="custom-file-upload">
+                  <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                  <input
+                    id="image"
+                    type="file"
+                    (change)="handleImageSelect($event, field)"
+                    multiple
+                    [disabled]="images.length >= 5"
+                  />
+                </div>
+              </div>
+            </div>
+            <div *ngIf="field.dataType === 7">
+              <div class="mt-2">
+                <label for="image">{{ '::Record:File' | abpLocalization }}</label>
+              </div>
+              <div class="mt-2">
+                <div *ngIf="field.tempSelectedFiles?.length > 0" class="custom-image-show">
+                  <div
+                    class="file-container"
+                    *ngFor="let file of field.tempSelectedFiles; let i = index"
+                  >
+                    <div class="file-details">
+                      <i [class]="getFileIconClass(file.name, file)"></i>
+                      <a class="file-name" [title]="file.name">{{ file.name }}</a>
+                    </div>
+                    <i
+                      class="fas fa-trash-alt delete-btn"
+                      (click)="deleteDocumentFile(field, i)"
+                    ></i>
+                  </div>
+                </div>
+                <ng-container *ngIf="field.options[0].responseText">
+                  <app-view-files
+                    [datatype]="field.dataType"
+                    [fileIds]="field.options[0].responseText"
+                    (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                    [isEditable]="false"
+                  ></app-view-files>
+                </ng-container>
+                <div class="mt-2">
+                  <div class="custom-file-upload">
+                    <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                    <input
+                      id="image"
+                      type="file"
+                      (change)="onDocumentFileChange($event, field)"
+                      multiple
+                      [disabled]="field.tempSelectedFiles && field.tempSelectedFiles.length >= 5"
+                      accept=".pdf, .doc, .docx"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer" *ngIf="checkUserAdmin(currentUser.name)">
+            <div class="flex-container">
+              <div class="flex-item">
+                <label for="executor">{{ '::Record:Executor' | abpLocalization }}</label
+                ><span
+                  *ngIf="field.isObligatory"
+                  style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                  >*</span
+                >
+              </div>
+              <div class="flex-item flex-grow">
+                <app-typehead-focus
+                  id="executor"
+                  [dataInput]="executorData"
+                  (dataReturn)="eventExecutorSelectHandle($event, field)"
+                  [placeholder]="'::Record:Executor' | abpLocalization"
+                  [initialSelected]="findItemById(executorData.data, field.executorId)"
+                  [disabled]="true"
+                ></app-typehead-focus>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
+
+<abp-modal [(visible)]="isLastStepViewModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <div class="row">
+      <div class="col-md-12">
+        <h3>{{ selectedStep.name }}</h3>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+
+    <div ngbNavContent *ngIf="selectedStep?.isSpecial === 20">
+      <div *ngIf="recordShareData.data.length > 0" class="row margin-custom">
+        <div class="selected-values-card">
+          <ngx-datatable
+            [rows]="recordShareData.data"
+            default
+            (activate)="recordShareRowClick($event)"
+          >
+            <ngx-datatable-column
+              [name]="'::Record:TraceAbilityCode' | abpLocalization"
+              prop="traceabilityCode"
+              [cellClass]="'text-primary'"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:ProfileName' | abpLocalization"
+              prop="profileName"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:ProductName' | abpLocalization"
+              prop="productName"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Record:CreatedBy' | abpLocalization"
+              prop="createdBy"
+              [sortable]="false"
+            ></ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+      </div>
+      <div *ngIf="recordShareData.data.length === 0" class="row margin-custom">
+        <div class="selected-values-card">{{ '::NoDataAvailable' | abpLocalization }}</div>
+      </div>
+      <div *ngIf="fieldData.length > 0">
+        <div class="row mt-2">
+          <div class="row d-flex">
+            <div class="col col-md-10">
+              <label class="form-label mb-2"> {{ '::Record:RecordCode' | abpLocalization }}</label>
+              <span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                >*</span
+              >
+              <ngx-bootstrap-multiselect
+                [options]="recordCodeDropdown.data"
+                [(ngModel)]="selectedlastStep.recordCodeIds"
+                [settings]="multiSelectSetting"
+                [texts]="multiSelectText"
+                class="d-flex w-100 mw-100 flex-fill"
+                [disabled]="true"
+              ></ngx-bootstrap-multiselect>
+            </div>
+            <div class="col-md-2 d-flex flex-column align-items-center">
+              <label class="mb-2" for="useAllSwitch">
+                {{ '::Record:UseAll' | abpLocalization }}</label
+              >
+              <div class="form-check form-switch form-switch-md">
+                <input
+                  class="form-check-input"
+                  [checked]="selectedlastStep.useAll === 1"
+                  type="checkbox"
+                  role="switch"
+                  id="useAllSwitch-2"
+                  (change)="onCheckboxChange()"
+                  disabled
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2">
+          <label>{{ '::Record:Product' | abpLocalization }}</label
+          ><span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+            >*</span
+          >
+          <div>
+            <app-typehead-focus
+              [dataInput]="productData"
+              (dataReturn)="eventProductSelectHandle($event)"
+              [initialSelected]="productData.selected"
+              [disabled]="true"
+            ></app-typehead-focus>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          <label>{{ '::Record:ProfileName' | abpLocalization }}</label
+          ><span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+            >*</span
+          >
+          <div>
+            <app-typehead-focus
+              [dataInput]="profileNameData"
+              (dataReturn)="eventProfileSelectHandle($event)"
+              [initialSelected]="profileNameData.selected"
+              [disabled]="true"
+            ></app-typehead-focus>
+          </div>
+        </div>
+
+        <div class="mt-2">
+          <label>{{ '::Record:PartnerName' | abpLocalization }}</label>
+
+          <div>
+            <app-typehead-focus
+              [id]="'partnerTypehead'"
+              [dataInput]="partnerData"
+              (dataReturn)="eventPartnerSelectHandle($event)"
+              [initialSelected]="partnerData.selected"
+              [disabled]="true"
+            ></app-typehead-focus>
+          </div>
+        </div>
+        <div class="mt-2">
+          <label>{{ '::Record:NumberOfStamps' | abpLocalization }}</label>
+          <span style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+            >*</span
+          >
+          <input
+            type="number"
+            class="form-control"
+            [(ngModel)]="selectedlastStep.numberOfStamp"
+            min="0"
+            (blur)="getStartEndNumber()"
+            disabled
+          />
+        </div>
+        <div class="row">
+          <div class="col col-md-6">
+            <div class="mt-2">
+              <label>{{ '::Record:StartNumber' | abpLocalization }}</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="selectedlastStep.startNumber"
+                (blur)="validateStampNumber(selectedlastStep.startNumber)"
+                disabled
+              />
+            </div>
+          </div>
+          <div class="col col-md-6">
+            <div class="mt-2">
+              <label>{{ '::Record:EndNumber' | abpLocalization }}</label>
+              <input
+                type="text"
+                class="form-control"
+                [(ngModel)]="selectedlastStep.endNumber"
+                (blur)="validateStampNumber(selectedlastStep.endNumber)"
+                disabled
+              />
+            </div>
+          </div>
+        </div>
+
+        <div *ngFor="let field of fieldData; let i = index">
+          <div class="custom-card">
+            <div class="card-body" *ngIf="field; else loaderRef">
+              <div class="mt-2">
+                <h5 class="mb-2" style="display: inline-block; font-weight: bold">
+                  {{ i + 1 }}. {{ field.name }}
+                </h5>
+                <span
+                  *ngIf="field.isObligatory"
+                  style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                  >*</span
+                >
+              </div>
+
+              <div *ngIf="field.dataType === 1">
+                <app-typehead-focus-custom
+                  id="option-typehead-1"
+                  [dataInput]="field.options"
+                  (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                  [initialSelected]="getSelectedOption(field)"
+                ></app-typehead-focus-custom>
+              </div>
+              <div *ngIf="field.dataType >= 10 && field.dataType <= 19">
+                <app-typehead-focus-custom
+                  [dataInput]="field.options"
+                  (dataReturn)="eventListObjectSelectCustomHandle($event, field.options)"
+                  [initialSelected]="getSelectedOption(field)"
+                  [disabled]="true"
+                ></app-typehead-focus-custom>
+              </div>
+              <div *ngIf="field.dataType === 2">
+                <ngx-bootstrap-multiselect
+                  [options]="field.options"
+                  [ngModel]="selectedOptionsMap.get(field.processFieldId)"
+                  (ngModelChange)="updateSelectedOptions(field, $event)"
+                  [disabled]="true"
+                ></ngx-bootstrap-multiselect>
+              </div>
+              <div *ngIf="field.dataType === 3">
+                <div class="form-group purple-border">
+                  <textarea
+                    class="form-control"
+                    id="{{ field.options }}"
+                    [(ngModel)]="field.options[0].responseText"
+                    rows="3"
+                    disabled
+                  ></textarea>
+                </div>
+              </div>
+              <div *ngIf="field.dataType === 4">
+                <input
+                  type="number"
+                  class="form-control"
+                  min="0"
+                  [(ngModel)]="field.options[0].responseText"
+                  disabled
+                />
+              </div>
+              <div *ngIf="field.dataType === 5">
+                <div class="col col-md-3">
+                  <div class="input-group">
+                    <input
+                      class="form-control"
+                      [placeholder]="'::SelecteDate' | abpLocalization"
+                      name="dp"
+                      ngbDatepicker
+                      #fromDatePicker="ngbDatepicker"
+                      [(ngModel)]="field.options[0].responseText"
+                      disabled
+                    />
+                    <button
+                      class="btn btn-outline-secondary bi bi-calendar3"
+                      (click)="fromDatePicker.toggle()"
+                      type="button"
+                      disabled
+                    ></button>
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="field.dataType === 6">
+                <div class="mt-2">
+                  <label for="image">{{ '::Record:Image' | abpLocalization }}</label>
+                </div>
+                <div class="mt-2">
+                  <div *ngIf="field.tempSelectedImages?.length > 0" class="custom-image-show">
+                    <div
+                      class="image-container"
+                      *ngFor="let image of field.tempSelectedImages; let i = index"
+                    >
+                      <img [src]="image.url" alt="Selected Image" />
+                      <i
+                        class="fas fa-trash delete-btn"
+                        aria-hidden="true"
+                        (click)="deleteImage(field, i)"
+                      ></i>
+                    </div>
+                  </div>
+                </div>
+                <ng-container *ngIf="field.options[0].responseText">
+                  <app-view-files
+                    [datatype]="field.dataType"
+                    [fileIds]="field.options[0].responseText"
+                    [isEditable]="false"
+                    (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                  ></app-view-files>
+                </ng-container>
+                <div class="mt-2">
+                  <div class="custom-file-upload">
+                    <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                    <input
+                      id="image"
+                      type="file"
+                      (change)="handleImageSelect($event, field)"
+                      multiple
+                      [disabled]="images.length >= 5"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="field.dataType === 7">
+                <div class="mt-2">
+                  <label for="image">{{ '::Record:File' | abpLocalization }}</label>
+                </div>
+                <div class="mt-2">
+                  <div *ngIf="field.tempSelectedFiles?.length > 0" class="custom-image-show">
+                    <div
+                      class="file-container"
+                      *ngFor="let file of field.tempSelectedFiles; let i = index"
+                    >
+                      <div class="file-details">
+                        <i [class]="getFileIconClass(file.name, file)"></i>
+                        <a class="file-name" [title]="file.name">{{ file.name }}</a>
+                      </div>
+                      <i
+                        class="fas fa-trash-alt delete-btn"
+                        (click)="deleteDocumentFile(field, i)"
+                      ></i>
+                    </div>
+                  </div>
+                  <ng-container *ngIf="field.options[0].responseText">
+                    <app-view-files
+                      [datatype]="field.dataType"
+                      [fileIds]="field.options[0].responseText"
+                      (eventDeleteFileEmit)="eventFileDeletedHandle($event)"
+                      [isEditable]="false"
+                    ></app-view-files>
+                  </ng-container>
+                  <div class="mt-2">
+                    <div class="custom-file-upload">
+                      <label for="image">{{ '::Record:Upload' | abpLocalization }}</label>
+                      <input
+                        id="image"
+                        type="file"
+                        (change)="onDocumentFileChange($event, field)"
+                        multiple
+                        [disabled]="field.tempSelectedFiles && field.tempSelectedFiles.length >= 5"
+                        accept=".pdf, .doc, .docx"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer" *ngIf="checkUserAdmin(currentUser.name)">
+              <div class="flex-container">
+                <div class="flex-item">
+                  <label for="executor">{{ '::Record:Executor' | abpLocalization }}</label
+                  ><span
+                    *ngIf="field.isObligatory"
+                    style="vertical-align: middle; font-size: 1.2em; color: red; margin-left: 8px"
+                    >*</span
+                  >
+                </div>
+                <div class="flex-item flex-grow">
+                  <app-typehead-focus
+                    id="executor-1"
+                    [dataInput]="executorData"
+                    (dataReturn)="eventExecutorSelectHandle($event, field)"
+                    [placeholder]="'::Record:Executor' | abpLocalization"
+                    [initialSelected]="findItemById(executorData.data, field.executorId)"
+                    [disabled]="true"
+                  ></app-typehead-focus>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>

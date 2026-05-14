@@ -1,0 +1,78 @@
+<form [formGroup]="eventInfoForm">
+  <div class="row mb-1">
+    <label class="form-label">{{ '::Minigame:Image' | abpLocalization }}</label>
+    <app-upload-component
+      #uploadComponent
+      id="image"
+      [imageName]="imgName"
+      [maxFilesNumber]="1"
+    ></app-upload-component>
+  </div>
+
+  <div class="row mb-1">
+    <div class="co">
+      <label class="form-label required">{{ '::Minigame:Code' | abpLocalization }}</label>
+      <input class="form-control" formControlName="code" />
+    </div>
+  </div>
+
+  <div class="row mb-1">
+    <div class="col">
+      <label class="form-label required">{{ '::Minigame' | abpLocalization }}</label>
+      <input class="form-control" formControlName="title" />
+    </div>
+  </div>
+
+  <div class="row mb-1">
+    <div class="col">
+      <label class="form-label required">{{ '::Minigame:ProductName' | abpLocalization }}</label>
+      <ngx-bootstrap-multiselect
+        class="w-100 d-block"
+        [options]="productData"
+        [settings]="singleSelectSettings"
+        [texts]="MultiText"
+        formControlName="productId"
+        id="product-name"
+        (dropdownOpened)="getProduct()"
+      ></ngx-bootstrap-multiselect>
+    </div>
+  </div>
+
+  <div class="row mb-1">
+    <div class="col-6">
+      <label class="form-label">{{ '::Minigame:StartDate' | abpLocalization }}</label>
+      <div class="input-group">
+        <input
+          class="form-control"
+          formControlName="startDate"
+          name="dp"
+          ngbDatepicker
+          #startDate="ngbDatepicker"
+        />
+        <button
+          class="btn btn-outline bg-light bi bi-calendar3"
+          (click)="startDate.toggle()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+
+    <div class="col-6">
+      <label class="form-label required">{{ '::Minigame:EndDate' | abpLocalization }}</label>
+      <div class="input-group">
+        <input
+          class="form-control"
+          formControlName="endDate"
+          name="dp"
+          ngbDatepicker
+          #endDate="ngbDatepicker"
+        />
+        <button
+          class="btn btn-outline bg-light bi bi-calendar3"
+          (click)="endDate.toggle()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+</form>

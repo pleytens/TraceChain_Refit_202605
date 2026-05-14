@@ -1,0 +1,11 @@
+<div class="container-fluid overflow-auto" style="max-height: 60vh">
+  @for (question of questionList; let i = $index; track i) {
+    <app-questions-card
+      [questionModel]="question"
+      [questionIndex]="i"
+      [partnerDropdownData]="partnerData"
+      (questionEmit)="addQuestion($event)"
+      (deleteQuestionEmit)="deleteQuestion($event)"
+    ></app-questions-card>
+  }
+</div>

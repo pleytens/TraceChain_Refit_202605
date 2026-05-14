@@ -1,0 +1,152 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:QRCodeStatistic' | abpLocalization }}
+        </h2>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-12">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          [placeholder]="'::Search' | abpLocalization"
+          (keyup.enter)="filter($event)"
+        />
+
+        <button
+          class="btn btn-outline-secondary bi bi-search"
+          (click)="filter($event)"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-3">
+      <app-typehead-focus
+        [dataInput]="reportByData"
+        (dataReturn)="eventReportBySelectHandle($event)"
+        [placeholder]="'::ReportBy' | abpLocalization"
+        [initialSelected]="findItemById(reportByData.data, 1)"
+      ></app-typehead-focus>
+    </div>
+
+    <div class="col col-md-3" *ngIf="reportByData.selected === 1">
+      <div class="input-group">
+        <input
+          class="form-control text-muted"
+          [placeholder]="'::FromDate' | abpLocalization"
+          name="dp"
+          [(ngModel)]="fromdate"
+          (ngModelChange)="filterDateChange()"
+          ngbDatepicker
+          #fromDatePicker="ngbDatepicker"
+        />
+        <button
+          class="btn btn-outline-secondary bi bi-calendar3"
+          (click)="fromDatePicker.toggle()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+    <div class="col col-md-3" *ngIf="reportByData.selected === 1">
+      <div class="input-group">
+        <input
+          class="form-control text-muted"
+          [placeholder]="'::ToDate' | abpLocalization"
+          name="dp"
+          [(ngModel)]="toDate"
+          (ngModelChange)="filterDateChange()"
+          ngbDatepicker
+          #toDatePicker="ngbDatepicker"
+        />
+        <button
+          class="btn btn-outline-secondary bi bi-calendar3"
+          (click)="toDatePicker.toggle()"
+          type="button"
+        ></button>
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div [ngClass]="reportByData.selected === 4 ? 'col col-md-6 row d-flex' : 'col col-md-3 row d-flex'">
+
+      <ngx-bootstrap-multiselect
+        [options]="marketData.data"
+        [(ngModel)]="marketData.selected"
+        [settings]="multiSelectSetting"
+        [texts]="multiMarketSelectText"
+        (ngModelChange)="filterDateChange()"
+        class="d-flex w-100 mw-100 flex-fill"
+      ></ngx-bootstrap-multiselect>
+    </div>
+    <div  *ngIf="reportByData.selected !== 4" class="col col-md-3 row d-flex">
+      <ngx-bootstrap-multiselect
+        [options]="catergoryData.data"
+        [(ngModel)]="catergoryData.selected"
+        [settings]="multiSelectSetting"
+        [texts]="multiCategorySelectText"
+        (ngModelChange)="filterDateChange()"
+        class="d-flex w-100 mw-100 flex-fill"
+      ></ngx-bootstrap-multiselect>
+    </div>
+    <div class="col col-md-6 row d-flex">
+      <ngx-bootstrap-multiselect
+        [options]="companytData.data"
+        [(ngModel)]="companytData.selected"
+        [settings]="multiSelectSetting"
+        [texts]="multiCompanySelectText"
+        (ngModelChange)="filterDateChange()"
+        class="d-flex w-100 mw-100 flex-fill"
+      ></ngx-bootstrap-multiselect>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-3">
+      <button class="btn btn-outline-primary" type="button">
+        {{ '::SaveData' | abpLocalization }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- <div class="card-body">
+      <ng-container>
+        <div class="card-content">
+          <ngx-datatable
+            [rows]="statistic.items"
+            [count]="statistic.totalCount"
+            [list]="list"
+            default
+            [selectAllRowsOnPage]="true"
+          >
+            <ngx-datatable-column
+              [name]="'::Statistic:Market' | abpLocalization"
+              prop="marketName"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Statistic:Category' | abpLocalization"
+              prop="category"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+              [name]="'::Statistic:NumberOfRecords' | abpLocalization"
+              prop="numberOfRecords"
+              [sortable]="false"
+            ></ngx-datatable-column>
+            <ngx-datatable-column
+            [name]="'::Statistic:NumberOfQRCodes' | abpLocalization"
+            prop="numberOfQRCodes"
+            [sortable]="false"
+          ></ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+      </ng-container>
+    </div> -->

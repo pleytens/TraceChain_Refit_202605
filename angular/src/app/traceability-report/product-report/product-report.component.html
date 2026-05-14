@@ -1,0 +1,114 @@
+<div class="container">
+  @if (isCustomReport) {
+  <ng-container [ngTemplateOutlet]="customReport"></ng-container>
+  } @else {
+  <ng-container [ngTemplateOutlet]="defaultReport"></ng-container>
+  }
+</div>
+
+<ng-template #customReport>
+  <div class="mt-2">
+    <h5 class="mb-2 text-black">{{ '::Product:DocumentFile' | abpLocalization }}</h5>
+    <div class="document-files-list">
+      @for (file of productModel?.documentFiles; track file.id; let i = $index) {
+      <div class="file-container" (click)="openFileUrl(file.url)" style="cursor: pointer">
+        <div class="file-details">
+          <i [class]="getFileIconClass(file.name, file)"></i>
+          <a class="file-name" [title]="file.name" [href]="file.url" target="_blank">{{
+            file.name
+          }}</a>
+        </div>
+      </div>
+      } @empty {
+      <div>Không có tài liệu nào.</div>
+      }
+    </div>
+  </div>
+  <div class="mt-2">
+    <h5 class="text-black mb-2">{{ '::Traceability:Report:Description' | abpLocalization }}</h5>
+    <quill-view [content]="productModel?.description"></quill-view>
+  </div>
+</ng-template>
+
+<ng-template #defaultReport>
+  <div class="w-100 overflow-auto">
+    <div id="productCarousel" class="carousel carousel-dark slide" data-bs-ride="false">
+      <div class="carousel-inner">
+        @for (item of carouselItems; let i = $index; track i) {
+        <div class="carousel-item" [class.active]="i === 0" data-bs-interval="1000">
+          @if (item.type === 'image') {
+          <div class="d-flex justify-content-center">
+            <img
+              [src]="item.src"
+              class="d-block w-auto"
+              alt="Product Image"
+              width="200"
+              height="315"
+            />
+          </div>
+          } @if (item.type === 'video') {
+          <iframe height="315" width="100%" [src]="item.src" allowfullscreen></iframe>
+          }
+        </div>
+        }
+      </div>
+
+      <button
+        class="carousel-control-prev"
+        type="button"
+        data-bs-target="#productCarousel"
+        data-bs-slide="prev"
+      >
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+
+      <button
+        class="carousel-control-next"
+        type="button"
+        data-bs-target="#productCarousel"
+        data-bs-slide="next"
+      >
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-2">
+    <h5 class="mb-2">{{ '::Product:Certificate' | abpLocalization }}</h5>
+    <app-list-cert class="w-100" [listCert]="productModel?.certificationImages"></app-list-cert>
+  </div>
+  <div class="mt-2" >
+    <h5 class="mb-2">{{ '::Product:DocumentFile' | abpLocalization }}</h5>
+    <div class="document-files-list">
+      @for (file of productModel?.documentFiles; track file.id; let i = $index) {
+      <div class="file-container" (click)="openFileUrl(file.url)" style="cursor: pointer">
+        <div class="file-details">
+          <i [class]="getFileIconClass(file.name, file)"></i>
+          <a class="file-name" [title]="file.name" [href]="file.url" target="_blank">{{
+            file.name
+          }}</a>
+        </div>
+      </div>
+      } @empty {
+      <div>{{ '::Traceability:Report:NoDocument' | abpLocalization }}</div>
+      }
+    </div>
+  </div>
+  <div class="mt-2 container">
+    <button
+      class="btn btn-primary w-100 d-flex justify-content-between"
+      type="button"
+      (click)="Description.toggle()"
+    >
+      {{ '::Product:Description' | abpLocalization }}
+      <span>
+        <i class="bi bi-caret-down-fill"></i>
+      </span>
+    </button>
+    <div #Description="ngbCollapse" [ngbCollapse]="false" class="collapse mt-2">
+      <quill-view [content]="productModel?.description"></quill-view>
+    </div>
+  </div>
+</ng-template>

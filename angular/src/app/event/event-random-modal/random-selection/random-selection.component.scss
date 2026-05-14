@@ -1,0 +1,23 @@
+.slot-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70px;
+  user-select: none;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  49% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+.animate-flip {
+  animation: flip 220ms ease-out both;
+}

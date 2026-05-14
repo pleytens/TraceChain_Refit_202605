@@ -1,0 +1,53 @@
+<!-- HEADER -->
+<div class="container-fluid p-0">
+  <div class="header-custom">
+    <div class="row">
+      <div class="col-12 row header-column"
+           style="height: 10vh">
+        <div class="col-3 d-flex justify-content-center align-items-center">
+          <app-language></app-language>
+        </div>
+        <div class="header-logo-center col-7">
+          <img src="assets/images/logo/LOGO_of_TRACEVERIFIED_No_s.png" alt="image" class="logo-center mx-auto" />
+        </div>
+        <div class="col-2 d-flex justify-content-center align-items-center">
+          <button class="btn btn-download" (click)="downloadPDF()" [disabled]="isDownloading">
+            <i class="bi bi-download"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- HEADER -->
+<!-- MAIN -->
+<div class="container-fluid p-0">
+  <div class="card rounded-0 mb-0">
+    <div class="card-body m-0 p-0">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<!-- FOOTER -->
+<div class="container-fluid p-0">
+  <div class="footer-custom d-flex align-items-center justify-content-between">
+    <p>
+      The service provided by
+      <a href="https://traceverified.com/">
+        <img
+          src="assets/images/logo/LOGO_of_TRACEVERIFIED_No_s.png"
+          alt="image"
+          class="logo-footer"
+        />
+      </a>
+    </p>
+    <div class="me-2">
+      <app-language-google></app-language-google>
+    </div>
+  </div>
+</div>
+<!-- FOOTER -->
+
+

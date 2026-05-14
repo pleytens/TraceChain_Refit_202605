@@ -1,0 +1,66 @@
+.custom-file-upload {
+  display: inline-block;
+  position: relative;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+.custom-file-upload img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+.custom-file-upload label {
+  background-color: #3498db;
+  color: #fff;
+  border: 1px solid #2980b9;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.custom-file-upload input[type='file'] {
+  font-size: 100px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.custom-image-show {
+  display: flex; /* Enables Flexbox for this container */
+  justify-content: left; /* Aligns items on the main-axis (default: row) */
+  align-items: center; /* Aligns items on the cross-axis */
+  flex-direction: row; /* Defines the direction of flex items (row|row-reverse|column|column-reverse) */
+  flex-wrap: wrap; /* Allows items to wrap as needed (nowrap|wrap|wrap-reverse) */
+  gap: 10px; /* Space between items */
+  padding: 10px;
+}
+
+.image-container {
+  position: relative;
+  width: fit-content;
+}
+
+.image-container img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 10px;
+  display: block; /* Removes bottom space/gap */
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px; /* Adjust based on your preference */
+  left: 10px; /* Adjust based on your preference */
+  display: none; /* Hide button initially */
+  /* Add more styling here to beautify the button */
+}
+
+.image-container:hover .delete-btn {
+  color: rgba(255, 0, 0, 0.79);
+  display: block; /* Show button on hover */
+}

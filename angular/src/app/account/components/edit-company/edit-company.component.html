@@ -1,0 +1,107 @@
+
+
+  
+      <form  [formGroup]="form" (ngSubmit)="save()">
+              <div class="mt-2">
+                <div class="custom-file-upload">
+                  <div *ngIf="imageSrc">
+                    <img [src]="imageSrc" alt="Selected Image" />
+                  </div>
+                  <label for="logo">{{ '::Company:ChooseLogo' | abpLocalization }}</label>
+                  <input id="logo" type="file" (change)="onFileChange($event)" />
+                </div>
+              </div>
+              <div class="mt-2">
+                <label for="gs1Code">{{ '::Company:GS1Code' | abpLocalization }}</label
+                ><span> * </span>
+                <input type="text" id="gs1Code" class="form-control" formControlName="gS1Code" />
+              </div>
+              <div class="mt-2">
+                <label for="name">{{ '::Company:Name' | abpLocalization }}</label
+                ><span> * </span>
+                <input type="text" id="name" class="form-control" formControlName="name" />
+              </div>
+              <div class="mt-2">
+                <label for="email-address">{{ '::Company:EmailAddress' | abpLocalization }}</label
+                ><span> * </span>
+                <input
+                  type="text"
+                  id="email-address"
+                  class="form-control"
+                  formControlName="emailAddress"
+                />
+              </div>
+              <div class="mt-2">
+                <label for="phone-number">{{ '::Company:PhoneNumber' | abpLocalization }}</label
+                ><span> * </span>
+                <input
+                  type="text"
+                  id="phone-number"
+                  class="form-control"
+                  formControlName="phoneNumber"
+                />
+              </div>
+              <div class="mt-2">
+                <label for="address">{{ '::Company:Address' | abpLocalization }}</label>
+                <input type="text" id="address" class="form-control" formControlName="address" />
+              </div>
+              <div class="mt-2">
+                <label for="country">{{ '::Company:Country' | abpLocalization }}</label
+                ><span> * </span>
+                <app-typehead-focus-customer
+                  id="country"
+                  [dataInput]="countryData"
+                  (dataReturn)="eventCountrySelectHandle($event)"
+                  [initialSelected]="countryData.selected"
+                ></app-typehead-focus-customer>
+              </div>
+              <div class="mt-2">
+                <label for="province">{{ '::Company:Province' | abpLocalization }}</label
+                ><span> * </span>
+                <app-typehead-focus-customer
+                  id="province"
+                  [dataInput]="provinceData"
+                  (dataReturn)="eventProvinceSelectHandle($event)"
+                  [initialSelected]="provinceData.selected"
+                ></app-typehead-focus-customer>
+              </div>
+              <div class="mt-2">
+                <label for="district">{{ '::Company:District' | abpLocalization }}</label
+                ><span> * </span>
+                <app-typehead-focus-customer
+                  id="district"
+                  [dataInput]="districtData"
+                  (dataReturn)="eventDistrictSelectHandle($event)"
+                  [initialSelected]="districtData.selected"
+                ></app-typehead-focus-customer>
+              </div>
+              <div class="mt-2">
+                <label for="ward">{{ '::Company:Ward' | abpLocalization }}</label
+                ><span> * </span>
+                <app-typehead-focus-customer
+                  id="ward"
+                  [dataInput]="wardData"
+                  (dataReturn)="eventWardSelectHandle($event)"
+                  [initialSelected]="wardData.selected"
+                ></app-typehead-focus-customer>
+              </div>
+              <div class="mt-2">
+                <label for="website">{{ '::Company:Website' | abpLocalization }}</label>
+                <input type="text" id="website" class="form-control" formControlName="websiteUrl" />
+              </div>
+              <div class="mt-2">
+                <label for="latitude">{{ '::Company:Latitude' | abpLocalization }}</label>
+                <input type="number" id="latitude" class="form-control" formControlName="latitude" />
+              </div>
+              <div class="mt-2">
+                <label for="longitude">{{ '::Company:Longitude' | abpLocalization }}</label>
+                <input type="number" id="longitude" class="form-control" formControlName="longitude" />
+              </div>
+  
+
+      </form>
+      <button class="btn btn-primary mt-2" (click)="save()" [disabled]="form.invalid">
+        <i class="fa fa-check mr-1"></i>
+        {{ '::Save' | abpLocalization }}
+      </button>
+  

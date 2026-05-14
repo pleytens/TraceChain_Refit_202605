@@ -1,0 +1,287 @@
+<div class="card">
+  <div class="card-header">
+    <div class="row">
+      <div class="col col-md-6">
+        <h2 class="card-title">
+          {{ '::Menu:Company' | abpLocalization }}
+        </h2>
+      </div>
+      <div class="text-end col col-md-6">
+        <div class="text-lg-end pt-2">
+          <button
+            *abpPermission="'TraceFarm.Companies.Create'"
+            id="create"
+            class="btn btn-primary"
+            type="button"
+            (click)="createCompany()"
+          >
+            <i class="fa fa-plus me-1"></i>
+            <span>{{ '::NewCompany' | abpLocalization }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col col-md-12">
+      <div class="margin-custom">
+        <input
+          type="text"
+          class="form-control"
+          [(ngModel)]="filterText"
+          placeholder="Search"
+          (ngModelChange)="filter()"
+        />
+      </div>
+    </div>
+  </div>
+  <div class="row margin-custom">
+    <div class="col col-md-4">
+      <div class="input-group"></div>
+    </div>
+    <div class="col col-md-4">
+      <div class="input-group"></div>
+    </div>
+    <div class="col col-md-4">
+      <!--      <combobox-with-search [dataInput]='selectBoxConfig'-->
+      <!--                            (dataReturn)='eventSelectHandle($event)'></combobox-with-search>-->
+    </div>
+  </div>
+  <div class="card-body">
+    <ngx-datatable [rows]="company.items" [count]="company.totalCount" [list]="list" default>
+      <ngx-datatable-column
+        [name]="'::Actions' | abpLocalization"
+        [maxWidth]="150"
+        [sortable]="false"
+      >
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <div ngbDropdown container="body" class="d-inline-block">
+            <button
+              class="btn btn-primary btn-sm dropdown-toggle"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              ngbDropdownToggle
+            >
+              <i class="fa fa-cog me-1"></i>{{ '::Actions' | abpLocalization }}
+            </button>
+            <div ngbDropdownMenu>
+              <button
+                *abpPermission="'TraceFarm.Companies.Edit'"
+                ngbDropdownItem
+                (click)="editCompany(row.id)"
+              >
+                {{ '::Edit' | abpLocalization }}
+              </button>
+              <button
+                *abpPermission="'TraceFarm.Companies.Delete'"
+                ngbDropdownItem
+                (click)="deleteCompany(row.id)"
+              >
+                {{ '::Delete' | abpLocalization }}
+              </button>
+            </div>
+          </div>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Company:GS1Code' | abpLocalization" prop="gS1Code">
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Company:Name' | abpLocalization"
+        prop="name"
+      ></ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Company:Address' | abpLocalization" prop="address">
+      </ngx-datatable-column>
+      <ngx-datatable-column
+        [name]="'::Company:AdminEmailAddress' | abpLocalization"
+        prop="userName"
+      >
+      </ngx-datatable-column>
+      <ngx-datatable-column [name]="'::Company:CreationTime' | abpLocalization">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.creationTime | date }}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+</div>
+<abp-modal [(visible)]="isModalOpen" [options]="{ centered: false, size: 'xl' }">
+  <ng-template #abpHeader>
+    <h3>{{ (selectedCompany.id ? '::EditCompany' : '::NewCompany') | abpLocalization }}</h3>
+  </ng-template>
+  <ng-template #abpBody>
+    <ng-template #loaderRef>
+      <div class="text-center"><i class="fa fa-pulse fa-spinner" aria-hidden="true"></i></div>
+    </ng-template>
+
+    <form *ngIf="form; else loaderRef" [formGroup]="form" (ngSubmit)="save()">
+      <ul ngbNav #nav="ngbNav" class="nav-tabs">
+        <li ngbNavItem>
+          <a ngbNavLink>{{ '::Company:Information' | abpLocalization }}</a>
+          <ng-template ngbNavContent>
+            <div class="mt-2">
+              <div class="custom-file-upload">
+                <div *ngIf="imageSrc">
+                  <img [src]="imageSrc" alt="Selected Image" />
+                </div>
+                <label for="logo">{{ '::Company:ChooseLogo' | abpLocalization }}</label>
+                <input id="logo" type="file" (change)="onFileChange($event)" />
+              </div>
+            </div>
+            <div class="mt-2">
+              <label for="gs1Code">{{ '::Company:GS1Code' | abpLocalization }}</label
+              ><span> * </span>
+              <input type="text" id="gs1Code" class="form-control" formControlName="gS1Code" />
+            </div>
+            <div class="mt-2">
+              <label for="name">{{ '::Company:Name' | abpLocalization }}</label
+              ><span> * </span>
+              <input type="text" id="name" class="form-control" formControlName="name" />
+            </div>
+            <div class="mt-2">
+              <label for="email-address">{{ '::Company:EmailAddress' | abpLocalization }}</label
+              ><span> * </span>
+              <input
+                type="text"
+                id="email-address"
+                class="form-control"
+                formControlName="emailAddress"
+              />
+            </div>
+            <div class="mt-2">
+              <label for="phone-number">{{ '::Company:PhoneNumber' | abpLocalization }}</label
+              ><span> * </span>
+              <input
+                type="text"
+                id="phone-number"
+                class="form-control"
+                formControlName="phoneNumber"
+              />
+            </div>
+            <div class="mt-2">
+              <label for="address">{{ '::Company:Address' | abpLocalization }}</label>
+              <input type="text" id="address" class="form-control" formControlName="address" />
+            </div>
+            <div class="mt-2">
+              <label for="country">{{ '::Company:Country' | abpLocalization }}</label
+              ><span> * </span>
+              <app-typehead-focus
+                id="country"
+                [dataInput]="countryData"
+                (dataReturn)="eventCountrySelectHandle($event)"
+                [initialSelected]="countryData.selected"
+              ></app-typehead-focus>
+            </div>
+            <div class="mt-2">
+              <label for="province">{{ '::Company:Province' | abpLocalization }}</label
+              ><span> * </span>
+              <app-typehead-focus
+                id="province"
+                [dataInput]="provinceData"
+                *ngIf="provinceData && provinceData.selected !== undefined"
+                (dataReturn)="eventProvinceSelectHandle($event)"
+                [initialSelected]="provinceData.selected"
+              ></app-typehead-focus>
+            </div>
+            <div class="mt-2">
+              <label for="district">{{ '::Company:District' | abpLocalization }}</label
+              ><span> * </span>
+              <app-typehead-focus
+                id="district"
+                [dataInput]="districtData"
+                (dataReturn)="eventDistrictSelectHandle($event)"
+                *ngIf="districtData && districtData.selected !== undefined"
+                [initialSelected]="districtData.selected"
+              ></app-typehead-focus>
+            </div>
+            <div class="mt-2">
+              <label for="ward">{{ '::Company:Ward' | abpLocalization }}</label
+              ><span> * </span>
+              <app-typehead-focus
+                id="ward"
+                [dataInput]="wardData"
+                (dataReturn)="eventWardSelectHandle($event)"
+                *ngIf="wardData && wardData.selected !== undefined"
+                [initialSelected]="wardData.selected"
+              ></app-typehead-focus>
+            </div>
+            <div class="mt-2">
+              <label for="website">{{ '::Company:Website' | abpLocalization }}</label>
+              <input type="text" id="website" class="form-control" formControlName="websiteUrl" />
+            </div>
+            <div class="mt-2">
+              <label for="latitude">{{ '::Company:Latitude' | abpLocalization }}</label>
+              <input type="number" id="latitude" class="form-control" formControlName="latitude" />
+            </div>
+            <div class="mt-2">
+              <label for="longitude">{{ '::Company:Longitude' | abpLocalization }}</label>
+              <input
+                type="number"
+                id="longitude"
+                class="form-control"
+                formControlName="longitude"
+              />
+            </div>
+          </ng-template>
+        </li>
+
+        <li ngbNavItem>
+          <a ngbNavLink>{{ '::Company:Account' | abpLocalization }}</a>
+          <ng-template ngbNavContent>
+            <div class="mt-2">
+              <label for="tenantName">{{ '::Company:TenantName' | abpLocalization }}</label
+              ><span> * </span>
+              <input
+                type="text"
+                id="tenantName"
+                class="form-control"
+                formControlName="tenantName"
+              />
+            </div>
+            <div *ngIf="!selectedCompany.id">
+              <div class="mt-2">
+                <label for="username">{{ '::Company:AdminEmailAddress' | abpLocalization }}</label
+                ><span> * </span>
+                <input
+                  type="text"
+                  id="username"
+                  class="form-control"
+                  formControlName="adminEmailAddress"
+                />
+              </div>
+              <div class="mt-2">
+                <label for="password">{{ '::Company:Password' | abpLocalization }}</label
+                ><span> * </span>
+                <div class="input-group" validationTarget validationStyle>
+                  <input
+                    type="{{ passwordVisible ? 'text' : 'password' }}"
+                    id="password"
+                    class="form-control"
+                    [placeholder]="'Password::Enter' | abpLocalization"
+                    formControlName="adminPassword"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="togglePasswordVisibility()"
+                  >
+                    <i [class]="passwordVisible ? 'fa fa-eye' : 'fa fa-eye-slash'"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </li>
+      </ul>
+      <div class="mt-2 fade-in-top" [ngbNavOutlet]="nav"></div>
+    </form>
+  </ng-template>
+  <ng-template #abpFooter>
+    <button type="button" class="btn btn-secondary" abpClose>
+      {{ '::Close' | abpLocalization }}
+    </button>
+    <button class="btn btn-primary" (click)="save()" [disabled]="form.invalid">
+      <i class="fa fa-check mr-1"></i>
+      {{ '::Save' | abpLocalization }}
+    </button>
+  </ng-template>
+</abp-modal>
