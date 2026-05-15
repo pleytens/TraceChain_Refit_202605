@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import MyProfileModal from "@/components/modals/MyProfileModal";
 import MyNotificationSettingsModal from "@/components/modals/MyNotificationSettingsModal";
+import StorageRequirementsModal from "@/components/modals/StorageRequirementsModal";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
   // Modals
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifSettings, setShowNotifSettings] = useState(false);
+  const [showStorageReqs, setShowStorageReqs] = useState(false);
 
   // Refs for click-outside
   const notifRef = useRef<HTMLDivElement>(null);
@@ -62,7 +64,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
 
   const roleLabel = (role: string) => {
     if (role === "TraceChainAdminPortalAdmin") return "TV Admin";
-    if (role === "TraceChainCustomerPortalAdmin") return "Portal Admin";
+    if (role === "TraceChainClientPortalAdmin") return "Portal Admin";
     return role;
   };
 
@@ -183,7 +185,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
                     <span>🔔</span>
                     My Notification Settings
                   </button>
-                  {!isAdminPortal && (currentUser?.role === "Admin" || currentUser?.role === "SuperAdmin") && (
+                  {!isAdminPortal && (
                     <button
                       onClick={() => { setShowUserMenu(false); onNavigateToUnits?.(); }}
                       className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
@@ -192,7 +194,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
                       Units Management
                     </button>
                   )}
-                  {!isAdminPortal && (currentUser?.role === "Admin" || currentUser?.role === "SuperAdmin") && (
+                  {!isAdminPortal && (
                     <button
                       onClick={() => { setShowUserMenu(false); onNavigateToProcessActions?.(); }}
                       className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
@@ -201,7 +203,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
                       Process Actions
                     </button>
                   )}
-                  {!isAdminPortal && (currentUser?.role === "Admin" || currentUser?.role === "SuperAdmin" || currentUser?.role === "TraceChainCustomerPortalAdmin") && (
+                  {!isAdminPortal && (
                     <button
                       onClick={() => { setShowUserMenu(false); onNavigateToSupplierSettings?.(); }}
                       className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
@@ -210,13 +212,22 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
                       Supplier Settings
                     </button>
                   )}
-                  {!isAdminPortal && (currentUser?.role === "Admin" || currentUser?.role === "SuperAdmin" || currentUser?.role === "TraceChainCustomerPortalAdmin") && (
+                  {!isAdminPortal && (
                     <button
                       onClick={() => { setShowUserMenu(false); onNavigateToCustomerSettings?.(); }}
                       className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
                     >
                       <span>🤝</span>
                       Customer Settings
+                    </button>
+                  )}
+                  {!isAdminPortal && (
+                    <button
+                      onClick={() => { setShowUserMenu(false); setShowStorageReqs(true); }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
+                    >
+                      <span>🧊</span>
+                      Storage Requirements
                     </button>
                   )}
                 </div>
@@ -229,6 +240,12 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
       {/* ── Modals ──────────────────────────────────────────────────────── */}
       {showProfile && <MyProfileModal onClose={() => setShowProfile(false)} />}
       {showNotifSettings && <MyNotificationSettingsModal onClose={() => setShowNotifSettings(false)} />}
+      {showStorageReqs && (
+        <StorageRequirementsModal
+          onClose={() => setShowStorageReqs(false)}
+          readOnly={!(currentUser?.role === "Admin" || currentUser?.role === "SuperAdmin" || currentUser?.role === "TraceChainClientPortalAdmin")}
+        />
+      )}
     </>
   );
 };

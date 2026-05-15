@@ -9,7 +9,7 @@ const roleRank: Record<string, number> = {
   Admin: 2,
   User: 1,
   TraceChainAdminPortalAdmin: 4,
-  TraceChainCustomerPortalAdmin: 3,
+  TraceChainClientPortalAdmin: 3,
   Role1: 1,
   Role2: 1,
   Role3: 1,
@@ -20,7 +20,7 @@ function creatableRoles(actorRole: UserRole, portal: string): UserRole[] {
   if (portal === "admin") {
     return ["TraceChainAdminPortalAdmin", "Role1", "Role2", "Role3"];
   }
-  // Customer portal
+  // Client portal
   if (actorRole === "SuperAdmin") return ["SuperAdmin", "Admin", "User", "User-Worker", "Worker"];
   if (actorRole === "Admin") return ["Admin", "User", "User-Worker", "Worker"];
   return [];
@@ -339,7 +339,7 @@ export default function UserManagement() {
 
   const roleColor: Record<string, string> = {
     TraceChainAdminPortalAdmin: "bg-purple-100 text-purple-700",
-    TraceChainCustomerPortalAdmin: "bg-indigo-100 text-indigo-700",
+    TraceChainClientPortalAdmin: "bg-indigo-100 text-indigo-700",
     SuperAdmin: "bg-red-100 text-red-700",
     Admin: "bg-orange-100 text-orange-700",
     User: "bg-blue-100 text-blue-700",
@@ -352,7 +352,7 @@ export default function UserManagement() {
 
   const roleLabel: Record<string, string> = {
     TraceChainAdminPortalAdmin: "TV Admin",
-    TraceChainCustomerPortalAdmin: "Portal Admin",
+    TraceChainClientPortalAdmin: "Portal Admin",
     SuperAdmin: "SuperAdmin",
     Admin: "Admin",
     User: "User",
@@ -389,7 +389,7 @@ export default function UserManagement() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-800 text-base">
-              {portal === "admin" ? "TraceChain Admin Portal People" : "TraceChain Customer Portal People"}
+              {portal === "admin" ? "TraceChain Admin Portal People" : "TraceChain Client Portal People"}
             </h2>
             <div className="flex items-center gap-3">
               <input

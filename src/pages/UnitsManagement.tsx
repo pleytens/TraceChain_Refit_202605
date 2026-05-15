@@ -1,24 +1,12 @@
 import React, { useState } from "react";
+import { useUnits, Unit } from "@/context/UnitsContext";
 
-interface Unit {
-  id: string;
-  name: string;
-  abbreviation: string;
-  type: string;
-  status: "Active" | "Inactive";
+interface UnitsManagementProps {
+  readOnly?: boolean;
 }
 
-const initialUnits: Unit[] = [
-  { id: "u1", name: "Kilogram", abbreviation: "kg", type: "Weight", status: "Active" },
-  { id: "u2", name: "Gram", abbreviation: "g", type: "Weight", status: "Active" },
-  { id: "u3", name: "Litre", abbreviation: "L", type: "Volume", status: "Active" },
-  { id: "u4", name: "Millilitre", abbreviation: "mL", type: "Volume", status: "Active" },
-  { id: "u5", name: "Piece", abbreviation: "pcs", type: "Quantity", status: "Active" },
-  { id: "u6", name: "Box", abbreviation: "box", type: "Quantity", status: "Inactive" },
-];
-
-const UnitsManagement: React.FC = () => {
-  const [units, setUnits] = useState<Unit[]>(initialUnits);
+const UnitsManagement: React.FC<UnitsManagementProps> = ({ readOnly = false }) => {
+  const { units, addUnit, updateUnit, deleteUnit } = useUnits();
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
@@ -46,37 +34,44 @@ const UnitsManagement: React.FC = () => {
   const handleSave = () => {
     if (!form.name.trim() || !form.abbreviation.trim()) return;
     if (editingUnit) {
-      setUnits((prev) => prev.map((u) => (u.id === editingUnit.id ? { ...u, ...form } : u)));
+      updateUnit(editingUnit.id, form);
     } else {
-      setUnits((prev) => [
-        { id: `u${Date.now()}`, ...form },
-        ...prev,
-      ]);
+      addUnit(form);
     }
     setShowModal(false);
   };
 
   const handleDelete = (id: string) => {
     if (confirm("Delete this unit?")) {
-      setUnits((prev) => prev.filter((u) => u.id !== id));
+      deleteUnit(id);
     }
   };
 
   return (
     <div className="space-y-6">
+      {/* Read-only banner */}
+      {readOnly && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-2.5 rounded-lg">
+          <span>🔒</span>
+          <span>You have read-only access. Contact your administrator to make changes.</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Units Management</h2>
           <p className="text-sm text-gray-500 mt-0.5">Manage measurement units used across the platform</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
-        >
-          <span className="text-base">+</span>
-          Add Unit
-        </button>
+        {!readOnly && (
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition"
+          >
+            <span className="text-base">+</span>
+            Add Unit
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -101,13 +96,13 @@ const UnitsManagement: React.FC = () => {
                 <th className="px-5 py-3 font-semibold text-gray-600">Abbreviation</th>
                 <th className="px-5 py-3 font-semibold text-gray-600">Type</th>
                 <th className="px-5 py-3 font-semibold text-gray-600">Status</th>
-                <th className="px-5 py-3 font-semibold text-gray-600 text-right">Actions</th>
+                {!readOnly && <th className="px-5 py-3 font-semibold text-gray-600 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-gray-400">
+                  <td colSpan={readOnly ? 5 : 6} className="px-5 py-10 text-center text-gray-400">
                     No units found.
                   </td>
                 </tr>
@@ -132,20 +127,22 @@ const UnitsManagement: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openEdit(unit)}
-                          className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-medium transition"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(unit.id)}
-                          className="text-xs px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-medium transition"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                       {readOnly ? null : (
+                         <div className="flex items-center justify-end gap-2">
+                           <button
+                             onClick={() => openEdit(unit)}
+                             className="text-xs px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-medium transition"
+                           >
+                             Edit
+                           </button>
+                           <button
+                             onClick={() => handleDelete(unit.id)}
+                             className="text-xs px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-medium transition"
+                           >
+                             Delete
+                           </button>
+                         </div>
+                       )}
                     </td>
                   </tr>
                 ))

@@ -3,7 +3,7 @@ import { useAuth, UserRole } from "@/context/AuthContext";
 
 const roleLabels: Record<UserRole, string> = {
   TraceChainAdminPortalAdmin: "Admin Portal Administrator",
-  TraceChainCustomerPortalAdmin: "Customer Portal Administrator",
+  TraceChainClientPortalAdmin: "Client Portal Administrator",
   SuperAdmin: "Super Admin",
   Admin: "Admin",
   User: "User",
@@ -14,7 +14,7 @@ const roleLabels: Record<UserRole, string> = {
 
 const roleColors: Record<UserRole, string> = {
   TV2AdminPortalAdmin: "bg-purple-100 text-purple-700",
-  TV2CustomerPortalAdmin: "bg-indigo-100 text-indigo-700",
+  TV2ClientPortalAdmin: "bg-indigo-100 text-indigo-700",
   SuperAdmin: "bg-red-100 text-red-700",
   Admin: "bg-orange-100 text-orange-700",
   User: "bg-blue-100 text-blue-700",

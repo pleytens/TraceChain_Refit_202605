@@ -1,71 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-
-interface ProcessStep {
-  name: string;
-  dataType: string;
-  dropdownOptions?: string; // only shown when dataType === "Dropdown"
-}
-
-interface ProcessRecord {
-  id: number;
-  name: string;
-  steps: ProcessStep[];
-  createdAt: string;
-  isActive: boolean;
-}
-
-const sampleProcesses: ProcessRecord[] = [
-  {
-    id: 1,
-    name: "Rice Farming Process",
-    steps: [
-      { name: "Land Preparation", dataType: "Text" },
-      { name: "Seeding", dataType: "Date" },
-      { name: "Irrigation", dataType: "Number" },
-      { name: "Harvesting", dataType: "Image" },
-      { name: "Packaging", dataType: "Text" },
-    ],
-    createdAt: "2024-01-10",
-    isActive: true,
-  },
-  {
-    id: 2,
-    name: "Fish Processing Line A",
-    steps: [
-      { name: "Receiving", dataType: "Text" },
-      { name: "Cleaning", dataType: "Image" },
-      { name: "Processing", dataType: "Number" },
-    ],
-    createdAt: "2024-02-05",
-    isActive: true,
-  },
-  {
-    id: 3,
-    name: "Dragon Fruit Harvest",
-    steps: [
-      { name: "Picking", dataType: "Date" },
-      { name: "Sorting", dataType: "Text" },
-      { name: "Packaging", dataType: "Image" },
-      { name: "Dispatch", dataType: "Text" },
-    ],
-    createdAt: "2024-03-15",
-    isActive: false,
-  },
-  {
-    id: 4,
-    name: "Pepper Drying Process",
-    steps: [
-      { name: "Collection", dataType: "Text" },
-      { name: "Washing", dataType: "Image" },
-      { name: "Sun Drying", dataType: "Date" },
-      { name: "Grading", dataType: "Number" },
-      { name: "Milling", dataType: "Text" },
-      { name: "Packaging", dataType: "Image" },
-    ],
-    createdAt: "2024-04-02",
-    isActive: true,
-  },
-];
+import { useProcesses, ProcessStep, ProcessRecord } from "@/context/ProcessesContext";
 
 interface ProcessModalProps {
   process?: ProcessRecord | null;
@@ -195,7 +129,7 @@ const ProcessModal: React.FC<ProcessModalProps> = ({ process, onClose, onSave })
 };
 
 const Process: React.FC = () => {
-  const [processes, setProcesses] = useState<ProcessRecord[]>(sampleProcesses);
+  const { processes, addProcess, updateProcess, deleteProcess } = useProcesses();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -215,27 +149,20 @@ const Process: React.FC = () => {
     (p) => !debouncedSearch || p.name.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
 
-  const handleSave = (data: Partial<ProcessRecord>) => {
+  const handleSave = async (data: Partial<ProcessRecord>) => {
     if (editProcess) {
-      setProcesses(processes.map((p) => (p.id === editProcess.id ? { ...p, ...data } : p)));
+      await updateProcess(editProcess.id, data);
       setSuccessBanner(`Process "${data.name}" updated successfully.`);
     } else {
-      const newProc: ProcessRecord = {
-        id: Date.now(),
-        createdAt: new Date().toISOString().slice(0, 10),
-        isActive: true,
-        ...data,
-      } as ProcessRecord;
-      // New process sorted to top
-      setProcesses([newProc, ...processes]);
-      setExpandedId(newProc.id);
+      const newId = await addProcess({ name: data.name ?? "", steps: data.steps ?? [], isActive: true });
+      setExpandedId(newId);
       setSuccessBanner(`Process "${data.name}" created. You can now add recordings to this process.`);
     }
     setTimeout(() => setSuccessBanner(null), 5000);
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Delete this process?")) setProcesses(processes.filter((p) => p.id !== id));
+  const handleDelete = async (id: number) => {
+    if (confirm("Delete this process?")) await deleteProcess(id);
   };
 
   return (

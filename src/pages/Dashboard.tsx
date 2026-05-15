@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useProducts } from "@/context/ProductsContext";
+import { useSuppliers } from "@/context/SuppliersContext";
 
 // ── Stat Card ──────────────────────────────────────────────
 const StatCard: React.FC<{ label: string; value: number; icon: string; color: string }> = ({
@@ -60,16 +62,11 @@ const PieChart: React.FC<{ active: number; expired: number }> = ({ active, expir
 };
 
 // ── Supplier Status Table ───────────────────────────────────
-const supplierRows = [
-  { name: "Green Farm Co.", gs1: "8936069", email: "admin@greenfarm.com", status: "active", date: "2024-01-15" },
-  { name: "Mekong Fish Ltd.", gs1: "8936070", email: "info@mekong.com", status: "active", date: "2024-02-20" },
-  { name: "Angkor Foods", gs1: "8936071", email: "contact@angkor.com", status: "expired", date: "2023-11-01" },
-  { name: "KBF Trading", gs1: "8936072", email: "kbf@trade.com", status: "active", date: "2024-03-10" },
-  { name: "Sunrise Produce", gs1: "8936073", email: "hello@sunrise.com", status: "expired", date: "2023-09-05" },
-];
 
 // ── Dashboard Page ─────────────────────────────────────────
 const Dashboard: React.FC = () => {
+  const { products } = useProducts();
+  const { suppliers } = useSuppliers();
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [tableSearch, setTableSearch] = useState("");
@@ -84,17 +81,17 @@ const Dashboard: React.FC = () => {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [tableSearch]);
 
-  const filteredRows = supplierRows.filter(
+  const filteredRows = suppliers.filter(
     (r) =>
       !debouncedTableSearch ||
       r.name.toLowerCase().includes(debouncedTableSearch.toLowerCase()) ||
       r.email.toLowerCase().includes(debouncedTableSearch.toLowerCase()) ||
-      r.gs1.includes(debouncedTableSearch)
+      r.gs1Code.includes(debouncedTableSearch)
   );
 
   const stats = [
-    { label: "Total Products", value: 142, icon: "📦", color: "bg-blue-50" },
-    { label: "Suppliers", value: 38, icon: "🏭", color: "bg-indigo-50" },
+    { label: "Total Products", value: products.length, icon: "📦", color: "bg-blue-50" },
+    { label: "Suppliers", value: suppliers.length, icon: "🏭", color: "bg-indigo-50" },
     { label: "Recordings", value: 1_204, icon: "📝", color: "bg-yellow-50" },
     { label: "QR Scans", value: 9_871, icon: "📱", color: "bg-purple-50" },
   ];
@@ -109,7 +106,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-5 text-white shadow-md">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-base font-bold mb-1">👋 Welcome to TraceChain Customer Portal!</h2>
+              <h2 className="text-base font-bold mb-1">👋 Welcome to TraceChain Client Portal!</h2>
               <p className="text-sm text-blue-100 mb-3">
                 Here's how to get started quickly:
               </p>
@@ -169,17 +166,56 @@ const Dashboard: React.FC = () => {
         {/* Supplier Status Pie */}
         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Supplier Status</h3>
-          <PieChart active={28} expired={10} />
+          <PieChart active={suppliers.length} expired={0} />
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="bg-green-50 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-green-600">28</p>
+              <p className="text-2xl font-bold text-green-600">{suppliers.length}</p>
               <p className="text-xs text-gray-500 mt-1">Active</p>
             </div>
             <div className="bg-red-50 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-red-600">10</p>
+              <p className="text-2xl font-bold text-red-600">0</p>
               <p className="text-xs text-gray-500 mt-1">Expired</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Recent Products */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-700">Recent Products</h3>
+          <span className="text-xs text-gray-400">{products.length} total</span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+              <tr>
+                <th className="px-5 py-3 text-left">Product Name</th>
+                <th className="px-5 py-3 text-left">GTIN Code</th>
+                <th className="px-5 py-3 text-left">Category</th>
+                <th className="px-5 py-3 text-left">Created</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {products.slice(0, 5).map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-5 py-3 font-medium text-gray-800">{p.productName}</td>
+                  <td className="px-5 py-3 font-mono text-xs text-gray-500">{p.gtinCode}</td>
+                  <td className="px-5 py-3">
+                    <span className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full">{p.categoryName}</span>
+                  </td>
+                  <td className="px-5 py-3 text-gray-500">{p.createdAt}</td>
+                </tr>
+              ))}
+              {products.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-5 py-8 text-center text-gray-400 text-sm">
+                    No products yet. Go to <strong>Products</strong> to add your first one.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -208,27 +244,21 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredRows.map((row, i) => (
-                <tr key={i} className="hover:bg-gray-50 transition-colors">
+              {filteredRows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3">
                     <button className="bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-1 rounded flex items-center gap-1">
                       ⚙ Actions
                     </button>
                   </td>
-                  <td className="px-5 py-3 font-mono text-xs text-gray-600">{row.gs1}</td>
+                  <td className="px-5 py-3 font-mono text-xs text-gray-600">{row.gs1Code}</td>
                   {/* text-wrap fix: break-words and min-w */}
                   <td className="px-5 py-3 font-medium text-gray-800 break-words min-w-[120px]">{row.name}</td>
                   <td className="px-5 py-3 text-gray-500 break-all min-w-[140px]">{row.email}</td>
-                  <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{row.date}</td>
+                  <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{row.createdAt}</td>
                   <td className="px-5 py-3">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        row.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {row.status === "active" ? "Active" : "Expired"}
+                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                      Active
                     </span>
                   </td>
                 </tr>

@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 
 // ── Shared login card component ────────────────────────────────────────────
 interface LoginCardProps {
-  portal: "admin" | "customer";
+  portal: "admin" | "client";
   title: string;
   subtitle: string;
   quickEmail: string;
@@ -73,7 +73,7 @@ function LoginCard({ portal, title, subtitle, quickEmail, quickPassword }: Login
           </div>
         </div>
         <span className={`text-xs px-3 py-1 rounded-full font-medium ${tagStyle}`}>
-          {isAdmin ? "Platform Administration" : "Customer Portal"}
+          {isAdmin ? "Platform Administration" : "Client Portal"}
         </span>
       </div>
 
@@ -94,7 +94,7 @@ function LoginCard({ portal, title, subtitle, quickEmail, quickPassword }: Login
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={isAdmin ? "admin@traceverified.com" : "admin@customer.com"}
+            placeholder={isAdmin ? "admin@traceverified.com" : "admin@client.com"}
             className={`w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${ringFocus} focus:border-transparent transition`}
           />
         </div>
@@ -183,10 +183,10 @@ export default function LoginPage() {
           quickPassword="TCpassword"
         />
         <LoginCard
-          portal="customer"
-          title="TraceChain Customer Portal"
-          subtitle="Customer Portal"
-          quickEmail="superadmin@customer.com"
+          portal="client"
+          title="TraceChain Client Portal"
+          subtitle="Client Portal"
+          quickEmail="superadmin@client.com"
           quickPassword="TCpassword"
         />
       </div>

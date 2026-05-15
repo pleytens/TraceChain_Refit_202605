@@ -4,36 +4,51 @@ interface PlaceholderPageProps {
   title: string;
   icon: string;
   description?: string;
+  readOnly?: boolean;
 }
 
-const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, icon, description }) => {
+const PlaceholderPage: React.FC<PlaceholderPageProps> = ({ title, icon, description, readOnly = false }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h2 className="text-base font-semibold text-gray-800">{title}</h2>
-        <button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors">
-          + New {title.replace(/s$/, "")}
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="px-6 py-3 border-b border-gray-50">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder={`Search ${title.toLowerCase()}...`}
-            className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-          <button className="border border-gray-200 rounded-lg px-3 py-2 text-gray-500 hover:bg-gray-50">🔍</button>
+    <div className="space-y-4">
+      {readOnly && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-2.5 rounded-lg">
+          <span>🔒</span>
+          <span>You have read-only access. Contact your administrator to make changes.</span>
         </div>
-      </div>
+      )}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+          {!readOnly && (
+            <button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition-colors">
+              + New {title.replace(/s$/, "")}
+            </button>
+          )}
+        </div>
 
-      {/* Empty State */}
-      <div className="py-20 flex flex-col items-center gap-4 text-gray-400">
-        <span className="text-6xl">{icon}</span>
-        <div className="text-center">
-          <p className="text-base font-medium text-gray-500">{title}</p>
-          <p className="text-sm mt-1">{description ?? `No ${title.toLowerCase()} found. Click "New ${title.replace(/s$/, "")}" to get started.`}</p>
+        {/* Search */}
+        <div className="px-6 py-3 border-b border-gray-50">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder={`Search ${title.toLowerCase()}...`}
+              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+            <button className="border border-gray-200 rounded-lg px-3 py-2 text-gray-500 hover:bg-gray-50">🔍</button>
+          </div>
+        </div>
+
+        {/* Empty State */}
+        <div className="py-20 flex flex-col items-center gap-4 text-gray-400">
+          <span className="text-6xl">{icon}</span>
+          <div className="text-center">
+            <p className="text-base font-medium text-gray-500">{title}</p>
+            <p className="text-sm mt-1">
+              {description ?? (readOnly
+                ? `No ${title.toLowerCase()} found.`
+                : `No ${title.toLowerCase()} found. Click "New ${title.replace(/s$/, "")}" to get started.`)}
+            </p>
+          </div>
         </div>
       </div>
     </div>

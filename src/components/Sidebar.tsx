@@ -18,16 +18,16 @@ interface SidebarGroup {
 
 type MenuItem = SidebarItem | SidebarGroup;
 
-// Admin portal menu: customer management focus
+// Admin portal menu: client management focus
 const adminMenuItems: MenuItem[] = [
   { label: "Dashboard", icon: "🏠", id: "home" },
   { label: "People Management", icon: "👥", id: "users" },
 ];
 
-// Customer portal menu: full operational menu
-const customerMenuItems: MenuItem[] = [
+// Client portal menu: full operational menu
+const clientMenuItems: MenuItem[] = [
   { label: "Dashboard", icon: "🏠", id: "home" },
-  { label: "People Management", icon: "👥", id: "users", adminRoles: ["TraceChainCustomerPortalAdmin", "SuperAdmin", "Admin"] },
+  { label: "People Management", icon: "👥", id: "users", adminRoles: ["TraceChainClientPortalAdmin", "SuperAdmin", "Admin"] },
   { label: "Recording", icon: "📝", id: "recording" },
   { label: "Markets", icon: "🛒", id: "markets" },
   { label: "Events", icon: "📅", id: "events" },
@@ -56,12 +56,12 @@ const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
   const isAdminPortal = activePortal === "admin";
   const [settingsOpen, setSettingsOpen] = useState(() => active.startsWith("settings-"));
 
-  const baseItems: MenuItem[] = isAdminPortal ? adminMenuItems : customerMenuItems;
+  const baseItems: MenuItem[] = isAdminPortal ? adminMenuItems : clientMenuItems;
   const isSettingsActive = active.startsWith("settings-");
 
   const roleLabel = (role: string) => {
     if (role === "TraceChainAdminPortalAdmin") return "TV Admin";
-    if (role === "TraceChainCustomerPortalAdmin") return "Portal Admin";
+    if (role === "TraceChainClientPortalAdmin") return "Portal Admin";
     return role;
   };
 
@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
         <div>
           <div className="text-sm font-bold text-white leading-tight">TraceVerified</div>
           <div className={`text-xs font-medium ${isAdminPortal ? "text-green-400" : "text-blue-400"}`}>
-            {isAdminPortal ? "Admin Portal" : "Customer Portal"}
+            {isAdminPortal ? "Admin Portal" : "Client Portal"}
           </div>
         </div>
       </div>

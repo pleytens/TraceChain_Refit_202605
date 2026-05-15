@@ -1,21 +1,6 @@
 import React, { useState } from "react";
-
-interface Product {
-  id: number;
-  gtinCode: string;
-  productName: string;
-  categoryName: string;
-  createdAt: string;
-}
-
-const sampleProducts: Product[] = [
-  { id: 1, gtinCode: "8936069001234", productName: "Organic Rice Premium", categoryName: "Grain", createdAt: "2024-01-10" },
-  { id: 2, gtinCode: "8936069005678", productName: "Fresh Catfish Fillet", categoryName: "Seafood", createdAt: "2024-02-05" },
-  { id: 3, gtinCode: "8936069009012", productName: "Dragon Fruit Red", categoryName: "Fruit", createdAt: "2024-03-15" },
-  { id: 4, gtinCode: "8936069003456", productName: "Jasmine Tea Leaves", categoryName: "Beverage", createdAt: "2024-01-28" },
-  { id: 5, gtinCode: "8936069007890", productName: "Cambodian Pepper Black", categoryName: "Spice", createdAt: "2024-04-02" },
-  { id: 6, gtinCode: "8936069002233", productName: "Wild Honey Raw", categoryName: "Food", createdAt: "2024-02-18" },
-];
+import { useProducts, Product } from "@/context/ProductsContext";
+import { useUnits } from "@/context/UnitsContext";
 
 interface ModalProps {
   product?: Product | null;
@@ -24,10 +9,12 @@ interface ModalProps {
 }
 
 const ProductModal: React.FC<ModalProps> = ({ product, onClose, onSave }) => {
+  const { activeUnits } = useUnits();
   const [form, setForm] = useState({
     gtinCode: product?.gtinCode ?? "",
     productName: product?.productName ?? "",
     categoryName: product?.categoryName ?? "",
+    unit: (product as any)?.unit ?? "",
   });
   const [activeTab, setActiveTab] = useState<"info" | "desc">("info");
 
@@ -104,6 +91,20 @@ const ProductModal: React.FC<ModalProps> = ({ product, onClose, onSave }) => {
               </div>
 
               <div>
+                <label className="block text-sm text-gray-600 mb-1">Unit</label>
+                <select
+                  value={form.unit}
+                  onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                >
+                  <option value="">-- Select unit --</option>
+                  {activeUnits.map((u) => (
+                    <option key={u.id} value={u.name}>{u.name} ({u.abbreviation})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm text-gray-600 mb-1">Certificate Images</label>
                 <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-green-400 transition-colors">
                   <p className="text-gray-400 text-sm">📜 Choose certificate (max 5)</p>
@@ -152,7 +153,7 @@ const ProductModal: React.FC<ModalProps> = ({ product, onClose, onSave }) => {
 };
 
 const Products: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(sampleProducts);
+  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -166,16 +167,20 @@ const Products: React.FC = () => {
     return matchQ && matchCat;
   });
 
-  const handleSave = (data: Partial<Product>) => {
+  const handleSave = async (data: Partial<Product>) => {
     if (editProduct) {
-      setProducts(products.map((p) => (p.id === editProduct.id ? { ...p, ...data } : p)));
+      await updateProduct(editProduct.id, data);
     } else {
-      setProducts([...products, { id: Date.now(), createdAt: new Date().toISOString().slice(0, 10), ...data } as Product]);
+      await addProduct({
+        gtinCode: data.gtinCode ?? "",
+        productName: data.productName ?? "",
+        categoryName: data.categoryName ?? "",
+      });
     }
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Delete this product?")) setProducts(products.filter((p) => p.id !== id));
+  const handleDelete = async (id: number) => {
+    if (confirm("Delete this product?")) await deleteProduct(id);
   };
 
   return (

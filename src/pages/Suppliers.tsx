@@ -1,21 +1,5 @@
 import React, { useState } from "react";
-
-interface Supplier {
-  id: number;
-  gs1Code: string;
-  name: string;
-  address: string;
-  email: string;
-  createdAt: string;
-}
-
-const sampleSuppliers: Supplier[] = [
-  { id: 1, gs1Code: "8936069", name: "Green Farm Co.", address: "Phnom Penh, Cambodia", email: "admin@greenfarm.com", createdAt: "2024-01-15" },
-  { id: 2, gs1Code: "8936070", name: "Mekong Fish Ltd.", address: "Kandal Province, Cambodia", email: "info@mekong.com", createdAt: "2024-02-20" },
-  { id: 3, gs1Code: "8936071", name: "Angkor Foods", address: "Siem Reap, Cambodia", email: "contact@angkor.com", createdAt: "2023-11-01" },
-  { id: 4, gs1Code: "8936072", name: "KBF Trading", address: "Kampot Province", email: "kbf@trade.com", createdAt: "2024-03-10" },
-  { id: 5, gs1Code: "8936073", name: "Sunrise Produce", address: "Battambang, Cambodia", email: "hello@sunrise.com", createdAt: "2023-09-05" },
-];
+import { useSuppliers, Supplier } from "@/context/SuppliersContext";
 
 interface ModalProps {
   supplier?: Supplier | null;
@@ -172,7 +156,7 @@ const SupplierModal: React.FC<ModalProps> = ({ supplier, onClose, onSave }) => {
 };
 
 const Suppliers: React.FC = () => {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(sampleSuppliers);
+  const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useSuppliers();
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null);
@@ -181,16 +165,21 @@ const Suppliers: React.FC = () => {
     !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.gs1Code.includes(search)
   );
 
-  const handleSave = (data: Partial<Supplier>) => {
+  const handleSave = async (data: Partial<Supplier>) => {
     if (editSupplier) {
-      setSuppliers(suppliers.map((s) => (s.id === editSupplier.id ? { ...s, ...data } : s)));
+      await updateSupplier(editSupplier.id, data);
     } else {
-      setSuppliers([...suppliers, { id: Date.now(), createdAt: new Date().toISOString().slice(0, 10), ...data } as Supplier]);
+      await addSupplier({
+        gs1Code: (data as any).gs1Code ?? "",
+        name: (data as any).name ?? "",
+        address: (data as any).address ?? "",
+        email: (data as any).email ?? "",
+      });
     }
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Delete this supplier?")) setSuppliers(suppliers.filter((s) => s.id !== id));
+  const handleDelete = async (id: number) => {
+    if (confirm("Delete this supplier?")) await deleteSupplier(id);
   };
 
   return (

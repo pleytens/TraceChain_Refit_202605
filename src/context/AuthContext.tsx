@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-export type UserRole = "TraceChainAdminPortalAdmin" | "TraceChainCustomerPortalAdmin" | "SuperAdmin" | "Admin" | "User" | "User-Worker" | "Worker" | "Role1" | "Role2" | "Role3";
+export type UserRole = "TraceChainAdminPortalAdmin" | "TraceChainClientPortalAdmin" | "SuperAdmin" | "Admin" | "User" | "User-Worker" | "Worker" | "Role1" | "Role2" | "Role3";
 
-export type Portal = "admin" | "customer";
+export type Portal = "admin" | "client";
 
 export interface AuthUser {
   id: string;
@@ -84,49 +84,49 @@ const initialUsers: AuthUser[] = [
     portal: "admin",
     notificationsEnabled: true,
   },
-  // TraceChain Customer Portal users
+  // TraceChain Client Portal users
   {
-    id: "customer-1",
-    email: "superadmin@customer.com",
+    id: "client-1",
+    email: "superadmin@client.com",
     firstName: "Super",
     lastName: "Admin",
     role: "SuperAdmin",
     status: "Active",
     createdAt: "2024-01-01T00:00:00Z",
-    portal: "customer",
+    portal: "client",
     notificationsEnabled: true,
   },
   {
-    id: "customer-sa2",
-    email: "superadmin2@customer.com",
+    id: "client-sa2",
+    email: "superadmin2@client.com",
     firstName: "Sarah",
     lastName: "SuperAdmin",
     role: "SuperAdmin",
     status: "Active",
     createdAt: "2024-01-01T00:00:00Z",
-    portal: "customer",
+    portal: "client",
     notificationsEnabled: true,
   },
   {
-    id: "customer-admin",
-    email: "admin@customer.com",
-    firstName: "Customer",
+    id: "client-admin",
+    email: "admin@client.com",
+    firstName: "Client",
     lastName: "Admin",
     role: "Admin",
     status: "Active",
     createdAt: "2024-01-01T00:00:00Z",
-    portal: "customer",
+    portal: "client",
     notificationsEnabled: true,
   },
   {
-    id: "customer-2",
-    email: "user@customer.com",
+    id: "client-2",
+    email: "user@client.com",
     firstName: "Demo",
     lastName: "User",
     role: "User",
     status: "Active",
     createdAt: "2024-01-02T00:00:00Z",
-    portal: "customer",
+    portal: "client",
     notificationsEnabled: true,
   },
 ];
@@ -134,10 +134,10 @@ const initialUsers: AuthUser[] = [
 const initialPasswords: Record<string, string> = {
   "admin-1": "TCpassword",
   "admin-2": "TCpassword",
-  "customer-1": "TCpassword",
-  "customer-sa2": "TCpassword",
-  "customer-admin": "TCpassword",
-  "customer-2": "TCpassword",
+  "client-1": "TCpassword",
+  "client-sa2": "TCpassword",
+  "client-admin": "TCpassword",
+  "client-2": "TCpassword",
 };
 
 const initialNotifications: Notification[] = [

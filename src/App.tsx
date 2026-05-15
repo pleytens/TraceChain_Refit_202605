@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ProductsProvider } from "@/context/ProductsContext";
+import { ProcessesProvider } from "@/context/ProcessesContext";
+import { SuppliersProvider } from "@/context/SuppliersContext";
+import { UnitsProvider } from "@/context/UnitsContext";
 import LoginPage from "@/pages/LoginPage";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
@@ -49,6 +53,9 @@ function AppInner() {
 
   const isAdminPortal = activePortal === "admin";
 
+  const adminRoles = ["Admin", "SuperAdmin", "TraceChainClientPortalAdmin"];
+  const isNormalUser = !isAdminPortal && !adminRoles.includes(currentUser?.role ?? "");
+
   const renderPage = () => {
     switch (activePage) {
       case "home":
@@ -74,13 +81,13 @@ function AppInner() {
       case "settings-processes":
         return <SettingsProcesses />;
       case "settings-suppliers":
-        return <SettingsSuppliers />;
+        return <SettingsSuppliers readOnly={isNormalUser} />;
       case "settings-customers":
-        return <SettingsCustomers />;
+        return <SettingsCustomers readOnly={isNormalUser} />;
       case "units-management":
-        return <UnitsManagement />;
+        return <UnitsManagement readOnly={isNormalUser} />;
       case "process-actions":
-        return <PlaceholderPage title="Process Actions" icon="⚙️" />;
+        return <PlaceholderPage title="Process Actions" icon="⚙️" readOnly={isNormalUser} />;
       default:
         return <PlaceholderPage title={meta.title} icon={meta.icon} />;
     }
@@ -108,7 +115,15 @@ function AppInner() {
 function App() {
   return (
     <AuthProvider>
-      <AppInner />
+      <UnitsProvider>
+        <ProductsProvider>
+          <SuppliersProvider>
+            <ProcessesProvider>
+              <AppInner />
+            </ProcessesProvider>
+          </SuppliersProvider>
+        </ProductsProvider>
+      </UnitsProvider>
     </AuthProvider>
   );
 }
