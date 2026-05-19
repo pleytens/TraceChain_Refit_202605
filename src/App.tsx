@@ -25,6 +25,7 @@ import SettingsCompanies from "@/pages/settings/SettingsCompanies";
 import UnitsManagement from "@/pages/UnitsManagement";
 import ProcessActionsPage from "@/pages/ProcessActions";
 import ViewProcesses from "@/pages/ViewProcesses";
+import SettingsLocations from "@/pages/settings/SettingsLocations";
 
 const pageMeta: Record<string, { title: string; icon: string }> = {
   home: { title: "Dashboard", icon: "🏠" },
@@ -45,6 +46,7 @@ const pageMeta: Record<string, { title: string; icon: string }> = {
   "settings-suppliers": { title: "Supplier Settings", icon: "🏭" },
   "settings-customers": { title: "Customer Settings", icon: "🤝" },
   "settings-companies": { title: "My Company", icon: "🏢" },
+  "settings-locations": { title: "Locations", icon: "📍" },
   "units-management": { title: "Units Management", icon: "📐" },
   "process-actions": { title: "Process Actions", icon: "⚙️" },
 };
@@ -93,6 +95,8 @@ function AppInner() {
         return <SettingsCustomers readOnly={isNormalUser} />;
       case "settings-companies":
         return <SettingsCompanies />;
+      case "settings-locations":
+        return <SettingsLocations />;
       case "units-management":
         return <UnitsManagement readOnly={isNormalUser} />;
       case "process-actions":

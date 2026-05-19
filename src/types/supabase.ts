@@ -97,10 +97,53 @@ export type Database = {
         }
         Relationships: []
       }
+      tc_locations: {
+        Row: {
+          city: string
+          country: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string
+          postal_code: string
+          street_address: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          city?: string
+          country?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string
+          postal_code?: string
+          street_address?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string
+          postal_code?: string
+          street_address?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tc_materials: {
         Row: {
           activity_log: Json
           created_at: string
+          current_storage_room_id: string | null
           id: string
           import_packing_item: string
           import_packing_unit_default_qty: string
@@ -113,12 +156,14 @@ export type Database = {
           origin_house_number: string
           origin_post_code: string
           origin_street_name: string
+          storage_requirement_id: string | null
           supplier_id: string
           supplier_name: string
         }
         Insert: {
           activity_log?: Json
           created_at?: string
+          current_storage_room_id?: string | null
           id: string
           import_packing_item?: string
           import_packing_unit_default_qty?: string
@@ -131,12 +176,14 @@ export type Database = {
           origin_house_number?: string
           origin_post_code?: string
           origin_street_name?: string
+          storage_requirement_id?: string | null
           supplier_id?: string
           supplier_name?: string
         }
         Update: {
           activity_log?: Json
           created_at?: string
+          current_storage_room_id?: string | null
           id?: string
           import_packing_item?: string
           import_packing_unit_default_qty?: string
@@ -149,6 +196,7 @@ export type Database = {
           origin_house_number?: string
           origin_post_code?: string
           origin_street_name?: string
+          storage_requirement_id?: string | null
           supplier_id?: string
           supplier_name?: string
         }
@@ -260,23 +308,29 @@ export type Database = {
         Row: {
           category_name: string
           created_at: string
+          current_storage_room_id: string | null
           gtin_code: string
           id: number
           product_name: string
+          storage_requirement_id: string | null
         }
         Insert: {
           category_name?: string
           created_at: string
+          current_storage_room_id?: string | null
           gtin_code: string
           id?: number
           product_name: string
+          storage_requirement_id?: string | null
         }
         Update: {
           category_name?: string
           created_at?: string
+          current_storage_room_id?: string | null
           gtin_code?: string
           id?: number
           product_name?: string
+          storage_requirement_id?: string | null
         }
         Relationships: []
       }
@@ -396,21 +450,120 @@ export type Database = {
       }
       tc_storage_requirements: {
         Row: {
-          id: number
-          requirements: Json
+          code: string
+          created_at: string | null
+          description: string
+          humidity_max_pct: number | null
+          humidity_min_pct: number | null
+          id: string
+          is_active: boolean
+          name: string
+          notes: string
+          requires_cold_chain: boolean
+          requires_hazmat: boolean
+          temperature_max_c: number | null
+          temperature_min_c: number | null
+          tenant_id: string
           updated_at: string | null
         }
         Insert: {
-          id?: number
-          requirements?: Json
+          code: string
+          created_at?: string | null
+          description?: string
+          humidity_max_pct?: number | null
+          humidity_min_pct?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string
+          requires_cold_chain?: boolean
+          requires_hazmat?: boolean
+          temperature_max_c?: number | null
+          temperature_min_c?: number | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
-          id?: number
-          requirements?: Json
+          code?: string
+          created_at?: string | null
+          description?: string
+          humidity_max_pct?: number | null
+          humidity_min_pct?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string
+          requires_cold_chain?: boolean
+          requires_hazmat?: boolean
+          temperature_max_c?: number | null
+          temperature_min_c?: number | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Relationships: []
+      }
+      tc_storage_rooms: {
+        Row: {
+          building: string
+          capacity_units: string
+          capacity_value: number | null
+          created_at: string | null
+          floor: string
+          id: string
+          is_active: boolean
+          location_id: string
+          notes: string
+          room: string
+          storage_requirement_id: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          building?: string
+          capacity_units?: string
+          capacity_value?: number | null
+          created_at?: string | null
+          floor?: string
+          id?: string
+          is_active?: boolean
+          location_id: string
+          notes?: string
+          room: string
+          storage_requirement_id?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          building?: string
+          capacity_units?: string
+          capacity_value?: number | null
+          created_at?: string | null
+          floor?: string
+          id?: string
+          is_active?: boolean
+          location_id?: string
+          notes?: string
+          room?: string
+          storage_requirement_id?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tc_storage_rooms_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "tc_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tc_storage_rooms_storage_requirement_id_fkey"
+            columns: ["storage_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "tc_storage_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tc_suppliers: {
         Row: {
