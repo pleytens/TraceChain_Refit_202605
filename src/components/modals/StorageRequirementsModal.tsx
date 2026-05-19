@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { X, Plus, Trash2, Pencil, Check } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 // ─── Storage key ──────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = "tc_storage_requirements";
+const LS_KEY = "tc_storage_requirements";
+const SUPABASE_ROW_ID = 1;
 
 const DEFAULT_REQUIREMENTS = [
   "Dry storage normal temperature",
@@ -13,16 +15,23 @@ const DEFAULT_REQUIREMENTS = [
 
 export const loadStorageRequirements = (): string[] => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(LS_KEY);
     if (raw) return JSON.parse(raw) as string[];
   } catch { /* ignore */ }
-  // Seed defaults on first load
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_REQUIREMENTS));
+  localStorage.setItem(LS_KEY, JSON.stringify(DEFAULT_REQUIREMENTS));
   return DEFAULT_REQUIREMENTS;
 };
 
-const saveStorageRequirements = (list: string[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+const saveLocal = (list: string[]) => {
+  localStorage.setItem(LS_KEY, JSON.stringify(list));
+};
+
+const saveToSupabase = async (list: string[]) => {
+  // Upsert single row with id=1
+  const { error } = await supabase
+    .from("tc_storage_requirements")
+    .upsert({ id: SUPABASE_ROW_ID, requirements: list, updated_at: new Date().toISOString() });
+  if (error) console.error("❌ Supabase upsert tc_storage_requirements:", error.message);
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -40,9 +49,37 @@ const StorageRequirementsModal: React.FC<Props> = ({ onClose, readOnly = false }
   const [editingValue, setEditingValue] = useState("");
   const [editError, setEditError] = useState("");
 
-  // Persist whenever items change
+  // Load from Supabase on mount
   useEffect(() => {
-    if (!readOnly) saveStorageRequirements(items);
+    supabase
+      .from("tc_storage_requirements")
+      .select("requirements")
+      .eq("id", SUPABASE_ROW_ID)
+      .maybeSingle()
+      .then(({ data, error: err }) => {
+        if (err) {
+          console.warn("⚠️ Supabase tc_storage_requirements load failed:", err.message);
+          return;
+        }
+        if (data?.requirements && Array.isArray(data.requirements) && data.requirements.length > 0) {
+          setItems(data.requirements as string[]);
+          saveLocal(data.requirements as string[]);
+        } else {
+          // Seed defaults
+          const defaults = loadStorageRequirements();
+          saveToSupabase(defaults);
+        }
+      });
+  }, []);
+
+  // Persist whenever items change (skip initial render)
+  const isFirstRender = React.useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (!readOnly) {
+      saveLocal(items);
+      saveToSupabase(items);
+    }
   }, [items, readOnly]);
 
   const handleAdd = () => {

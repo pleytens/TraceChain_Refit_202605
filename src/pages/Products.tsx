@@ -168,14 +168,18 @@ const Products: React.FC = () => {
   });
 
   const handleSave = async (data: Partial<Product>) => {
-    if (editProduct) {
-      await updateProduct(editProduct.id, data);
-    } else {
-      await addProduct({
-        gtinCode: data.gtinCode ?? "",
-        productName: data.productName ?? "",
-        categoryName: data.categoryName ?? "",
-      });
+    try {
+      if (editProduct) {
+        await updateProduct(editProduct.id, data);
+      } else {
+        await addProduct({
+          gtinCode: data.gtinCode ?? "",
+          productName: data.productName ?? "",
+          categoryName: data.categoryName ?? "",
+        });
+      }
+    } catch (err: any) {
+      alert("❌ Failed to save product: " + (err?.message ?? "Unknown error") + "\n\nCheck the browser console (F12) for more details.");
     }
   };
 

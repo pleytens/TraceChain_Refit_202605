@@ -49,16 +49,25 @@ export const ProductsProvider: React.FC<{ children: ReactNode }> = ({ children }
         .select("*")
         .order("id", { ascending: false })
         .then(({ data, error }) => {
-          if (error || !data || data.length === 0) {
+          if (error) {
+            console.error("❌ Supabase fetch tc_products:", error.message);
+            setProducts(defaultProducts);
+            setLoading(false);
+          } else if (!data || data.length === 0) {
+            // Seed default products (no id — BIGSERIAL handles it)
             const rows = defaultProducts.map((p) => ({
-              id: p.id,
               gtin_code: p.gtinCode,
               product_name: p.productName,
               category_name: p.categoryName,
               created_at: p.createdAt,
             }));
-            supabase!.from("tc_products").upsert(rows).then(() => {
-              setProducts(defaultProducts);
+            supabase!.from("tc_products").insert(rows).select().then(({ data: seeded, error: seedErr }) => {
+              if (seedErr) {
+                console.error("❌ Supabase seed tc_products:", seedErr.message);
+                setProducts(defaultProducts);
+              } else {
+                setProducts((seeded as DbRow[]).map(rowToProduct));
+              }
               setLoading(false);
             });
           } else {
@@ -90,13 +99,24 @@ export const ProductsProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [products, loading]);
 
   const addProduct = async (data: Omit<Product, "id" | "createdAt">) => {
-    const id = Date.now();
     const createdAt = new Date().toISOString().slice(0, 10);
-    const newProduct: Product = { id, createdAt, ...data };
     if (supabase) {
-      await supabase.from("tc_products").insert({ id, gtin_code: data.gtinCode, product_name: data.productName, category_name: data.categoryName, created_at: createdAt });
+      const { data: inserted, error } = await supabase
+        .from("tc_products")
+        .insert({ gtin_code: data.gtinCode, product_name: data.productName, category_name: data.categoryName, created_at: createdAt })
+        .select()
+        .single();
+      if (error) {
+        console.error("❌ Supabase insert error (tc_products):", error.message, error.details, error.hint);
+        throw new Error(error.message);
+      }
+      const newProduct = rowToProduct(inserted as DbRow);
+      setProducts((prev) => [newProduct, ...prev]);
+    } else {
+      const id = Date.now();
+      const newProduct: Product = { id, createdAt, ...data };
+      setProducts((prev) => [newProduct, ...prev]);
     }
-    setProducts((prev) => [newProduct, ...prev]);
   };
 
   const updateProduct = async (id: number, data: Partial<Product>) => {

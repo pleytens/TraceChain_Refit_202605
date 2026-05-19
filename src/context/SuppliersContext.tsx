@@ -91,13 +91,24 @@ export const SuppliersProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [suppliers, loading]);
 
   const addSupplier = async (data: Omit<Supplier, "id" | "createdAt">) => {
-    const id = Date.now();
     const createdAt = new Date().toISOString().slice(0, 10);
-    const newSupplier: Supplier = { id, createdAt, ...data };
     if (supabase) {
-      await supabase.from("tc_suppliers").insert({ id, gs1_code: data.gs1Code, name: data.name, address: data.address, email: data.email, created_at: createdAt });
+      const { data: inserted, error } = await supabase
+        .from("tc_suppliers")
+        .insert({ gs1_code: data.gs1Code, name: data.name, address: data.address, email: data.email, created_at: createdAt })
+        .select()
+        .single();
+      if (error) {
+        console.error("❌ Supabase insert error (tc_suppliers):", error.message, error.details, error.hint);
+        throw new Error(error.message);
+      }
+      const newSupplier = rowToSupplier(inserted as DbRow);
+      setSuppliers((prev) => [newSupplier, ...prev]);
+    } else {
+      const id = Date.now();
+      const newSupplier: Supplier = { id, createdAt, ...data };
+      setSuppliers((prev) => [newSupplier, ...prev]);
     }
-    setSuppliers((prev) => [newSupplier, ...prev]);
   };
 
   const updateSupplier = async (id: number, data: Partial<Supplier>) => {

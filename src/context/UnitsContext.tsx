@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { supabase } from "@/lib/supabase";
 
 export interface Unit {
   id: string;
@@ -19,7 +20,7 @@ const defaultUnits: Unit[] = [
   { id: "u6", name: "Box", abbreviation: "box", type: "Quantity", status: "Inactive" },
 ];
 
-function loadUnits(): Unit[] {
+function loadUnitsLocal(): Unit[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -30,35 +31,106 @@ function loadUnits(): Unit[] {
   return defaultUnits;
 }
 
+function saveLocal(next: Unit[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+}
+
 interface UnitsContextValue {
   units: Unit[];
   activeUnits: Unit[];
-  addUnit: (data: Omit<Unit, "id">) => void;
-  updateUnit: (id: string, data: Partial<Unit>) => void;
-  deleteUnit: (id: string) => void;
+  addUnit: (data: Omit<Unit, "id">) => Promise<void>;
+  updateUnit: (id: string, data: Partial<Unit>) => Promise<void>;
+  deleteUnit: (id: string) => Promise<void>;
 }
 
 const UnitsContext = createContext<UnitsContextValue | null>(null);
 
 export const UnitsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [units, setUnits] = useState<Unit[]>(loadUnits);
+  const [units, setUnits] = useState<Unit[]>(loadUnitsLocal);
 
-  const persist = (next: Unit[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setUnits(next);
-  };
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("tc_units")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.warn("⚠️ Supabase tc_units load failed, using localStorage:", error.message);
+          return;
+        }
+        if (data && data.length > 0) {
+          const rows: Unit[] = data.map((r) => ({
+            id: r.id,
+            name: r.name,
+            abbreviation: r.abbreviation,
+            type: r.type,
+            status: r.status as "Active" | "Inactive",
+          }));
+          setUnits(rows);
+          saveLocal(rows);
+        } else {
+          // Seed defaults into Supabase if table is empty
+          const toSeed = loadUnitsLocal();
+          supabase!
+            .from("tc_units")
+            .insert(
+              toSeed.map((u) => ({
+                id: u.id,
+                name: u.name,
+                abbreviation: u.abbreviation,
+                type: u.type,
+                status: u.status,
+              }))
+            )
+            .then(({ error: seedErr }) => {
+              if (seedErr) console.warn("⚠️ Seeding tc_units failed:", seedErr.message);
+            });
+        }
+      });
+  }, []);
 
-  const addUnit = (data: Omit<Unit, "id">) => {
+  const addUnit = async (data: Omit<Unit, "id">) => {
     const newUnit: Unit = { id: `u${Date.now()}`, ...data };
-    persist([newUnit, ...units]);
+    if (supabase) {
+      const { error } = await supabase.from("tc_units").insert({
+        id: newUnit.id,
+        name: newUnit.name,
+        abbreviation: newUnit.abbreviation,
+        type: newUnit.type,
+        status: newUnit.status,
+      });
+      if (error) console.error("❌ Supabase insert tc_units:", error.message);
+    }
+    setUnits((prev) => {
+      const next = [newUnit, ...prev];
+      saveLocal(next);
+      return next;
+    });
   };
 
-  const updateUnit = (id: string, data: Partial<Unit>) => {
-    persist(units.map((u) => (u.id === id ? { ...u, ...data } : u)));
+  const updateUnit = async (id: string, data: Partial<Unit>) => {
+    if (supabase) {
+      const { error } = await supabase.from("tc_units").update(data).eq("id", id);
+      if (error) console.error("❌ Supabase update tc_units:", error.message);
+    }
+    setUnits((prev) => {
+      const next = prev.map((u) => (u.id === id ? { ...u, ...data } : u));
+      saveLocal(next);
+      return next;
+    });
   };
 
-  const deleteUnit = (id: string) => {
-    persist(units.filter((u) => u.id !== id));
+  const deleteUnit = async (id: string) => {
+    if (supabase) {
+      const { error } = await supabase.from("tc_units").delete().eq("id", id);
+      if (error) console.error("❌ Supabase delete tc_units:", error.message);
+    }
+    setUnits((prev) => {
+      const next = prev.filter((u) => u.id !== id);
+      saveLocal(next);
+      return next;
+    });
   };
 
   const activeUnits = units.filter((u) => u.status === "Active");

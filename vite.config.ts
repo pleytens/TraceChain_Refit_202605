@@ -15,4 +15,7 @@ export default defineConfig({
     allowedHosts: process.env.TEMPO === "true" ? true : undefined,
     host: process.env.TEMPO === "true" ? "0.0.0.0" : undefined,
   },
+  preview: {
+    host: "0.0.0.0",
+  },
 });

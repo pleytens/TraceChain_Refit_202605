@@ -166,15 +166,19 @@ const Suppliers: React.FC = () => {
   );
 
   const handleSave = async (data: Partial<Supplier>) => {
-    if (editSupplier) {
-      await updateSupplier(editSupplier.id, data);
-    } else {
-      await addSupplier({
-        gs1Code: (data as any).gs1Code ?? "",
-        name: (data as any).name ?? "",
-        address: (data as any).address ?? "",
-        email: (data as any).email ?? "",
-      });
+    try {
+      if (editSupplier) {
+        await updateSupplier(editSupplier.id, data);
+      } else {
+        await addSupplier({
+          gs1Code: (data as any).gs1Code ?? "",
+          name: (data as any).name ?? "",
+          address: (data as any).address ?? "",
+          email: (data as any).email ?? "",
+        });
+      }
+    } catch (err: any) {
+      alert("❌ Failed to save supplier: " + (err?.message ?? "Unknown error") + "\n\nCheck the browser console (F12) for more details.");
     }
   };
 

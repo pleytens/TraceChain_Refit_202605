@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Plus, Trash2, X, Search, ChevronDown, Edit2, Eye } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { useUnits } from "@/context/UnitsContext";
 
 // ─── Activity Log ─────────────────────────────────────────────────────────────
 
@@ -82,14 +84,6 @@ const PACKING_ITEM_LIBRARY = [
   "Pallet (Wooden)", "Pallet (Plastic)", "Big Bag (FIBC)", "Vacuum Bag",
   "Net Bag", "Mesh Sack", "Bottle (PET)", "Bottle (Glass)",
   "Can (Tin)", "Flexible Pouch", "Tetrapak", "Bulk Tanker",
-];
-
-const UNIT_ITEM_LIBRARY = [
-  "kg", "g", "mg", "ton (metric)", "lb", "oz",
-  "L", "mL", "m³", "barrel",
-  "pcs", "dozen", "case", "pallet",
-  "m", "cm", "mm", "ft",
-  "m²", "hectare",
 ];
 
 // ─── Load Suppliers from shared localStorage (written by SettingsCompanies) ───
@@ -365,6 +359,8 @@ const AddMaterialModal: React.FC<AddMaterialModalProps> = ({
 }) => {
   const { currentUser } = useAuth();
   const isEdit = !!editingMaterial;
+  const { activeUnits } = useUnits();
+  const UNIT_ITEM_LIBRARY = activeUnits.map((u) => `${u.name} (${u.abbreviation})`);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [form, setForm] = useState({
@@ -479,7 +475,7 @@ const AddMaterialModal: React.FC<AddMaterialModalProps> = ({
         <div className="px-6 py-5 space-y-7 overflow-y-auto max-h-[75vh]">
 
           {/* 2.1 Material Name */}
-          <Section title="2.1 Material Name">
+          <Section title="Material Name">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
                 Material Name <span className="text-red-500">*</span>
@@ -496,7 +492,7 @@ const AddMaterialModal: React.FC<AddMaterialModalProps> = ({
           </Section>
 
           {/* 2.2 Supplier Name */}
-          <Section title="2.2 Supplier Name">
+          <Section title="Supplier Name">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
                 Supplier <span className="text-red-500">*</span>
@@ -519,7 +515,7 @@ const AddMaterialModal: React.FC<AddMaterialModalProps> = ({
           </Section>
 
           {/* 2.3 Material Category */}
-          <Section title="2.3 Material Category">
+          <Section title="Material Category">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Material Category</label>
               <AutocompleteInput
@@ -531,44 +527,36 @@ const AddMaterialModal: React.FC<AddMaterialModalProps> = ({
             </div>
           </Section>
 
-          {/* 2.4 Import Packing Item */}
-          <Section title="2.4 Import Packing Item">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Import Packing Item</label>
-              <AutocompleteInput
-                value={form.importPackingItem}
-                onChange={(v) => set("importPackingItem", v)}
-                options={PACKING_ITEM_LIBRARY}
-                placeholder="e.g. Jute Bag, Cardboard Box…"
-              />
-            </div>
-          </Section>
-
-          {/* 2.5 Import Unit Item */}
-          <Section title="2.5 Import Unit Item">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Import Unit Item</label>
-              <AutocompleteInput
-                value={form.importUnitItem}
-                onChange={(v) => set("importUnitItem", v)}
-                options={UNIT_ITEM_LIBRARY}
-                placeholder="e.g. kg, L, pcs…"
-              />
-            </div>
-          </Section>
-
-          {/* 2.6 Import Packing Unit Default Quantity */}
-          <Section title="2.6 Import Packing Unit Default Quantity">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
-                Default Quantity
-                {qtyProposal && (
-                  <span className="ml-2 text-xs text-blue-500 font-normal">
-                    ↩ Proposed from last record: {qtyProposal.importPackingUnitDefaultQty}
-                  </span>
-                )}
-              </label>
-              <div className="flex gap-2">
+          {/* Packing & Unit */}
+          <Section title="Packing & Unit">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Import Packing Item</label>
+                <AutocompleteInput
+                  value={form.importPackingItem}
+                  onChange={(v) => set("importPackingItem", v)}
+                  options={PACKING_ITEM_LIBRARY}
+                  placeholder="e.g. Jute Bag, Cardboard Box…"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Import Unit Item</label>
+                <AutocompleteInput
+                  value={form.importUnitItem}
+                  onChange={(v) => set("importUnitItem", v)}
+                  options={UNIT_ITEM_LIBRARY}
+                  placeholder="e.g. kg, L, pcs…"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Unit Default Quantity
+                  {qtyProposal && (
+                    <span className="ml-2 text-xs text-blue-500 font-normal">
+                      ↩ {qtyProposal.importPackingUnitDefaultQty}
+                    </span>
+                  )}
+                </label>
                 <input
                   type="number"
                   min="0"
@@ -578,20 +566,15 @@ const AddMaterialModal: React.FC<AddMaterialModalProps> = ({
                   placeholder="e.g. 25"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                {form.importUnitItem && (
-                  <span className="flex items-center px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-600 whitespace-nowrap">
-                    {form.importUnitItem}
-                  </span>
-                )}
+                <p className="text-xs text-gray-400 mt-1">
+                  Pre-filled from last matching Supplier + Packing + Unit. Can be overwritten.
+                </p>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
-                Pre-filled when same Supplier + Packing + Unit combination was recorded before. Can be overwritten.
-              </p>
             </div>
           </Section>
 
           {/* 2.7 Origin Post Address */}
-          <Section title="2.7 Origin Post Address">
+          <Section title="Origin Post Address">
             {!form.supplierId ? (
               <p className="text-xs text-gray-400 italic">Select a supplier first to see address options.</p>
             ) : (
@@ -751,6 +734,75 @@ const saveMaterials = (list: Material[]) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 };
 
+// ─── Supabase row ↔ Material helpers ─────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function rowToMaterial(row: any): Material {
+  // Support BOTH old schema (data JSONB blob) and new flat-column schema
+  if (row.data && typeof row.data === "object") {
+    // Old schema: everything stored in `data` JSONB column
+    const d = row.data as Material;
+    return {
+      id: d.id ?? row.id,
+      name: d.name ?? "",
+      supplierId: d.supplierId ?? "",
+      supplierName: d.supplierName ?? "",
+      materialCategory: d.materialCategory ?? "",
+      importPackingItem: d.importPackingItem ?? "",
+      importUnitItem: d.importUnitItem ?? "",
+      importPackingUnitDefaultQty: d.importPackingUnitDefaultQty ?? "",
+      originPostAddress: d.originPostAddress ?? {
+        houseNumber: "", streetName: "", district: "", postCode: "", city: "", country: "",
+      },
+      activityLog: Array.isArray(d.activityLog) ? d.activityLog : [],
+      createdAt: d.createdAt ?? row.created_at ?? "",
+    };
+  }
+  // New flat-column schema
+  return {
+    id: row.id,
+    name: row.name ?? "",
+    supplierId: row.supplier_id ?? "",
+    supplierName: row.supplier_name ?? "",
+    materialCategory: row.material_category ?? "",
+    importPackingItem: row.import_packing_item ?? "",
+    importUnitItem: row.import_unit_item ?? "",
+    importPackingUnitDefaultQty: row.import_packing_unit_default_qty ?? "",
+    originPostAddress: {
+      houseNumber: row.origin_house_number ?? "",
+      streetName: row.origin_street_name ?? "",
+      district: row.origin_district ?? "",
+      postCode: row.origin_post_code ?? "",
+      city: row.origin_city ?? "",
+      country: row.origin_country ?? "",
+    },
+    activityLog: Array.isArray(row.activity_log) ? row.activity_log : [],
+    createdAt: row.created_at ?? "",
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function materialToRow(m: Material): any {
+  return {
+    id: m.id,
+    name: m.name,
+    supplier_id: m.supplierId,
+    supplier_name: m.supplierName,
+    material_category: m.materialCategory,
+    import_packing_item: m.importPackingItem,
+    import_unit_item: m.importUnitItem,
+    import_packing_unit_default_qty: m.importPackingUnitDefaultQty,
+    origin_house_number: m.originPostAddress.houseNumber,
+    origin_street_name: m.originPostAddress.streetName,
+    origin_district: m.originPostAddress.district,
+    origin_post_code: m.originPostAddress.postCode,
+    origin_city: m.originPostAddress.city,
+    origin_country: m.originPostAddress.country,
+    activity_log: m.activityLog,
+    created_at: m.createdAt,
+  };
+}
+
 const Materials: React.FC = () => {
   const { currentUser } = useAuth();
   const canEdit =
@@ -759,15 +811,37 @@ const Materials: React.FC = () => {
     currentUser?.role === "TraceChainAdminPortalAdmin" ||
     currentUser?.role === "TraceChainClientPortalAdmin";
 
-  const [materials, setMaterials] = useState<Material[]>(loadMaterials);
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>(loadSuppliersFromStorage);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
   const [viewingMaterial, setViewingMaterial] = useState<Material | null>(null);
 
+  // Load materials from Supabase on mount
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      if (supabase) {
+        const { data, error } = await supabase
+          .from("tc_materials")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (!error && data) {
+          const loaded = data.map(rowToMaterial);
+          setMaterials(loaded);
+          saveMaterials(loaded);
+        } else {
+          console.error("❌ Supabase fetch tc_materials:", error?.message);
+          setMaterials(loadMaterials());
+        }
+      } else {
+        setMaterials(loadMaterials());
+      }
+    };
+    fetchMaterials();
+  }, []);
+
   // Reload suppliers from localStorage whenever this component mounts
-  // (so newly added suppliers in Supplier Settings are visible here)
   useEffect(() => {
     setSuppliers(loadSuppliersFromStorage());
   }, []);
@@ -794,17 +868,56 @@ const Materials: React.FC = () => {
     );
   });
 
-  const handleSave = (m: Material) => {
-    setMaterials((prev) => {
-      const next = editingMaterial
-        ? prev.map((x) => (x.id === m.id ? m : x))
-        : [m, ...prev];
-      saveMaterials(next);
-      return next;
-    });
+  const handleSave = async (m: Material) => {
+    const row = materialToRow(m);
+    if (supabase) {
+      if (editingMaterial) {
+        const { error } = await supabase
+          .from("tc_materials")
+          .update(row)
+          .eq("id", m.id);
+        if (error) {
+          console.error("❌ Supabase update error (tc_materials):", error.message);
+          return;
+        }
+        setMaterials((prev) => {
+          const next = prev.map((x) => (x.id === m.id ? m : x));
+          saveMaterials(next);
+          return next;
+        });
+      } else {
+        const { error } = await supabase
+          .from("tc_materials")
+          .insert(row);
+        if (error) {
+          console.error("❌ Supabase insert error (tc_materials):", error.message);
+          return;
+        }
+        setMaterials((prev) => {
+          const next = [m, ...prev];
+          saveMaterials(next);
+          return next;
+        });
+      }
+    } else {
+      setMaterials((prev) => {
+        const next = editingMaterial
+          ? prev.map((x) => (x.id === m.id ? m : x))
+          : [m, ...prev];
+        saveMaterials(next);
+        return next;
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    if (supabase) {
+      const { error } = await supabase.from("tc_materials").delete().eq("id", id);
+      if (error) {
+        console.error("❌ Supabase delete error (tc_materials):", error.message);
+        return;
+      }
+    }
     setMaterials((prev) => {
       const next = prev.filter((m) => m.id !== id);
       saveMaterials(next);

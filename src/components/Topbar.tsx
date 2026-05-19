@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import MyProfileModal from "@/components/modals/MyProfileModal";
 import MyNotificationSettingsModal from "@/components/modals/MyNotificationSettingsModal";
 import StorageRequirementsModal from "@/components/modals/StorageRequirementsModal";
+import { ChevronRight, ChevronDown } from "lucide-react";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,9 +30,23 @@ interface TopbarProps {
   onNavigateToProcessActions?: () => void;
   onNavigateToSupplierSettings?: () => void;
   onNavigateToCustomerSettings?: () => void;
+  onNavigateToProcessSettings?: () => void;
+  onNavigateToCompany?: () => void;
+  onNavigateToLocations?: () => void;
+  onNavigateToPeopleManagement?: () => void;
 }
 
-const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToProcessActions, onNavigateToSupplierSettings, onNavigateToCustomerSettings }) => {
+const Topbar: React.FC<TopbarProps> = ({
+  title,
+  onNavigateToUnits,
+  onNavigateToProcessActions,
+  onNavigateToSupplierSettings,
+  onNavigateToCustomerSettings,
+  onNavigateToProcessSettings,
+  onNavigateToCompany,
+  onNavigateToLocations,
+  onNavigateToPeopleManagement,
+}) => {
   const { currentUser, activePortal, notifications, markNotificationRead, markAllNotificationsRead, unreadCount } = useAuth();
 
   const isAdminPortal = activePortal === "admin";
@@ -43,6 +58,9 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
   // Dropdowns
   const [showNotifs, setShowNotifs] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showAppSettings, setShowAppSettings] = useState(false);
+  const [showMyVariables, setShowMyVariables] = useState(false);
+  const [showMyCompany, setShowMyCompany] = useState(false);
 
   // Modals
   const [showProfile, setShowProfile] = useState(false);
@@ -56,7 +74,12 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifs(false);
-      if (userRef.current && !userRef.current.contains(e.target as Node)) setShowUserMenu(false);
+      if (userRef.current && !userRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+        setShowAppSettings(false);
+        setShowMyVariables(false);
+        setShowMyCompany(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -158,7 +181,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
 
             {/* User dropdown */}
             {showUserMenu && (
-              <div className="absolute right-0 top-12 w-52 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+              <div className="absolute right-0 top-12 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
                 {/* User info header */}
                 <div className={`px-4 py-3 ${isAdminPortal ? "bg-green-50 border-b border-green-100" : "bg-blue-50 border-b border-blue-100"}`}>
                   <div className="text-sm font-semibold text-gray-800 truncate">
@@ -171,6 +194,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
                 </div>
 
                 <div className="py-1">
+                  {/* My Profile */}
                   <button
                     onClick={() => { setShowUserMenu(false); setShowProfile(true); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
@@ -178,57 +202,144 @@ const Topbar: React.FC<TopbarProps> = ({ title, onNavigateToUnits, onNavigateToP
                     <span>👤</span>
                     My Profile
                   </button>
+
+                  {/* My Notifications */}
                   <button
                     onClick={() => { setShowUserMenu(false); setShowNotifSettings(true); }}
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
                   >
                     <span>🔔</span>
-                    My Notification Settings
+                    My Notifications
                   </button>
+
+                  {/* Application Settings (submenu) */}
                   {!isAdminPortal && (
-                    <button
-                      onClick={() => { setShowUserMenu(false); onNavigateToUnits?.(); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
-                    >
-                      <span>📐</span>
-                      Units Management
-                    </button>
-                  )}
-                  {!isAdminPortal && (
-                    <button
-                      onClick={() => { setShowUserMenu(false); onNavigateToProcessActions?.(); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
-                    >
-                      <span>⚙️</span>
-                      Process Actions
-                    </button>
-                  )}
-                  {!isAdminPortal && (
-                    <button
-                      onClick={() => { setShowUserMenu(false); onNavigateToSupplierSettings?.(); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
-                    >
-                      <span>🏭</span>
-                      Supplier Settings
-                    </button>
-                  )}
-                  {!isAdminPortal && (
-                    <button
-                      onClick={() => { setShowUserMenu(false); onNavigateToCustomerSettings?.(); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
-                    >
-                      <span>🤝</span>
-                      Customer Settings
-                    </button>
-                  )}
-                  {!isAdminPortal && (
-                    <button
-                      onClick={() => { setShowUserMenu(false); setShowStorageReqs(true); }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
-                    >
-                      <span>🧊</span>
-                      Storage Requirements
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setShowAppSettings((v) => !v)}
+                        className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition"
+                      >
+                        <span>⚙️</span>
+                        <span className="flex-1">Application Settings</span>
+                        {showAppSettings ? (
+                          <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                        )}
+                      </button>
+
+                      {showAppSettings && (
+                        <div className="bg-gray-50 border-t border-b border-gray-100">
+                          {/* My Suppliers */}
+                          <button
+                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); onNavigateToSupplierSettings?.(); }}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <span>🏭</span>
+                            My Suppliers
+                          </button>
+
+                          {/* My Customers */}
+                          <button
+                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); onNavigateToCustomerSettings?.(); }}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <span>🤝</span>
+                            My Customers
+                          </button>
+
+                          {/* My Company (expandable) */}
+                          <button
+                            onClick={() => setShowMyCompany((v) => !v)}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <span>🏢</span>
+                            <span className="flex-1">My Company</span>
+                            {showMyCompany ? (
+                              <ChevronDown className="w-3 h-3 text-gray-400" />
+                            ) : (
+                              <ChevronRight className="w-3 h-3 text-gray-400" />
+                            )}
+                          </button>
+
+                          {showMyCompany && (
+                            <div className="bg-white border-t border-gray-100">
+                              {/* Details */}
+                              <button
+                                onClick={() => { setShowUserMenu(false); setShowAppSettings(false); setShowMyCompany(false); onNavigateToCompany?.(); }}
+                                className="w-full text-left pl-16 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                              >
+                                <span>📋</span>
+                                Details
+                              </button>
+
+                              {/* Locations */}
+                              <button
+                                onClick={() => { setShowUserMenu(false); setShowAppSettings(false); setShowMyCompany(false); onNavigateToLocations?.(); }}
+                                className="w-full text-left pl-16 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                              >
+                                <span>📍</span>
+                                Locations
+                              </button>
+
+                              {/* People Management */}
+                              <button
+                                onClick={() => { setShowUserMenu(false); setShowAppSettings(false); setShowMyCompany(false); onNavigateToPeopleManagement?.(); }}
+                                className="w-full text-left pl-16 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                              >
+                                <span>👥</span>
+                                People Management
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Processes */}
+                          <button
+                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); onNavigateToProcessSettings?.(); }}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <span>🔄</span>
+                            Processes
+                          </button>
+
+                          {/* My Variables (expandable) */}
+                          <button
+                            onClick={() => setShowMyVariables((v) => !v)}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <span>📐</span>
+                            <span className="flex-1">My Variables</span>
+                            {showMyVariables ? (
+                              <ChevronDown className="w-3 h-3 text-gray-400" />
+                            ) : (
+                              <ChevronRight className="w-3 h-3 text-gray-400" />
+                            )}
+                          </button>
+
+                          {showMyVariables && (
+                            <div className="bg-white border-t border-gray-100">
+                              {/* Units Management */}
+                              <button
+                                onClick={() => { setShowUserMenu(false); setShowAppSettings(false); setShowMyVariables(false); onNavigateToUnits?.(); }}
+                                className="w-full text-left pl-16 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                              >
+                                <span>📏</span>
+                                Units Management
+                              </button>
+
+                              {/* Storage Requirements */}
+                              <button
+                                onClick={() => { setShowUserMenu(false); setShowAppSettings(false); setShowMyVariables(false); setShowStorageReqs(true); }}
+                                className="w-full text-left pl-16 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                              >
+                                <span>🗄️</span>
+                                Storage Requirements
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

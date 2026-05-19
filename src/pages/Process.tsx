@@ -150,15 +150,19 @@ const Process: React.FC = () => {
   );
 
   const handleSave = async (data: Partial<ProcessRecord>) => {
-    if (editProcess) {
-      await updateProcess(editProcess.id, data);
-      setSuccessBanner(`Process "${data.name}" updated successfully.`);
-    } else {
-      const newId = await addProcess({ name: data.name ?? "", steps: data.steps ?? [], isActive: true });
-      setExpandedId(newId);
-      setSuccessBanner(`Process "${data.name}" created. You can now add recordings to this process.`);
+    try {
+      if (editProcess) {
+        await updateProcess(editProcess.id, data);
+        setSuccessBanner(`Process "${data.name}" updated successfully.`);
+      } else {
+        const newId = await addProcess({ name: data.name ?? "", steps: data.steps ?? [], isActive: true });
+        setExpandedId(newId);
+        setSuccessBanner(`Process "${data.name}" created. You can now add recordings to this process.`);
+      }
+      setTimeout(() => setSuccessBanner(null), 5000);
+    } catch (err: any) {
+      alert("❌ Failed to save process: " + (err?.message ?? "Unknown error") + "\n\nCheck the browser console (F12) for more details.");
     }
-    setTimeout(() => setSuccessBanner(null), 5000);
   };
 
   const handleDelete = async (id: number) => {

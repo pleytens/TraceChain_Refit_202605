@@ -3,6 +3,7 @@ import { Plus, Trash2, X, Search, Edit2, ChevronDown, Eye } from "lucide-react";
 import { loadStorageRequirements } from "@/components/modals/StorageRequirementsModal";
 import { useUnits } from "@/context/UnitsContext";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 // ─── Activity Log ─────────────────────────────────────────────────────────────
 
@@ -85,7 +86,7 @@ const PACKING_ITEM_LIBRARY = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const uid = () => Math.random().toString(36).slice(2, 9);
+const uid = () => crypto.randomUUID();
 const today = () => new Date().toISOString().slice(0, 10);
 
 const formatAddress = (a: PostAddress) => {
@@ -104,20 +105,100 @@ const emptyProduct = (): Omit<Product, "id" | "createdAt" | "activityLog"> => ({
   storagePostAddress: emptyAddress(), other1: "", other2: "", other3: "",
 });
 
-// ─── Storage ──────────────────────────────────────────────────────────────────
+// ─── Supabase helpers ─────────────────────────────────────────────────────────
 
-const STORAGE_KEY = "tc_settings_products";
-
-const loadProducts = (): Product[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Product[]) : [];
-  } catch { return []; }
+type DbRow = {
+  id: string;
+  name: string;
+  product_category: string;
+  commercial_name: string;
+  internal_id: string;
+  gs1_id: string;
+  barcode_id: string;
+  packing_item: string;
+  unit: string;
+  unit_default_quantity: string;
+  storage_requirement: string;
+  storage_house_number: string;
+  storage_street_name: string;
+  storage_district: string;
+  storage_post_code: string;
+  storage_city: string;
+  storage_country: string;
+  storage_location_room: string;
+  other1: string;
+  other2: string;
+  other3: string;
+  activity_log: ActivityEntry[];
+  created_at: string;
 };
 
-const saveProducts = (list: Product[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+function rowToProduct(row: DbRow): Product {
+  return {
+    id: row.id,
+    name: row.name,
+    productCategory: row.product_category,
+    commercialName: row.commercial_name,
+    internalId: row.internal_id,
+    gs1Id: row.gs1_id,
+    barcodeId: row.barcode_id,
+    packingItem: row.packing_item,
+    unit: row.unit,
+    unitDefaultQuantity: row.unit_default_quantity,
+    storageRequirement: row.storage_requirement,
+    storagePostAddress: {
+      houseNumber: row.storage_house_number,
+      streetName: row.storage_street_name,
+      district: row.storage_district,
+      postCode: row.storage_post_code,
+      city: row.storage_city,
+      country: row.storage_country,
+      locationRoom: row.storage_location_room,
+    },
+    other1: row.other1,
+    other2: row.other2,
+    other3: row.other3,
+    activityLog: Array.isArray(row.activity_log) ? row.activity_log : [],
+    createdAt: row.created_at,
+  };
+}
+
+function productToRow(p: Product): DbRow {
+  return {
+    id: p.id,
+    name: p.name,
+    product_category: p.productCategory,
+    commercial_name: p.commercialName,
+    internal_id: p.internalId,
+    gs1_id: p.gs1Id,
+    barcode_id: p.barcodeId,
+    packing_item: p.packingItem,
+    unit: p.unit,
+    unit_default_quantity: p.unitDefaultQuantity,
+    storage_requirement: p.storageRequirement,
+    storage_house_number: p.storagePostAddress.houseNumber,
+    storage_street_name: p.storagePostAddress.streetName,
+    storage_district: p.storagePostAddress.district,
+    storage_post_code: p.storagePostAddress.postCode,
+    storage_city: p.storagePostAddress.city,
+    storage_country: p.storagePostAddress.country,
+    storage_location_room: p.storagePostAddress.locationRoom,
+    other1: p.other1,
+    other2: p.other2,
+    other3: p.other3,
+    activity_log: p.activityLog,
+    created_at: p.createdAt,
+  };
+}
+
+// ─── localStorage fallback ────────────────────────────────────────────────────
+
+const LS_KEY = "tc_settings_products";
+const lsLoad = (): Product[] => {
+  try { const r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : []; }
+  catch { return []; }
 };
+const lsSave = (list: Product[]) => localStorage.setItem(LS_KEY, JSON.stringify(list));
 
 // ─── AutocompleteInput ────────────────────────────────────────────────────────
 
@@ -226,7 +307,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSave, onDe
       name: form.name.trim(),
       other2: form.other2.slice(0, 50),
       other3: form.other3.slice(0, 50),
-      createdAt: editingProduct?.createdAt ?? today(),
+      createdAt: editingProduct?.createdAt ?? new Date().toISOString(),
       activityLog: [
         ...(editingProduct?.activityLog ?? []),
         {
@@ -328,20 +409,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ onClose, onSave, onDe
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Unit Default Quantity</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number" min="0" step="any"
-                    value={form.unitDefaultQuantity}
-                    onChange={(e) => set("unitDefaultQuantity", e.target.value)}
-                    placeholder="e.g. 500"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {form.unit && (
-                    <span className="flex items-center px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-600 whitespace-nowrap">
-                      {form.unit}
-                    </span>
-                  )}
-                </div>
+                <input
+                  type="number" min="0" step="any"
+                  value={form.unitDefaultQuantity}
+                  onChange={(e) => set("unitDefaultQuantity", e.target.value)}
+                  placeholder="e.g. 500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
           </Section>
@@ -572,11 +646,113 @@ const SettingsProducts: React.FC = () => {
     currentUser?.role === "TraceChainAdminPortalAdmin" ||
     currentUser?.role === "TraceChainClientPortalAdmin";
 
-  const [products, setProducts] = useState<Product[]>(loadProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+
+  // ── Load from Supabase or localStorage ──
+  useEffect(() => {
+    if (supabase) {
+      supabase
+        .from("tc_settings_products")
+        .select("*")
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("❌ Supabase fetch tc_settings_products:", error.message, error.details, error.hint);
+            // Fall back to localStorage
+            setProducts(lsLoad());
+          } else {
+            const rows = (data as DbRow[]).map(rowToProduct);
+            if (rows.length > 0) {
+              // Sort newest first by created_at
+              rows.sort((a, b) => (b.createdAt > a.createdAt ? -1 : 1));
+              setProducts(rows);
+              // Sync localStorage with Supabase data
+              lsSave(rows);
+            } else {
+              // Supabase returned empty — check localStorage for any locally-saved products
+              const local = lsLoad();
+              setProducts(local);
+            }
+          }
+          setLoading(false);
+        });
+    } else {
+      setProducts(lsLoad());
+      setLoading(false);
+    }
+  }, []);
+
+  const handleSave = async (p: Product) => {
+    // Determine if this is a new product by checking if any existing product has the same id
+    const isNew = !products.some((x) => x.id === p.id);
+    if (supabase) {
+      const row = productToRow(p);
+      if (isNew) {
+        const { data, error } = await supabase
+          .from("tc_settings_products")
+          .insert(row)
+          .select()
+          .single();
+        if (error) {
+          console.error("❌ Supabase insert tc_settings_products:", error.message, error.details, error.hint);
+          alert(`⚠️ Could not save to database: ${error.message}\n\nProduct saved locally instead and will reappear until the page is fully refreshed.`);
+          // Fall back: keep in local state + localStorage so it persists until Supabase is fixed
+          setProducts((prev) => {
+            const next = [p, ...prev];
+            lsSave(next);
+            return next;
+          });
+          return;
+        }
+        setProducts((prev) => {
+          const next = [rowToProduct(data as DbRow), ...prev];
+          lsSave(next);
+          return next;
+        });
+      } else {
+        const { error } = await supabase
+          .from("tc_settings_products")
+          .update(row)
+          .eq("id", p.id);
+        if (error) {
+          console.error("❌ Supabase update tc_settings_products:", error.message, error.details, error.hint);
+        }
+        setProducts((prev) => {
+          const next = prev.map((x) => (x.id === p.id ? p : x));
+          lsSave(next);
+          return next;
+        });
+      }
+    } else {
+      setProducts((prev) => {
+        const next = isNew ? [p, ...prev] : prev.map((x) => (x.id === p.id ? p : x));
+        lsSave(next);
+        return next;
+      });
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (supabase) {
+      const { error } = await supabase.from("tc_settings_products").delete().eq("id", id);
+      if (error) console.error("❌ Supabase delete tc_settings_products:", error.message);
+    }
+    setProducts((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      lsSave(next);
+      return next;
+    });
+    setShowModal(false);
+    setEditingProduct(null);
+  };
+
+  const openCreate = () => { setEditingProduct(null); setShowModal(true); };
+  const openEdit = (p: Product) => { setEditingProduct(p); setShowModal(true); };
+  const openView = (p: Product) => { setViewingProduct(p); };
 
   const filtered = products.filter((p) => {
     const q = search.toLowerCase();
@@ -591,27 +767,13 @@ const SettingsProducts: React.FC = () => {
     );
   });
 
-  const handleSave = (p: Product) => {
-    setProducts((prev) => {
-      const next = editingProduct ? prev.map((x) => (x.id === p.id ? p : x)) : [p, ...prev];
-      saveProducts(next);
-      return next;
-    });
-  };
-
-  const handleDelete = (id: string) => {
-    setProducts((prev) => {
-      const next = prev.filter((p) => p.id !== id);
-      saveProducts(next);
-      return next;
-    });
-    setShowModal(false);
-    setEditingProduct(null);
-  };
-
-  const openCreate = () => { setEditingProduct(null); setShowModal(true); };
-  const openEdit = (p: Product) => { setEditingProduct(p); setShowModal(true); };
-  const openView = (p: Product) => { setViewingProduct(p); };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
+        Loading products…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

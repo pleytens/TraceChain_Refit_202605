@@ -27,20 +27,19 @@ const adminMenuItems: MenuItem[] = [
 // Client portal menu: full operational menu
 const clientMenuItems: MenuItem[] = [
   { label: "Dashboard", icon: "🏠", id: "home" },
-  { label: "People Management", icon: "👥", id: "users", adminRoles: ["TraceChainClientPortalAdmin", "SuperAdmin", "Admin"] },
   { label: "Recording", icon: "📝", id: "recording" },
   { label: "Markets", icon: "🛒", id: "markets" },
   { label: "Events", icon: "📅", id: "events" },
   { label: "Reports", icon: "📊", id: "report" },
   {
     type: "group",
-    label: "Settings",
-    icon: "🔧",
+    label: "View",
+    icon: "👁️",
     id: "settings",
     children: [
       { label: "Materials", icon: "🧱", id: "settings-materials" },
       { label: "Products", icon: "📦", id: "settings-products" },
-      { label: "Processes", icon: "⚙️", id: "settings-processes" },
+      { label: "Processes", icon: "🔄", id: "view-processes" },
     ],
   },
   { label: "Profile Settings", icon: "👤", id: "profile" },
@@ -54,10 +53,11 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
   const { currentUser, logout, activePortal } = useAuth();
   const isAdminPortal = activePortal === "admin";
-  const [settingsOpen, setSettingsOpen] = useState(() => active.startsWith("settings-"));
+  const isInViewGroup = active.startsWith("settings-") || active === "view-processes";
+  const [settingsOpen, setSettingsOpen] = useState(() => isInViewGroup);
 
   const baseItems: MenuItem[] = isAdminPortal ? adminMenuItems : clientMenuItems;
-  const isSettingsActive = active.startsWith("settings-");
+  const isSettingsActive = isInViewGroup;
 
   const roleLabel = (role: string) => {
     if (role === "TraceChainAdminPortalAdmin") return "TV Admin";

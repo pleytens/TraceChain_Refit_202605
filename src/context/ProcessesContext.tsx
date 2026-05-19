@@ -140,14 +140,26 @@ export const ProcessesProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [processes, loading]);
 
   const addProcess = async (data: Omit<ProcessRecord, "id" | "createdAt">): Promise<number> => {
-    const id = Date.now();
     const createdAt = new Date().toISOString().slice(0, 10);
-    const newProcess: ProcessRecord = { id, createdAt, ...data };
     if (supabase) {
-      await supabase.from("tc_processes").insert({ id, name: data.name, steps: data.steps, created_at: createdAt, is_active: data.isActive });
+      const { data: inserted, error } = await supabase
+        .from("tc_processes")
+        .insert({ name: data.name, steps: data.steps, created_at: createdAt, is_active: data.isActive })
+        .select()
+        .single();
+      if (error) {
+        console.error("❌ Supabase insert error (tc_processes):", error.message, error.details, error.hint);
+        throw new Error(error.message);
+      }
+      const newProcess = rowToRecord(inserted as DbRow);
+      setProcesses((prev) => [newProcess, ...prev]);
+      return newProcess.id;
+    } else {
+      const id = Date.now();
+      const newProcess: ProcessRecord = { id, createdAt, ...data };
+      setProcesses((prev) => [newProcess, ...prev]);
+      return id;
     }
-    setProcesses((prev) => [newProcess, ...prev]);
-    return id;
   };
 
   const updateProcess = async (id: number, data: Partial<ProcessRecord>) => {
