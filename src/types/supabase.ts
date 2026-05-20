@@ -62,8 +62,11 @@ export type Database = {
           id: string
           is_active: boolean
           is_system: boolean
+          is_used: boolean
+          location_selector_type: string | null
           name: string
           produces_output: boolean
+          required_variable_categories: Json | null
           sort_order: number
           updated_at: string | null
         }
@@ -76,8 +79,11 @@ export type Database = {
           id: string
           is_active?: boolean
           is_system?: boolean
+          is_used?: boolean
+          location_selector_type?: string | null
           name: string
           produces_output?: boolean
+          required_variable_categories?: Json | null
           sort_order?: number
           updated_at?: string | null
         }
@@ -90,8 +96,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_system?: boolean
+          is_used?: boolean
+          location_selector_type?: string | null
           name?: string
           produces_output?: boolean
+          required_variable_categories?: Json | null
           sort_order?: number
           updated_at?: string | null
         }
@@ -137,6 +146,8 @@ export type Database = {
           created_at: string | null
           id: string
           is_active: boolean
+          is_client_premise: boolean | null
+          is_customer_delivery: boolean | null
           name: string
           notes: string
           postal_code: string
@@ -150,6 +161,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean
+          is_client_premise?: boolean | null
+          is_customer_delivery?: boolean | null
           name: string
           notes?: string
           postal_code?: string
@@ -163,6 +176,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_active?: boolean
+          is_client_premise?: boolean | null
+          is_customer_delivery?: boolean | null
           name?: string
           notes?: string
           postal_code?: string
@@ -315,6 +330,7 @@ export type Database = {
           is_final: boolean
           is_used: boolean
           name: string
+          process_type: string | null
           sort_order: number
           status: string
           updated_at: string | null
@@ -326,6 +342,7 @@ export type Database = {
           is_final?: boolean
           is_used?: boolean
           name: string
+          process_type?: string | null
           sort_order?: number
           status?: string
           updated_at?: string | null
@@ -337,6 +354,7 @@ export type Database = {
           is_final?: boolean
           is_used?: boolean
           name?: string
+          process_type?: string | null
           sort_order?: number
           status?: string
           updated_at?: string | null
@@ -370,6 +388,57 @@ export type Database = {
           id?: number
           product_name?: string
           storage_requirement_id?: string | null
+        }
+        Relationships: []
+      }
+      tc_qr_codes: {
+        Row: {
+          action_id: string | null
+          batch_number: string
+          created_at: string | null
+          date_qr_codes: string
+          date_recorded: string
+          expiry_date: string | null
+          id: string
+          material_product: string
+          process_id: string | null
+          qr_code_count: number
+          quantity_recorded: number
+          recording_id: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_id?: string | null
+          batch_number: string
+          created_at?: string | null
+          date_qr_codes: string
+          date_recorded: string
+          expiry_date?: string | null
+          id?: string
+          material_product: string
+          process_id?: string | null
+          qr_code_count?: number
+          quantity_recorded?: number
+          recording_id?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_id?: string | null
+          batch_number?: string
+          created_at?: string | null
+          date_qr_codes?: string
+          date_recorded?: string
+          expiry_date?: string | null
+          id?: string
+          material_product?: string
+          process_id?: string | null
+          qr_code_count?: number
+          quantity_recorded?: number
+          recording_id?: string | null
+          tenant_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

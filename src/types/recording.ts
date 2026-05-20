@@ -55,6 +55,7 @@ export interface Recording {
   recordName: string;
   processId: string;
   processName: string;
+  isFinalProcess?: boolean; // true if the linked process has is_final = true
   recordedBy: string;
   recordedAt: string;
   userName: string;

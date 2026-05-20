@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Plus, Search, Bell, Eye, Lock, RefreshCw, ChevronUp, ChevronDown,
-  Package, Users, Clock, MapPin, X, FileText
+  Package, Users, Clock, MapPin, X, FileText, PlayCircle, AlertCircle
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -27,7 +27,8 @@ function rowToRecording(r: any): Recording {
     id: r.id,
     recordName: r.record_name,
     processId: r.process_id,
-    processName: r.data?.processName ?? "—",
+    processName: r.data?.processName ?? r.tc_processes?.name ?? "—",
+    isFinalProcess: r.tc_processes?.is_final ?? r._is_final ?? undefined,
     recordedBy: r.recorded_by,
     recordedAt: r.recorded_at,
     userName: r.user_name,
@@ -39,6 +40,19 @@ function rowToRecording(r: any): Recording {
     lockedByName: r.locked_by_name ?? undefined,
     data: r.data ?? {},
   };
+}
+
+// ─── Validation ────────────────────────────────────────────────────────────────
+
+function validateRecordingForRun(recording: Recording): { valid: boolean; message?: string } {
+  if (recording.isFinalProcess === false) {
+    return {
+      valid: false,
+      message: "A Final Process is missing. Please add one.",
+    };
+  }
+  // isFinalProcess === true or undefined (unknown) → allow run
+  return { valid: true };
 }
 
 // ─── Record detail modal ────────────────────────────────────────────────────────
@@ -226,7 +240,7 @@ const RecordingsDashboard: React.FC = () => {
     if (supabase) {
       const { data, error } = await supabase
         .from("tc_recordings")
-        .select("*")
+        .select("*, tc_processes(id, name, is_final)")
         .order("recorded_at", { ascending: false });
       setLoading(false);
       if (!error && data) {
@@ -248,7 +262,8 @@ const RecordingsDashboard: React.FC = () => {
     const now = new Date().toISOString();
 
     if (supabase) {
-      const { error } = await supabase
+      // 1. Lock the recording
+      const { error: recordingError } = await supabase
         .from("tc_recordings")
         .update({
           batch_lot_number: batchLot,
@@ -261,7 +276,38 @@ const RecordingsDashboard: React.FC = () => {
           updated_at: now,
         })
         .eq("id", runTarget.id);
-      if (error) throw new Error(error.message);
+      if (recordingError) throw new Error(recordingError.message);
+
+      // 2. Mark the process as used
+      if (runTarget.processId) {
+        const { error: processError } = await supabase
+          .from("tc_processes")
+          .update({
+            is_used: true,
+            updated_at: now,
+          })
+          .eq("id", runTarget.processId);
+        if (processError) console.error("Failed to mark process as used:", processError.message);
+      }
+
+      // 3. Mark all actions used in this recording as is_used
+      const actionIds: string[] = (runTarget.data?.actions ?? [])
+        .map((a: any) => a.actionId)
+        .filter(Boolean);
+      if (actionIds.length > 0) {
+        // These are step IDs from tc_process_action_steps; get the actual action_ids
+        const { data: stepRows } = await supabase
+          .from("tc_process_action_steps")
+          .select("action_id")
+          .in("id", actionIds);
+        const libActionIds = (stepRows ?? []).map((r: any) => r.action_id).filter(Boolean);
+        if (libActionIds.length > 0) {
+          await supabase
+            .from("tc_action_library")
+            .update({ is_used: true })
+            .in("id", libActionIds);
+        }
+      }
     } else {
       const ls: any[] = JSON.parse(localStorage.getItem("tc_recordings") ?? "[]");
       const idx = ls.findIndex((r) => r.id === runTarget.id);
@@ -277,6 +323,15 @@ const RecordingsDashboard: React.FC = () => {
           user_name: lockedByName,
         };
         localStorage.setItem("tc_recordings", JSON.stringify(ls));
+      }
+      // Also update process in localStorage
+      if (runTarget.processId) {
+        const lsProcesses: any[] = JSON.parse(localStorage.getItem("tc_processes") ?? "[]");
+        const pIdx = lsProcesses.findIndex((p) => p.id === runTarget.processId);
+        if (pIdx !== -1) {
+          lsProcesses[pIdx].is_used = true;
+          localStorage.setItem("tc_processes", JSON.stringify(lsProcesses));
+        }
       }
     }
     setRunTarget(null);
@@ -517,24 +572,42 @@ const RecordingsDashboard: React.FC = () => {
                             <Eye size={12} />
                             View
                           </button>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => setRunTarget(row)}
-                              className="flex items-center gap-1 text-xs bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg px-3 py-1.5 transition"
-                            >
-                              <Lock size={12} />
-                              RUN
-                            </button>
-                            <button
-                              onClick={() => setViewTarget(row)}
-                              className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 transition"
-                            >
-                              <Eye size={12} />
-                              View
-                            </button>
-                          </>
-                        )}
+                        ) : (() => {
+                          const { valid, message } = validateRecordingForRun(row);
+                          return (
+                            <>
+                              <button
+                                onClick={() => valid && setRunTarget(row)}
+                                disabled={!valid}
+                                title={!valid ? message : "Lock this recording and issue QR"}
+                                className={`flex items-center gap-1 text-xs font-semibold rounded-lg px-3 py-1.5 transition ${
+                                  valid
+                                    ? "bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                }`}
+                              >
+                                {valid ? (
+                                  <>
+                                    <PlayCircle size={12} />
+                                    RUN
+                                  </>
+                                ) : (
+                                  <>
+                                    <AlertCircle size={12} />
+                                    Incomplete
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                onClick={() => setViewTarget(row)}
+                                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 transition"
+                              >
+                                <Eye size={12} />
+                                View
+                              </button>
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
                   </tr>

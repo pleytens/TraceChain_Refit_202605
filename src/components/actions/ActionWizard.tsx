@@ -37,7 +37,7 @@ const ALL_CATEGORIES: ActionCategory[] = [
   "Control",
 ];
 
-const STEP_LABELS = ["Basic Info", "Add Attributes?", "Configure", "Review"];
+const STEP_LABELS = ["Basic Info", "Add Attributes?", "Select Attributes", "Review"];
 
 // ─── Step indicator ──────────────────────────────────────────────────────────
 
@@ -88,7 +88,13 @@ const ActionWizard: React.FC<Props> = ({
 }) => {
   const [step, setStep] = useState<WizardStep>(1);
   const [wantsAttributes, setWantsAttributes] = useState<boolean | null>(
-    initial?.attributes && Object.keys(initial.attributes).length > 0 ? true : null
+    initial?.attributes?.flags
+      ? Object.values(initial.attributes.flags).some(Boolean)
+        ? true
+        : null
+      : initial?.attributes && Object.keys(initial.attributes).length > 0
+      ? true
+      : null
   );
 
   const [form, setForm] = useState<ActionFormData>({
@@ -325,12 +331,12 @@ const ActionWizard: React.FC<Props> = ({
           </div>
         )}
 
-        {/* ── STEP 3: Configure Attributes ─────────────────────────────── */}
+        {/* ── STEP 3: Select Attributes ─────────────────────────────── */}
         {step === 3 && (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-gray-900 mb-0.5">Configure Attributes</h4>
-              <p className="text-xs text-gray-500">Answer each question to configure who, when, and where.</p>
+              <h4 className="text-sm font-bold text-gray-900 mb-0.5">Select Attributes</h4>
+              <p className="text-xs text-gray-500">Choose which data categories will be collected during Recording.</p>
             </div>
             <AttributeStep
               attributes={form.attributes}
@@ -370,82 +376,44 @@ const ActionWizard: React.FC<Props> = ({
             </div>
 
             {/* Attributes summary */}
-            {Object.keys(form.attributes).length > 0 && (
+            {wantsAttributes && (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                  <span className="text-base">📌</span> Attributes
+                  <span className="text-base">📌</span> Required Attributes
                 </p>
                 <div className="bg-gray-50 rounded-xl border border-gray-200 divide-y divide-gray-100">
-                  {form.attributes.who && form.attributes.who.workerIds.length > 0 && (
-                    <div className="flex items-start gap-3 px-4 py-3">
-                      <Users size={14} className="text-blue-500 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 mb-0.5">Workers</p>
-                        <p className="text-sm text-gray-800">{form.attributes.who.workerNames?.join(", ") || `${form.attributes.who.workerIds.length} selected`}</p>
+                  {(
+                    [
+                      { key: "who",   icon: <Users size={13} />,  label: "Who",   desc: "Workers / operators" },
+                      { key: "when",  icon: <Clock size={13} />,  label: "When",  desc: "Timestamps" },
+                      { key: "what",  icon: <span className="text-xs font-bold">W</span>, label: "What", desc: "Materials / products" },
+                      { key: "where", icon: <MapPin size={13} />, label: "Where", desc: "Location" },
+                    ] as const
+                  ).map(({ key, icon, label, desc }) => {
+                    const enabled = form.attributes.flags?.[key] ?? false;
+                    return (
+                      <div key={key} className="flex items-center gap-3 px-4 py-2.5">
+                        <span className={`shrink-0 ${enabled ? "text-blue-500" : "text-gray-300"}`}>{icon}</span>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-gray-700">{label}</p>
+                          <p className="text-xs text-gray-400">{desc}</p>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                            enabled
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {enabled ? "Required" : "Not used"}
+                        </span>
                       </div>
-                    </div>
-                  )}
-                  {form.attributes.when && (
-                    <div className="flex items-start gap-3 px-4 py-3">
-                      <Clock size={14} className="text-blue-500 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 mb-0.5">Timestamps</p>
-                        {form.attributes.when.startDateTime && (
-                          <p className="text-sm text-gray-800">Start: {new Date(form.attributes.when.startDateTime).toLocaleString()}</p>
-                        )}
-                        {form.attributes.when.endDateTime && (
-                          <p className="text-sm text-gray-800">End: {new Date(form.attributes.when.endDateTime).toLocaleString()}</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {/* Legacy single where */}
-                  {form.attributes.where && form.attributes.where.storageRoomId && !form.attributes.whereTypes && (
-                    <div className="flex items-start gap-3 px-4 py-3">
-                      <MapPin size={14} className="text-blue-500 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 mb-0.5">Location ({form.attributes.where.type.toUpperCase()})</p>
-                        <p className="text-sm text-gray-800">
-                          Building {form.attributes.where.building} → Floor {form.attributes.where.floor} → {form.attributes.where.room}
-                          {form.attributes.where.storageRequirementName && (
-                            <span className="ml-1.5 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
-                              {form.attributes.where.storageRequirementName}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {/* Multi-type where */}
-                  {form.attributes.whereTypes && form.attributes.whereTypes.length > 0 && (
-                    <div className="flex items-start gap-3 px-4 py-3">
-                      <MapPin size={14} className="text-blue-500 mt-0.5 shrink-0" />
-                      <div className="space-y-2 flex-1">
-                        {form.attributes.whereTypes.map((t) => {
-                          const loc = form.attributes.whereLocations?.[t];
-                          if (!loc?.storageRoomId) return (
-                            <p key={t} className="text-xs text-gray-400 italic">
-                              {t.toUpperCase()}: No room selected
-                            </p>
-                          );
-                          return (
-                            <div key={t}>
-                              <p className="text-xs text-gray-500 mb-0.5">Location ({t.toUpperCase()})</p>
-                              <p className="text-sm text-gray-800">
-                                Building {loc.building} → Floor {loc.floor} → {loc.room}
-                                {loc.storageRequirementName && (
-                                  <span className="ml-1.5 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
-                                    {loc.storageRequirementName}
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Actual details will be collected during Recording.
+                </p>
               </div>
             )}
           </div>

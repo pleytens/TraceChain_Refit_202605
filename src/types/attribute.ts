@@ -30,7 +30,18 @@ export interface WhereAttribute {
 /** Per-type location entry for multi-type where */
 export type WhereLocations = Partial<Record<LocationType, WhereAttribute>>;
 
+/** Simple on/off flags — what data categories this action requires during Recording */
+export interface ActionAttributeFlags {
+  who: boolean;
+  when: boolean;
+  what: boolean;
+  where: boolean;
+}
+
 export interface ActionAttributes {
+  /** Category flags — the only thing stored during Action creation */
+  flags?: ActionAttributeFlags;
+  // Legacy fields kept for backwards-compat (populated during Recording, not Action creation)
   who?: WhoAttribute;
   when?: WhenAttribute;
   where?: WhereAttribute;

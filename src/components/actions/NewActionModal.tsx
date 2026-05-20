@@ -16,7 +16,9 @@ export interface ActionRow {
   custom_param_example: string;
   is_system: boolean;
   is_active: boolean;
+  is_used?: boolean;
   sort_order: number;
+  required_variable_categories?: { who: boolean; when: boolean; what: boolean; where: boolean };
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -166,7 +168,9 @@ const NewActionModal: React.FC<Props> = ({ action, existingActions, onClose, onS
                     category: action.category,
                     description: action.description,
                     isActive: action.is_active,
-                    attributes: {},
+                    attributes: action.required_variable_categories
+                      ? { flags: action.required_variable_categories }
+                      : {},
                   }
                 : undefined
             }

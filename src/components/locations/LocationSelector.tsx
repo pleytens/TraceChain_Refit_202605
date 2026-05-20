@@ -14,6 +14,8 @@ interface SingleProps {
   onRoomSelect: (room: StorageRoomOption | null) => void;
   materialStorageRequirementCode?: string;
   disabled?: boolean;
+  /** Filter locations by type: 'my_company_locations' = is_client_premise, 'my_customer_delivery_address' = is_customer_delivery */
+  assetLocationType?: "my_company_locations" | "my_customer_delivery_address";
 }
 
 interface MultiProps {
@@ -24,13 +26,15 @@ interface MultiProps {
   onLocationChange: (type: LocationType, attr: WhereAttribute | null) => void;
   materialStorageRequirementCode?: string;
   disabled?: boolean;
+  /** Filter locations by type: 'my_company_locations' = is_client_premise, 'my_customer_delivery_address' = is_customer_delivery */
+  assetLocationType?: "my_company_locations" | "my_customer_delivery_address";
 }
 
 type Props = SingleProps | MultiProps;
 
 // ─── Shared data loader ────────────────────────────────────────────────────────
 
-function useLocationData() {
+function useLocationData(assetLocationType?: "my_company_locations" | "my_customer_delivery_address") {
   const [locationOptions, setLocationOptions] = useState<LocationOption[]>([]);
   const [rooms, setRooms] = useState<StorageRoomOption[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,8 +42,18 @@ function useLocationData() {
   useEffect(() => {
     if (!supabase) return;
     setLoading(true);
+
+    let locQuery = supabase.from("tc_locations").select("id, name, street_address, city").eq("is_active", true);
+
+    // Filter by asset location type if specified
+    if (assetLocationType === "my_company_locations") {
+      locQuery = (locQuery as any).eq("is_client_premise", true);
+    } else if (assetLocationType === "my_customer_delivery_address") {
+      locQuery = (locQuery as any).eq("is_customer_delivery", true);
+    }
+
     Promise.all([
-      supabase.from("tc_locations").select("id, name, street_address, city").eq("is_active", true).order("name"),
+      locQuery.order("name"),
       supabase
         .from("tc_storage_rooms")
         .select("id, location_id, building, floor, room, storage_requirement_id, tc_storage_requirements(code, name)")
@@ -74,7 +88,7 @@ function useLocationData() {
         );
       }
     });
-  }, []);
+  }, [assetLocationType]);
 
   return { locationOptions, rooms, loading };
 }
@@ -88,7 +102,8 @@ const RoomPicker: React.FC<{
   onRoomSelect: (room: StorageRoomOption | null) => void;
   materialStorageRequirementCode?: string;
   disabled?: boolean;
-}> = ({ locationOptions, rooms, selectedRoomId, onRoomSelect, materialStorageRequirementCode, disabled }) => {
+  assetLocationType?: "my_company_locations" | "my_customer_delivery_address";
+}> = ({ locationOptions, rooms, selectedRoomId, onRoomSelect, materialStorageRequirementCode, disabled, assetLocationType }) => {
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
 
   useEffect(() => {
@@ -110,7 +125,9 @@ const RoomPicker: React.FC<{
       <div>
         <label className="block text-xs font-semibold text-gray-700 mb-1">
           <MapPin size={12} className="inline mr-1" />
-          Address / Warehouse
+          {assetLocationType === "my_customer_delivery_address"
+            ? "Customer Delivery Address"
+            : "Address / Warehouse"}
         </label>
         {locationOptions.length === 0 ? (
           <p className="text-xs text-gray-400 italic">No locations configured.</p>
@@ -231,7 +248,8 @@ const BADGE_MAP: Record<string, string> = {
 // ─── Main ──────────────────────────────────────────────────────────────────────
 
 const LocationSelector: React.FC<Props> = (props) => {
-  const { locationOptions, rooms, loading } = useLocationData();
+  const assetLocationType = (props as any).assetLocationType as "my_company_locations" | "my_customer_delivery_address" | undefined;
+  const { locationOptions, rooms, loading } = useLocationData(assetLocationType);
 
   // ── SINGLE MODE (legacy) ────────────────────────────────────────────────────
   if (!props.mode || props.mode === "single") {
@@ -254,7 +272,7 @@ const LocationSelector: React.FC<Props> = (props) => {
           </div>
         </div>
         {loading ? <div className="text-xs text-gray-400 py-2">Loading locations…</div> : (
-          <RoomPicker locationOptions={locationOptions} rooms={rooms} selectedRoomId={selectedRoomId} onRoomSelect={onRoomSelect} materialStorageRequirementCode={materialStorageRequirementCode} disabled={disabled} />
+          <RoomPicker locationOptions={locationOptions} rooms={rooms} selectedRoomId={selectedRoomId} onRoomSelect={onRoomSelect} materialStorageRequirementCode={materialStorageRequirementCode} disabled={disabled} assetLocationType={assetLocationType} />
         )}
       </div>
     );
@@ -349,6 +367,7 @@ const LocationSelector: React.FC<Props> = (props) => {
                 }}
                 materialStorageRequirementCode={materialStorageRequirementCode}
                 disabled={disabled}
+                assetLocationType={assetLocationType}
               />
             </div>
           ))}

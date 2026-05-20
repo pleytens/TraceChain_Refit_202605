@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import MyProfileModal from "@/components/modals/MyProfileModal";
 import MyNotificationSettingsModal from "@/components/modals/MyNotificationSettingsModal";
 import StorageRequirementsModal from "@/components/modals/StorageRequirementsModal";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronDown, Share2 } from "lucide-react";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -34,6 +34,8 @@ interface TopbarProps {
   onNavigateToCompany?: () => void;
   onNavigateToLocations?: () => void;
   onNavigateToPeopleManagement?: () => void;
+  onNavigateToQRCodes?: () => void;
+  onNavigateToAssets?: () => void;
 }
 
 const Topbar: React.FC<TopbarProps> = ({
@@ -46,6 +48,8 @@ const Topbar: React.FC<TopbarProps> = ({
   onNavigateToCompany,
   onNavigateToLocations,
   onNavigateToPeopleManagement,
+  onNavigateToQRCodes,
+  onNavigateToAssets,
 }) => {
   const { currentUser, activePortal, notifications, markNotificationRead, markAllNotificationsRead, unreadCount } = useAuth();
 
@@ -293,13 +297,13 @@ const Topbar: React.FC<TopbarProps> = ({
                             </div>
                           )}
 
-                          {/* Processes */}
+                          {/* Assets */}
                           <button
-                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); onNavigateToProcessSettings?.(); }}
+                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); onNavigateToAssets?.(); }}
                             className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
                           >
-                            <span>🔄</span>
-                            Processes
+                            <span>📋</span>
+                            Assets
                           </button>
 
                           {/* My Variables (expandable) */}
@@ -337,6 +341,33 @@ const Topbar: React.FC<TopbarProps> = ({
                               </button>
                             </div>
                           )}
+
+                          {/* Process & Action */}
+                          <button
+                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); onNavigateToProcessSettings?.(); }}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <span>🔄</span>
+                            Process & Action
+                          </button>
+
+                          {/* QR Codes */}
+                          <button
+                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); onNavigateToQRCodes?.(); }}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <span>📷</span>
+                            QR Codes
+                          </button>
+
+                          {/* Share preferences */}
+                          <button
+                            onClick={() => { setShowUserMenu(false); setShowAppSettings(false); }}
+                            className="w-full text-left pl-10 pr-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center gap-3 transition"
+                          >
+                            <Share2 className="w-4 h-4 text-gray-500" />
+                            Share preferences
+                          </button>
                         </div>
                       )}
                     </>

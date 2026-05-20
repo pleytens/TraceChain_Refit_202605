@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_ACTIONS as DB_DEFAULT_ACTIONS } from "@/lib/dbInit";
 import NewActionModal from "@/components/actions/NewActionModal";
+import type { ActionAttributes } from "@/types/attribute";
 // ActionLibraryRow from @/types/action is structurally identical to ActionLibraryItem below
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,7 +37,9 @@ interface ActionLibraryItem {
   custom_param_example: string;
   is_system: boolean;
   is_active: boolean;
+  is_used: boolean;
   sort_order: number;
+  required_variable_categories?: { who: boolean; when: boolean; what: boolean; where: boolean };
   custom_params?: ActionCustomParam[];
 }
 
@@ -55,6 +58,7 @@ interface ProcessRecord {
   sort_order: number;
   status: "ACTIVE" | "INACTIVE";
   is_used: boolean;
+  process_type?: string | null;
   action_steps?: { action_id: string; step_order: number; notes: string; variable_details?: ActionStepVariableDetails }[];
 }
 
@@ -193,9 +197,18 @@ const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, 
 
   const addActionStep = () => {
     if (!canEditSteps) return;
+    const defaultAction = nonSystemActions[0];
+    const defaultVd = defaultAction?.required_variable_categories
+      ? {
+          what: defaultAction.required_variable_categories.what ?? false,
+          who: defaultAction.required_variable_categories.who ?? false,
+          when: defaultAction.required_variable_categories.when ?? false,
+          where: defaultAction.required_variable_categories.where ?? false,
+        }
+      : { what: false, who: false, when: false, where: false };
     setForm((f) => ({
       ...f,
-      action_steps: [...f.action_steps, { action_id: nonSystemActions[0]?.id ?? "", step_order: f.action_steps.length + 1, notes: "", variable_details: { what: false, who: false, when: false, where: false } }],
+      action_steps: [...f.action_steps, { action_id: defaultAction?.id ?? "", step_order: f.action_steps.length + 1, notes: "", variable_details: defaultVd }],
     }));
   };
 
@@ -208,9 +221,23 @@ const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, 
     if (!canEditSteps) return;
     setForm((f) => ({
       ...f,
-      action_steps: f.action_steps.map((s, idx) =>
-        idx === i ? { ...s, [field]: val } : s
-      ),
+      action_steps: f.action_steps.map((s, idx) => {
+        if (idx !== i) return s;
+        const updated = { ...s, [field]: val };
+        // When changing the action, auto-populate variable_details from the new action's required_variable_categories
+        if (field === "action_id") {
+          const newAction = actions.find((a) => a.id === val);
+          if (newAction?.required_variable_categories) {
+            updated.variable_details = {
+              what: newAction.required_variable_categories.what ?? false,
+              who: newAction.required_variable_categories.who ?? false,
+              when: newAction.required_variable_categories.when ?? false,
+              where: newAction.required_variable_categories.where ?? false,
+            };
+          }
+        }
+        return updated;
+      }),
     }));
   };
 
@@ -249,6 +276,7 @@ const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, 
       status: form.status,
       sort_order: process?.sort_order ?? 0,
       is_used: process?.is_used ?? false,
+      process_type: process?.process_type ?? null,
       action_steps: form.action_steps,
     });
     setSaving(false);
@@ -479,7 +507,7 @@ const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, 
                   <option value="INACTIVE">Inactive</option>
                   <option value="ACTIVE">Active</option>
                 </select>
-                {statusChangedToActive && form.status === "ACTIVE" && isActiveProcess && (
+                {form.status === "ACTIVE" && isActiveProcess && (
                   <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                     <AlertTriangle size={10} /> Set to Inactive to edit steps.
                   </p>
@@ -535,10 +563,16 @@ const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, 
             <button
               onClick={handleSave}
               disabled={!canSave || isUsedInRecordings || saving}
-              title={!canSave ? "Add at least 1 action step to save" : ""}
+              title={
+                isUsedInRecordings
+                  ? "Process is used in recordings and cannot be modified"
+                  : !canSave
+                  ? "Add at least 1 action step to save"
+                  : ""
+              }
               className="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Process"}
+              {saving ? "Saving…" : isEdit ? "Save Changes" : "Create Process"}
             </button>
           </div>
         </div>
@@ -555,7 +589,7 @@ const SuperAdminProcesses: React.FC = () => {
   const { currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role === "SuperAdmin" || currentUser?.role === "Admin" || currentUser?.role === "TraceChainClientPortalAdmin";
 
-  const [activeTab, setActiveTab] = useState<Tab>("action-library");
+  const [activeTab, setActiveTab] = useState<Tab>("processes");
   const [loading, setLoading] = useState(true);
 
   // Action Library state
@@ -565,12 +599,14 @@ const SuperAdminProcesses: React.FC = () => {
   const [showActionModal, setShowActionModal] = useState(false);
   const [editingAction, setEditingAction] = useState<ActionLibraryItem | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(ALL_CATEGORIES));
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
 
   // Processes state
   const [processes, setProcesses] = useState<ProcessRecord[]>([]);
   const [processSearch, setProcessSearch] = useState("");
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [editingProcess, setEditingProcess] = useState<ProcessRecord | null>(null);
+  const [expandedProcessId, setExpandedProcessId] = useState<string | null>(null);
 
   // Load action library
   useEffect(() => {
@@ -591,7 +627,9 @@ const SuperAdminProcesses: React.FC = () => {
             custom_param_example: r.custom_param_example,
             is_system: r.is_system,
             is_active: r.is_active,
+            is_used: r.is_used ?? false,
             sort_order: r.sort_order,
+            required_variable_categories: r.required_variable_categories ?? { who: false, when: false, what: false, where: false },
           }));
           setActions(items);
           localStorage.setItem(LS_ACTIONS_KEY, JSON.stringify(items));
@@ -627,10 +665,11 @@ const SuperAdminProcesses: React.FC = () => {
             stepsMap[s.process_id].push(s);
           });
           const procs = pData.map((r) => ({
-            id: r.id, name: r.name, description: r.description,
-            is_final: r.is_final, sort_order: r.sort_order,
-            status: (r.status as "ACTIVE" | "INACTIVE") ?? "INACTIVE",
+            id: r.id, name: r.name, description: r.description ?? "",
+            is_final: r.is_final ?? false, sort_order: r.sort_order ?? 0,
+            status: ((r.status as "ACTIVE" | "INACTIVE") || "INACTIVE") as "ACTIVE" | "INACTIVE",
             is_used: r.is_used ?? false,
+            process_type: r.process_type ?? null,
             action_steps: (stepsMap[r.id] ?? []).map((s: any) => ({
               action_id: s.action_id,
               step_order: s.step_order,
@@ -660,10 +699,15 @@ const SuperAdminProcesses: React.FC = () => {
     category: ActionCategory;
     description: string;
     is_active: boolean;
+    attributes?: ActionAttributes;
   }) => {
     const isNew = !a.id;
     const newId = a.id ?? `act_custom_${Date.now()}`;
     const maxOrder = Math.max(0, ...actions.filter((x) => !x.is_system).map((x) => x.sort_order));
+
+    const requiredVarCats = a.attributes?.flags
+      ? { who: a.attributes.flags.who ?? false, when: a.attributes.flags.when ?? false, what: a.attributes.flags.what ?? false, where: a.attributes.flags.where ?? false }
+      : { who: false, when: false, what: false, where: false };
 
     const fullAction: ActionLibraryItem = {
       id: newId,
@@ -671,11 +715,13 @@ const SuperAdminProcesses: React.FC = () => {
       name: a.name,
       category: a.category,
       description: a.description,
-      produces_output: false,           // Removed from Action – now lives on Process
-      custom_param_example: "",         // Removed from Action UI per brief v3.1
+      produces_output: false,
+      custom_param_example: "",
       is_system: false,
       is_active: a.is_active,
+      is_used: actions.find((x) => x.id === a.id)?.is_used ?? false,
       sort_order: isNew ? maxOrder + 1 : (actions.find((x) => x.id === a.id)?.sort_order ?? 0),
+      required_variable_categories: requiredVarCats,
     };
 
     if (supabase) {
@@ -685,12 +731,14 @@ const SuperAdminProcesses: React.FC = () => {
           category: fullAction.category, description: fullAction.description,
           produces_output: false, custom_param_example: "",
           is_system: false, is_active: fullAction.is_active, sort_order: fullAction.sort_order,
+          required_variable_categories: requiredVarCats,
         });
         if (error) { console.error("Insert action_library:", error.message); return; }
       } else {
         const { error } = await supabase.from("tc_action_library").update({
           name: fullAction.name, category: fullAction.category,
           description: fullAction.description, is_active: fullAction.is_active,
+          required_variable_categories: requiredVarCats,
         }).eq("id", fullAction.id);
         if (error) { console.error("Update action_library:", error.message); return; }
       }
@@ -769,6 +817,7 @@ const SuperAdminProcesses: React.FC = () => {
           id: inserted.id, name: inserted.name, description: inserted.description,
           is_final: inserted.is_final, sort_order: inserted.sort_order, status: inserted.status,
           is_used: inserted.is_used ?? false,
+          process_type: inserted.process_type ?? null,
           action_steps: p.action_steps,
         };
         setProcesses((prev) => {
@@ -803,7 +852,7 @@ const SuperAdminProcesses: React.FC = () => {
           }
         }
         // Update local state immediately after successful edit
-        const full: ProcessRecord = { ...p, id: p.id!, is_used: p.is_used ?? false, action_steps: p.action_steps };
+        const full: ProcessRecord = { ...p, id: p.id!, is_used: p.is_used ?? false, process_type: p.process_type ?? null, action_steps: p.action_steps };
         setProcesses((prev) => {
           const next = prev.map((x) => (x.id === full.id ? full : x));
           localStorage.setItem(LS_PROCESSES_KEY, JSON.stringify(next));
@@ -870,10 +919,23 @@ const SuperAdminProcesses: React.FC = () => {
     });
   };
 
-  const filteredProcesses = processes.filter((p) => {
-    const q = processSearch.toLowerCase();
-    return !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
-  });
+  const filteredProcesses = processes
+    .filter((p) => {
+      const q = processSearch.toLowerCase();
+      return !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      // Pin asset_in at top (-2), asset_out second (-1), rest by sort_order
+      const pinOrder = (p: ProcessRecord) => {
+        if (p.process_type === "asset_in")  return -2;
+        if (p.process_type === "asset_out") return -1;
+        return 0;
+      };
+      const pa = pinOrder(a);
+      const pb = pinOrder(b);
+      if (pa !== pb) return pa - pb;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
 
   if (!isSuperAdmin) {
     return (
@@ -891,7 +953,7 @@ const SuperAdminProcesses: React.FC = () => {
       <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h2 className="text-base font-bold text-gray-900">Super Admin → Processes</h2>
+            <h2 className="text-base font-bold text-gray-900">Process & Action</h2>
             <p className="text-sm text-gray-500 mt-0.5">
               Configure processes and manage the Action Library used by operators in the process wizard.
             </p>
@@ -905,17 +967,6 @@ const SuperAdminProcesses: React.FC = () => {
         {/* Tabs */}
         <div className="mt-4 flex gap-1 border-b border-gray-200">
           <button
-            onClick={() => setActiveTab("action-library")}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition -mb-px ${
-              activeTab === "action-library"
-                ? "border-blue-600 text-blue-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <BookOpen size={14} />
-            Action Library
-          </button>
-          <button
             onClick={() => setActiveTab("processes")}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition -mb-px ${
               activeTab === "processes"
@@ -928,6 +979,17 @@ const SuperAdminProcesses: React.FC = () => {
             {processes.length > 0 && (
               <span className="ml-1 text-xs bg-gray-200 text-gray-600 rounded-full px-1.5">{processes.length}</span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab("action-library")}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition -mb-px ${
+              activeTab === "action-library"
+                ? "border-blue-600 text-blue-700"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <BookOpen size={14} />
+            Action Library
           </button>
         </div>
       </div>
@@ -967,97 +1029,153 @@ const SuperAdminProcesses: React.FC = () => {
                 </button>
               </div>
 
-              {/* Grouped by category */}
-              {ALL_CATEGORIES.map((cat) => {
-                const items = groupedActions[cat] ?? [];
-                if (items.length === 0) return null;
-                const isOpen = expandedCategories.has(cat);
+              {/* Table header */}
+              <div className="grid grid-cols-[1.8fr_10rem_2fr_7rem_9rem] gap-2 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <div>Action Name</div>
+                <div>Short</div>
+                <div className="hidden md:block">Description</div>
+                <div>Status</div>
+                <div className="text-right">Actions</div>
+              </div>
 
-                return (
-                  <div key={cat} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <button
-                      onClick={() => toggleCategory(cat)}
-                      className="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 transition"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${CATEGORY_COLORS[cat as ActionCategory] ?? "bg-gray-100 text-gray-600"}`}>
-                          {cat}
-                        </span>
-                        <span className="text-xs text-gray-400">{items.length} action{items.length !== 1 ? "s" : ""}</span>
-                      </div>
-                      {isOpen ? <ChevronDown size={15} className="text-gray-400" /> : <ChevronRight size={15} className="text-gray-400" />}
-                    </button>
+              {/* Flat action rows */}
+              <div className="space-y-2">
+                {filteredActions.map((action) => {
+                  const isActionOpen = expandedAction === action.id;
+                  return (
+                    <div key={action.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      {/* Action row */}
+                      <div className="grid grid-cols-[1.8fr_10rem_2fr_7rem_9rem] gap-2 px-4 py-3 items-center hover:bg-gray-50/60 transition">
+                        {/* Action Name */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-medium text-gray-900 text-sm truncate">{action.name}</span>
+                          {action.is_system && (
+                            <span className="shrink-0 text-xs bg-red-100 text-red-600 rounded px-1.5 py-0.5 font-medium">system</span>
+                          )}
+                          {action.is_used && (
+                            <span className="shrink-0 text-xs bg-amber-100 text-amber-700 rounded px-1.5 py-0.5 font-medium">in use</span>
+                          )}
+                        </div>
 
-                    {isOpen && (
-                      <div className="border-t border-gray-100">
-                        <table className="w-full text-sm">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Short</th>
-                              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Description</th>
-                              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                              <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-50">
-                            {items.map((action) => (
-                              <tr key={action.id} className="hover:bg-gray-50 transition">
-                                <td className="px-4 py-2.5">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-900">{action.name}</span>
-                                    {action.is_system && (
-                                      <span className="text-xs bg-red-100 text-red-600 rounded px-1.5 py-0.5 font-medium">system</span>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-2.5 hidden md:table-cell">
-                                  <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{action.action_key}</code>
-                                </td>
-                                <td className="px-4 py-2.5 text-gray-500 text-xs max-w-xs truncate hidden lg:table-cell">
-                                  {action.description || "—"}
-                                </td>
-                                <td className="px-4 py-2.5">
-                                  {action.is_system ? (
-                                    <span className="text-xs text-gray-400">—</span>
-                                  ) : (
-                                    <button
-                                      onClick={() => handleToggleActive(action)}
-                                      className={`text-xs px-2.5 py-0.5 rounded-full font-medium transition ${action.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-                                    >
-                                      {action.is_active ? "Active" : "Inactive"}
-                                    </button>
-                                  )}
-                                </td>
-                                <td className="px-4 py-2.5">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <button
-                                      onClick={() => { setEditingAction(action); setShowActionModal(true); }}
-                                      className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
-                                      title={action.is_system ? "View" : "Edit"}
-                                    >
-                                      <Edit2 size={13} />
-                                    </button>
-                                    {!action.is_system && (
-                                      <button
-                                        onClick={() => handleDeleteAction(action.id)}
-                                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                                        title="Delete"
-                                      >
-                                        <Trash2 size={13} />
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                        {/* Short (action_key) */}
+                        <div>
+                          <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{action.action_key}</code>
+                        </div>
+
+                        {/* Description */}
+                        <div className="text-xs text-gray-400 truncate hidden md:block">
+                          {action.description || "—"}
+                        </div>
+
+                        {/* Status */}
+                        <div>
+                          {action.is_system ? (
+                            <span className="text-xs text-gray-400">—</span>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleToggleActive(action); }}
+                              className={`text-xs px-2.5 py-0.5 rounded-full font-medium transition ${action.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
+                            >
+                              {action.is_active ? "Active" : "Inactive"}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Actions + chevron */}
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingAction(action); setShowActionModal(true); }}
+                            className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+                            title={action.is_system ? "View" : action.is_used ? "View (read-only)" : "Edit"}
+                          >
+                            {action.is_used && !action.is_system ? <Eye size={13} /> : <Edit2 size={13} />}
+                          </button>
+                          {!action.is_system && !action.is_used && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteAction(action.id); }}
+                              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                              title="Delete"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setExpandedAction(isActionOpen ? null : action.id)}
+                            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                            title={isActionOpen ? "Collapse" : "Expand"}
+                          >
+                            {isActionOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                          </button>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
+
+                      {/* Expanded details */}
+                      {isActionOpen && (
+                        <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/70 space-y-4">
+                          <div>
+                            <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description</h5>
+                            <p className="text-sm text-gray-700">{action.description || "—"}</p>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Category</h5>
+                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${CATEGORY_COLORS[action.category] ?? "bg-gray-100 text-gray-600"}`}>
+                                {action.category}
+                              </span>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Produces Output</h5>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                action.produces_output ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                              }`}>
+                                {action.produces_output ? "Yes" : "No"}
+                              </span>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">System Action</h5>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                action.is_system ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-700"
+                              }`}>
+                                {action.is_system ? "Yes" : "No"}
+                              </span>
+                            </div>
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Sort Order</h5>
+                              <span className="text-sm font-mono text-gray-700">{action.sort_order}</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Action Key</h5>
+                            <code className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">{action.action_key}</code>
+                          </div>
+
+                          {/* Attributes */}
+                          {!action.is_system && (
+                            <div>
+                              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Required Attributes</h5>
+                              <div className="flex flex-wrap gap-2">
+                                {(["who", "when", "what", "where"] as const).map((k) => {
+                                  const on = action.required_variable_categories?.[k] ?? false;
+                                  return (
+                                    <span
+                                      key={k}
+                                      className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize ${on ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400"}`}
+                                    >
+                                      {k}: {on ? "✓" : "✗"}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
 
               <p className="text-xs text-gray-400 px-1">
                 {filteredActions.length} action{filteredActions.length !== 1 ? "s" : ""} shown ·{" "}
@@ -1089,9 +1207,9 @@ const SuperAdminProcesses: React.FC = () => {
                 </button>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="space-y-2">
                 {filteredProcesses.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col items-center justify-center py-16 text-center">
                     <div className="text-4xl mb-3">🔄</div>
                     <p className="text-gray-600 font-medium">No processes configured</p>
                     <p className="text-sm text-gray-400 mt-1">Create your first process to define the action sequences operators follow.</p>
@@ -1103,51 +1221,83 @@ const SuperAdminProcesses: React.FC = () => {
                     </button>
                   </div>
                 ) : (
-                  <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Process Name</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Description</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Steps</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {filteredProcesses.map((proc) => (
-                        <tr key={proc.id} className="hover:bg-gray-50 transition">
-                          <td className="px-4 py-3 font-medium text-gray-900">{proc.name}</td>
-                          <td className="px-4 py-3 text-gray-500 text-xs max-w-xs truncate hidden md:table-cell">
-                            {proc.description || "—"}
-                          </td>
-                          <td className="px-4 py-3 text-gray-600">
-                            <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">
-                              {(proc.action_steps?.length ?? 0) + 2} steps
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${proc.is_final ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"}`}>
-                              {proc.is_final ? "Final (QR)" : "Interim"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            {proc.status === "INACTIVE" ? (
-                              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">
-                                Inactive
+                  <>
+                    {/* Table header */}
+                    <div className="grid grid-cols-[1.8fr_2fr_8rem_8rem_9rem] gap-2 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                      <div>Process Name</div>
+                      <div className="hidden md:block">Description</div>
+                      <div>Type</div>
+                      <div>Status</div>
+                      <div className="text-right">Actions</div>
+                    </div>
+
+                    {filteredProcesses.map((proc) => {
+                      const isExpanded = expandedProcessId === proc.id;
+                      const isAssetIn  = proc.process_type === "asset_in";
+                      const isAssetOut = proc.process_type === "asset_out";
+                      const totalSteps = (proc.action_steps?.length ?? 0) + 2;
+
+                      return (
+                        <div key={proc.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                          {/* Process Row */}
+                          <div
+                            className={`grid grid-cols-[1.8fr_2fr_8rem_8rem_9rem] gap-2 px-4 py-3 items-center hover:bg-gray-50/60 transition ${
+                              isAssetIn ? "bg-green-50/40" : isAssetOut ? "bg-red-50/40" : ""
+                            }`}
+                          >
+                            {/* Name */}
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`font-semibold truncate ${
+                                isAssetIn  ? "text-green-600" :
+                                isAssetOut ? "text-red-500"   :
+                                "text-gray-900"
+                              }`}>
+                                {proc.name}
                               </span>
-                            ) : proc.is_used ? (
-                              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700">
-                                Active – Used
+                              {(isAssetIn || isAssetOut) && (
+                                <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded font-semibold ${
+                                  isAssetIn ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+                                }`}>
+                                  {isAssetIn ? "Entry" : "Exit"}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Description */}
+                            <div className="text-xs text-gray-400 truncate hidden md:block">
+                              {proc.description || "—"}
+                            </div>
+
+                            {/* Type */}
+                            <div>
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                                proc.is_final
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}>
+                                {proc.is_final ? "Final (QR)" : "Interim"}
                               </span>
-                            ) : (
-                              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">
-                                Active – Unused
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-end gap-2">
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                              {proc.status === "INACTIVE" ? (
+                                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">
+                                  Inactive
+                                </span>
+                              ) : proc.is_used ? (
+                                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700">
+                                  Active – in use
+                                </span>
+                              ) : (
+                                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">
+                                  Active – Unused
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Actions + Expand chevron at end */}
+                            <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => { setEditingProcess(processes.find((p) => p.id === proc.id) ?? proc); setShowProcessModal(true); }}
                                 className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
@@ -1162,12 +1312,82 @@ const SuperAdminProcesses: React.FC = () => {
                               >
                                 <Trash2 size={13} />
                               </button>
+                              <span className="text-xs text-gray-400 mx-1">{totalSteps} steps</span>
+                              <button
+                                onClick={() => setExpandedProcessId(isExpanded ? null : proc.id)}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                title={isExpanded ? "Collapse" : "Expand"}
+                              >
+                                {isExpanded
+                                  ? <ChevronDown size={15} className="text-gray-400" />
+                                  : <ChevronRight size={15} className="text-gray-400" />
+                                }
+                              </button>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          </div>
+
+                          {/* Expanded: Action Steps */}
+                          {isExpanded && (
+                            <div className="border-t border-gray-100 px-5 py-4 bg-gray-50/50 space-y-2">
+                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                                Process Steps
+                              </p>
+
+                              {/* PROCESS_START */}
+                              <div className="flex items-center gap-3 px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg">
+                                <span className="text-xs font-mono font-bold text-gray-500 w-6 text-center shrink-0">S</span>
+                                <span className="text-xs font-semibold text-gray-600">PROCESS_START</span>
+                                <span className="ml-auto text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">system</span>
+                                <span className="text-xs text-gray-400">auto</span>
+                              </div>
+
+                              {/* User action steps */}
+                              {(proc.action_steps ?? [])
+                                .slice()
+                                .sort((a, b) => a.step_order - b.step_order)
+                                .map((step, idx) => {
+                                  const action = actions.find((a) => a.id === step.action_id);
+                                  return (
+                                    <div key={idx} className="flex items-center gap-3 px-3 py-2 bg-white border border-gray-200 rounded-lg">
+                                      <span className="text-xs font-mono text-gray-400 w-6 text-center shrink-0">{idx + 1}</span>
+                                      <span className="text-sm font-medium text-gray-800 flex-1 truncate">
+                                        {action?.name ?? step.action_id}
+                                      </span>
+                                      {action && (
+                                        <>
+                                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${CATEGORY_COLORS[action.category] ?? "bg-gray-100 text-gray-600"}`}>
+                                            {action.category}
+                                          </span>
+                                          {action.produces_output && (
+                                            <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium shrink-0">
+                                              → output
+                                            </span>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+
+                              {(proc.action_steps?.length ?? 0) === 0 && (
+                                <p className="text-xs text-gray-400 italic text-center py-2">No action steps defined.</p>
+                              )}
+
+                              {/* PROCESS_END */}
+                              <div className="flex items-center gap-3 px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg">
+                                <span className="text-xs font-mono font-bold text-gray-500 w-6 text-center shrink-0">E</span>
+                                <span className="text-xs font-semibold text-gray-600">PROCESS_END</span>
+                                <span className="ml-auto text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">system</span>
+                                <span className="text-xs text-gray-400">
+                                  {proc.is_final ? "issues QR code · locks product" : "destination carries to next process"}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
                 )}
               </div>
             </div>

@@ -28,6 +28,7 @@ const adminMenuItems: MenuItem[] = [
 const clientMenuItems: MenuItem[] = [
   { label: "Dashboard", icon: "🏠", id: "home" },
   { label: "Recording", icon: "📝", id: "recording" },
+  { label: "QR Codes", icon: "📷", id: "qr-codes" },
   { label: "Markets", icon: "🛒", id: "markets" },
   { label: "Events", icon: "📅", id: "events" },
   { label: "Reports", icon: "📊", id: "report" },
@@ -39,7 +40,8 @@ const clientMenuItems: MenuItem[] = [
     children: [
       { label: "Materials", icon: "🧱", id: "settings-materials" },
       { label: "Products", icon: "📦", id: "settings-products" },
-      { label: "Processes", icon: "🔄", id: "view-processes" },
+      { label: "Assets", icon: "📋", id: "assets" },
+      { label: "Process & Action", icon: "🔄", id: "view-processes" },
     ],
   },
   { label: "Profile Settings", icon: "👤", id: "profile" },
@@ -53,7 +55,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
   const { currentUser, logout, activePortal } = useAuth();
   const isAdminPortal = activePortal === "admin";
-  const isInViewGroup = active.startsWith("settings-") || active === "view-processes";
+  const isInViewGroup = active.startsWith("settings-") || active === "view-processes" || active === "assets";
   const [settingsOpen, setSettingsOpen] = useState(() => isInViewGroup);
 
   const baseItems: MenuItem[] = isAdminPortal ? adminMenuItems : clientMenuItems;

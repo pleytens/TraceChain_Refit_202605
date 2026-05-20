@@ -27,6 +27,8 @@ import UnitsManagement from "@/pages/UnitsManagement";
 import ProcessActionsPage from "@/pages/ProcessActions";
 import ViewProcesses from "@/pages/ViewProcesses";
 import SettingsLocations from "@/pages/settings/SettingsLocations";
+import QRCodeDashboard from "@/pages/settings/QRCodeDashboard";
+import AssetsDashboard from "@/pages/AssetsDashboard";
 
 const pageMeta: Record<string, { title: string; icon: string }> = {
   home: { title: "Dashboard", icon: "🏠" },
@@ -50,6 +52,10 @@ const pageMeta: Record<string, { title: string; icon: string }> = {
   "settings-locations": { title: "Locations", icon: "📍" },
   "units-management": { title: "Units Management", icon: "📐" },
   "process-actions": { title: "Process Actions", icon: "⚙️" },
+  "qr-codes": { title: "QR Codes", icon: "📷" },
+  "settings-qr-codes": { title: "QR Codes", icon: "📷" },
+  "assets": { title: "Assets", icon: "📋" },
+  "settings-assets": { title: "Assets", icon: "📋" },
 };
 
 function AppInner() {
@@ -102,6 +108,14 @@ function AppInner() {
         return <UnitsManagement readOnly={isNormalUser} />;
       case "process-actions":
         return <ProcessActionsPage readOnly={isNormalUser} />;
+      case "qr-codes":
+        return <QRCodeDashboard readOnly={true} />;
+      case "settings-qr-codes":
+        return <QRCodeDashboard readOnly={false} />;
+      case "assets":
+        return <AssetsDashboard readOnly={true} />;
+      case "settings-assets":
+        return <AssetsDashboard readOnly={false} />;
       default:
         return <PlaceholderPage title={meta.title} icon={meta.icon} />;
     }
@@ -121,6 +135,8 @@ function AppInner() {
           onNavigateToCompany={() => setActivePage("settings-companies")}
           onNavigateToLocations={() => setActivePage("settings-locations")}
           onNavigateToPeopleManagement={() => setActivePage("users")}
+          onNavigateToQRCodes={() => setActivePage("settings-qr-codes")}
+          onNavigateToAssets={() => setActivePage("settings-assets")}
         />
         <main className="flex-1 p-6 overflow-auto">
           {renderPage()}

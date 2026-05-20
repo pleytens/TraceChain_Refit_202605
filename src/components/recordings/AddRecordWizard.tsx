@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   X, ChevronRight, ChevronLeft, Check, Package, Users, Clock, MapPin,
-  Search, CheckCircle2, List
+  Search, CheckCircle2, List, AlertTriangle
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import PeopleSelector from "@/components/people/PeopleSelector";
@@ -24,6 +24,7 @@ interface ProcessOption {
   name: string;
   description: string;
   status: string;
+  is_final: boolean;
   actionSteps: ProcessStep[];
   variableDetails: Record<string, { what: boolean; who: boolean; when: boolean; where: boolean }>;
 }
@@ -60,6 +61,7 @@ const FALLBACK_PROCESSES: ProcessOption[] = [
     name: "Import in Stock",
     description: "Record materials coming into stock",
     status: "ACTIVE",
+    is_final: false,
     actionSteps: [
       { id: "s1", name: "Process Start", is_system: true, action_key: "PROCESS_START" },
       { id: "s2", name: "Move In", is_system: false, action_key: "move_in" },
@@ -162,13 +164,13 @@ const AddRecordWizard: React.FC<Props> = ({
     Promise.all([
       supabase
         .from("tc_processes")
-        .select("id, name, description, status")
+        .select("id, name, description, status, is_final")
         .eq("status", "ACTIVE")
         .order("name"),
       supabase
         .from("tc_process_action_steps")
         .select(
-          "id, process_id, step_order, notes, variable_details, tc_action_library(id, action_key, name, is_system)"
+          "id, process_id, step_order, notes, variable_details, tc_action_library(id, action_key, name, is_system, required_variable_categories)"
         )
         .order("step_order"),
     ]).then(([pRes, sRes]) => {
@@ -182,15 +184,18 @@ const AddRecordWizard: React.FC<Props> = ({
         const steps = stepsData.filter((s) => s.process_id === p.id);
         const variableDetails: Record<string, { what: boolean; who: boolean; when: boolean; where: boolean }> = {};
         steps.forEach((s: any) => {
-          if (s.variable_details && typeof s.variable_details === "object") {
-            variableDetails[s.id] = s.variable_details;
-          }
+          // Use step-level variable_details if any flag is set; otherwise fall back to action's required_variable_categories
+          const stepVd = s.variable_details && typeof s.variable_details === "object" ? s.variable_details : null;
+          const actionVd = s.tc_action_library?.required_variable_categories ?? null;
+          const stepHasAnyFlag = stepVd && (stepVd.who || stepVd.when || stepVd.what || stepVd.where);
+          variableDetails[s.id] = stepHasAnyFlag ? stepVd : (actionVd ?? { what: false, who: false, when: false, where: false });
         });
         return {
           id: p.id,
           name: p.name,
           description: p.description,
           status: p.status,
+          is_final: p.is_final ?? false,
           actionSteps: steps.map((s: any) => ({
             id: s.id,
             name: s.tc_action_library?.name ?? "Unknown",
@@ -404,6 +409,15 @@ const AddRecordWizard: React.FC<Props> = ({
                                 {s.name}
                               </span>
                             ))}
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
+                                p.is_final
+                                  ? "bg-purple-100 text-purple-700 border-purple-200"
+                                  : "bg-amber-50 text-amber-600 border-amber-200"
+                              }`}
+                            >
+                              {p.is_final ? "✓ Final Process" : "⚠ Not Final"}
+                            </span>
                           </div>
                         </div>
                         <div className="text-xs text-gray-400 shrink-0">
@@ -579,6 +593,20 @@ const AddRecordWizard: React.FC<Props> = ({
                 <p className="text-xs text-gray-400">Please confirm the details before creating the record.</p>
               </div>
 
+              {/* Final process warning */}
+              {!selectedProcess.is_final && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-2">
+                  <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-amber-800">Non-Final Process Selected</p>
+                    <p className="text-xs text-amber-700 mt-0.5">
+                      This process does not issue a QR code or lock the product. A Final Process is required to RUN this recording.
+                      You can still create it, but the RUN button will be disabled until a final process recording exists.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <List size={14} className="text-blue-500" />
@@ -706,6 +734,8 @@ const AddRecordWizard: React.FC<Props> = ({
               ? currentActionIdx < actionStates.length - 1
                 ? "Next Action"
                 : "Review"
+              : selectedProcess && !selectedProcess.is_final
+              ? "Create (Non-Final)"
               : "Confirm & Create"}
           </button>
         </div>
