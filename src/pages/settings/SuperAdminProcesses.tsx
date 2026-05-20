@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Edit2, Search, X, ChevronDown, ChevronRight, Settings, BookOpen, AlertCircle } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Plus, Trash2, Edit2, Search, X, ChevronDown, ChevronRight, Settings, BookOpen, AlertCircle, Eye, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { DEFAULT_ACTIONS as DB_DEFAULT_ACTIONS } from "@/lib/dbInit";
+import NewActionModal from "@/components/actions/NewActionModal";
+// ActionLibraryRow from @/types/action is structurally identical to ActionLibraryItem below
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +40,13 @@ interface ActionLibraryItem {
   custom_params?: ActionCustomParam[];
 }
 
+export interface ActionStepVariableDetails {
+  what: boolean;
+  who: boolean;
+  when: boolean;
+  where: boolean;
+}
+
 interface ProcessRecord {
   id: string;
   name: string;
@@ -45,7 +54,8 @@ interface ProcessRecord {
   is_final: boolean;
   sort_order: number;
   status: "ACTIVE" | "INACTIVE";
-  action_steps?: { action_id: string; step_order: number; notes: string }[];
+  is_used: boolean;
+  action_steps?: { action_id: string; step_order: number; notes: string; variable_details?: ActionStepVariableDetails }[];
 }
 
 // ─── Default seeded actions (used when Supabase unavailable) ─────────────────
@@ -84,179 +94,7 @@ function loadFromLS<T>(key: string, fallback: T): T {
   }
 }
 
-// ─── Action Library Modal ─────────────────────────────────────────────────────
-
-interface ActionModalProps {
-  action: ActionLibraryItem | null;
-  onClose: () => void;
-  onSave: (a: Partial<ActionLibraryItem> & { id?: string }) => void;
-  existingActions: ActionLibraryItem[];
-}
-
-const ActionModal: React.FC<ActionModalProps> = ({ action, onClose, onSave, existingActions }) => {
-  const isEdit = !!action && !action.is_system;
-  const [form, setForm] = useState({
-    name: action?.name ?? "",
-    action_key: action?.action_key ?? "",
-    category: (action?.category ?? "Movement") as ActionCategory,
-    description: action?.description ?? "",
-    produces_output: action?.produces_output ?? false,
-    custom_param_example: action?.custom_param_example ?? "",
-    is_active: action?.is_active ?? true,
-  });
-  const [error, setError] = useState("");
-
-  const handleSave = () => {
-    if (!form.name.trim()) { setError("Action name is required."); return; }
-    if (!form.action_key.trim()) { setError("Action key is required."); return; }
-    const duplicate = existingActions.find(
-      (a) => a.action_key === form.action_key.trim() && a.id !== action?.id
-    );
-    if (duplicate) { setError("An action with this key already exists."); return; }
-    onSave({
-      ...(action?.id ? { id: action.id } : {}),
-      ...form,
-      name: form.name.trim(),
-      action_key: form.action_key.trim().toLowerCase().replace(/\s+/g, "_"),
-    });
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h3 className="text-base font-bold text-gray-900">
-            {action?.is_system ? "View System Action" : isEdit ? "Edit Action" : "New Action"}
-          </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition"><X size={18} /></button>
-        </div>
-
-        <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
-          {action?.is_system && (
-            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
-              <AlertCircle size={14} className="mt-0.5 shrink-0" />
-              <span>This is a system action and cannot be edited. System actions are automatically managed by TraceChain.</span>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              Action Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              disabled={!!action?.is_system}
-              type="text"
-              value={form.name}
-              onChange={(e) => { setForm((f) => ({ ...f, name: e.target.value })); setError(""); }}
-              placeholder="e.g. Cook, Mix, Transfer…"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              Action Key <span className="text-red-500">*</span>
-            </label>
-            <input
-              disabled={!!action?.is_system || isEdit}
-              type="text"
-              value={form.action_key}
-              onChange={(e) => { setForm((f) => ({ ...f, action_key: e.target.value })); setError(""); }}
-              placeholder="e.g. cook, mix_blend, transfer…"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-            />
-            <p className="text-xs text-gray-400 mt-1">Unique identifier. Lowercase with underscores. Cannot be changed after creation.</p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Category</label>
-            <select
-              disabled={!!action?.is_system}
-              value={form.category}
-              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as ActionCategory }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-            >
-              {ALL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
-            <textarea
-              disabled={!!action?.is_system}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={3}
-              placeholder="Describe what this action does…"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50 disabled:text-gray-400"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Custom Parameter Example</label>
-            <input
-              disabled={!!action?.is_system}
-              type="text"
-              value={form.custom_param_example}
-              onChange={(e) => setForm((f) => ({ ...f, custom_param_example: e.target.value }))}
-              placeholder="e.g. Temperature (°C), duration…"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-            />
-            <p className="text-xs text-gray-400 mt-1">Shown as a hint in the process wizard for operators.</p>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-gray-700">Produces Output?</p>
-              <p className="text-xs text-gray-400">If this action transforms input into a new product/material.</p>
-            </div>
-            <button
-              disabled={!!action?.is_system}
-              type="button"
-              onClick={() => setForm((f) => ({ ...f, produces_output: !f.produces_output }))}
-              className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${form.produces_output ? "bg-blue-600" : "bg-gray-300"} disabled:opacity-50`}
-            >
-              <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${form.produces_output ? "translate-x-5" : "translate-x-0.5"}`} />
-            </button>
-          </div>
-
-          {!action?.is_system && (
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-gray-700">Active</p>
-                <p className="text-xs text-gray-400">Inactive actions are hidden from the process wizard.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, is_active: !f.is_active }))}
-                className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${form.is_active ? "bg-blue-600" : "bg-gray-300"}`}
-              >
-                <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${form.is_active ? "translate-x-5" : "translate-x-0.5"}`} />
-              </button>
-            </div>
-          )}
-
-          {error && <p className="text-xs text-red-500">{error}</p>}
-        </div>
-
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition">
-            {action?.is_system ? "Close" : "Cancel"}
-          </button>
-          {!action?.is_system && (
-            <button
-              onClick={handleSave}
-              className="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition"
-            >
-              {isEdit ? "Save Changes" : "Create Action"}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+// ActionModal is replaced by NewActionModal (wizard) – see src/components/actions/NewActionModal.tsx
 
 // ─── Process Modal ────────────────────────────────────────────────────────────
 
@@ -264,34 +102,110 @@ interface ProcessModalProps {
   process: ProcessRecord | null;
   actions: ActionLibraryItem[];
   onClose: () => void;
-  onSave: (p: Omit<ProcessRecord, "id"> & { id?: string }) => void;
+  onSave: (p: Omit<ProcessRecord, "id"> & { id?: string }) => Promise<void>;
+  onStatusUpdated?: (id: string, status: "ACTIVE" | "INACTIVE") => void;
 }
 
-const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, onSave }) => {
+// Status-change confirmation modal
+const StatusConfirmModal: React.FC<{ onConfirm: () => void | Promise<void>; onCancel: () => void }> = ({ onConfirm, onCancel }) => (
+  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center">
+          <AlertTriangle size={16} className="text-amber-600" />
+        </div>
+        <div>
+          <h4 className="text-sm font-bold text-gray-900">Confirm Status Change</h4>
+          <p className="text-xs text-gray-500 mt-1">
+            Changing status to <strong>Active</strong> is permanent for this edit session. You will not be able to modify action steps again without setting the process to Inactive first.
+          </p>
+        </div>
+      </div>
+      <div className="flex justify-end gap-3">
+        <button onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition">Cancel</button>
+        <button onClick={onConfirm} className="px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition">
+          Confirm Active
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, onSave, onStatusUpdated }) => {
   const isEdit = !!process;
+  const isNewProcess = !process;
   const nonSystemActions = actions.filter((a) => !a.is_system && a.is_active);
+
+  // Track original status to detect if this process has recordings (used)
+  const isUsedInRecordings = process?.is_used === true;
 
   const [form, setForm] = useState({
     name: process?.name ?? "",
     description: process?.description ?? "",
     is_final: process?.is_final ?? false,
-    status: (process?.status ?? "ACTIVE") as "ACTIVE" | "INACTIVE",
-    action_steps: process?.action_steps ?? [] as { action_id: string; step_order: number; notes: string }[],
+    status: (process?.status || "INACTIVE") as "ACTIVE" | "INACTIVE",
+    action_steps: process?.action_steps ?? [] as { action_id: string; step_order: number; notes: string; variable_details?: ActionStepVariableDetails }[],
   });
   const [error, setError] = useState("");
 
+  // Track if user changed from Active → Inactive within this session (one-time)
+  const [statusChangedToActive, setStatusChangedToActive] = useState(false);
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
+  const pendingStatusRef = useRef<"ACTIVE" | "INACTIVE" | null>(null);
+
+  // The SAVED status in the DB (original process status before any pending changes)
+  const savedStatus = process?.status ?? "INACTIVE";
+
+  // Determine edit permissions based on SAVED status (not pending form status)
+  // A process is read-only only if it is ALREADY ACTIVE in the DB
+  const isActiveProcess = !isNewProcess && savedStatus === "ACTIVE";
+  // Fields and steps are editable unless the saved process is active or used in recordings
+  const canEditFields = !isUsedInRecordings && (savedStatus === "INACTIVE" || isNewProcess);
+  const canEditSteps = canEditFields;
+
+  const handleStatusChange = (newStatus: "ACTIVE" | "INACTIVE") => {
+    if (newStatus === "ACTIVE" && form.status === "INACTIVE") {
+      // Show confirmation warning before switching to Active
+      pendingStatusRef.current = newStatus;
+      setShowStatusConfirm(true);
+    } else {
+      // For any other transition (e.g., ACTIVE → INACTIVE), just update local state
+      setForm((f) => ({ ...f, status: newStatus }));
+    }
+  };
+
+  const confirmStatusChange = () => {
+    const newStatus = pendingStatusRef.current;
+    if (newStatus) {
+      // Only update local form state — do NOT save to DB yet.
+      // The status will be saved when the user clicks "Save Changes".
+      setForm((f) => ({ ...f, status: newStatus }));
+      setStatusChangedToActive(true);
+    }
+    setShowStatusConfirm(false);
+    pendingStatusRef.current = null;
+  };
+
+  const cancelStatusChange = () => {
+    setShowStatusConfirm(false);
+    pendingStatusRef.current = null;
+  };
+
   const addActionStep = () => {
+    if (!canEditSteps) return;
     setForm((f) => ({
       ...f,
-      action_steps: [...f.action_steps, { action_id: nonSystemActions[0]?.id ?? "", step_order: f.action_steps.length + 1, notes: "" }],
+      action_steps: [...f.action_steps, { action_id: nonSystemActions[0]?.id ?? "", step_order: f.action_steps.length + 1, notes: "", variable_details: { what: false, who: false, when: false, where: false } }],
     }));
   };
 
   const removeActionStep = (i: number) => {
+    if (!canEditSteps) return;
     setForm((f) => ({ ...f, action_steps: f.action_steps.filter((_, idx) => idx !== i) }));
   };
 
   const updateActionStep = (i: number, field: string, val: string) => {
+    if (!canEditSteps) return;
     setForm((f) => ({
       ...f,
       action_steps: f.action_steps.map((s, idx) =>
@@ -300,165 +214,336 @@ const ProcessModal: React.FC<ProcessModalProps> = ({ process, actions, onClose, 
     }));
   };
 
-  const handleSave = () => {
+  const toggleVariableDetail = (i: number, key: keyof ActionStepVariableDetails) => {
+    if (!canEditSteps) return;
+    setForm((f) => ({
+      ...f,
+      action_steps: f.action_steps.map((s, idx) =>
+        idx === i
+          ? {
+              ...s,
+              variable_details: {
+                ...(s.variable_details ?? { what: false, who: false, when: false, where: false }),
+                [key]: !(s.variable_details?.[key] ?? false),
+              },
+            }
+          : s
+      ),
+    }));
+  };
+
+  // Save button: disabled if < 1 user step (i.e. only START+END = 2 total logical steps)
+  const canSave = form.action_steps.length >= 1;
+
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
     if (!form.name.trim()) { setError("Process name is required."); return; }
-    onSave({
+    if (!canSave) { setError("Minimum 3 steps required (START + END + 1 action)."); return; }
+    setSaving(true);
+    await onSave({
       ...(process?.id ? { id: process.id } : {}),
       name: form.name.trim(),
       description: form.description.trim(),
       is_final: form.is_final,
       status: form.status,
       sort_order: process?.sort_order ?? 0,
+      is_used: process?.is_used ?? false,
       action_steps: form.action_steps,
     });
+    setSaving(false);
     onClose();
   };
 
+  // Action row icon logic
+  const getStepIcons = (i: number) => {
+    if (isUsedInRecordings) {
+      return (
+        <button
+          type="button"
+          title="Read-only (Used in Recordings)"
+          className="p-1 text-gray-400 rounded"
+        >
+          <Eye size={13} />
+        </button>
+      );
+    }
+    if (form.status === "INACTIVE" || isNewProcess) {
+      return (
+        <button
+          type="button"
+          onClick={() => removeActionStep(i)}
+          title="Delete action"
+          className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+        >
+          <Trash2 size={12} />
+        </button>
+      );
+    }
+    // Active (Unused) — read-only
+    return (
+      <button
+        type="button"
+        title="Read-only (set status to Inactive to modify)"
+        className="p-1 text-gray-400 rounded cursor-default"
+      >
+        <Eye size={13} />
+      </button>
+    );
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 py-10 px-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h3 className="text-base font-bold text-gray-900">
-            {isEdit ? "Edit Process" : "New Process"}
-          </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition"><X size={18} /></button>
-        </div>
+    <>
+      {showStatusConfirm && (
+        <StatusConfirmModal onConfirm={confirmStatusChange} onCancel={cancelStatusChange} />
+      )}
 
-        <div className="px-6 py-5 space-y-5">
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">
-              Process Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => { setForm((f) => ({ ...f, name: e.target.value })); setError(""); }}
-              placeholder="e.g. Raw Material Intake, Transformation, Packaging…"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+      <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 py-10 px-4 overflow-y-auto">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+            <h3 className="text-base font-bold text-gray-900">
+              {isEdit ? "Edit Process" : "New Process"}
+            </h3>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition"><X size={18} /></button>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2}
-              placeholder="Brief description of this process…"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            />
-          </div>
-
-          <div className="flex gap-6">
-            <div className="flex items-center justify-between flex-1">
-              <div>
-                <p className="text-xs font-semibold text-gray-700">Final Process?</p>
-                <p className="text-xs text-gray-400">Issues QR code at completion.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, is_final: !f.is_final }))}
-                className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${form.is_final ? "bg-blue-600" : "bg-gray-300"}`}
-              >
-                <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${form.is_final ? "translate-x-5" : "translate-x-0.5"}`} />
-              </button>
+          <div className="px-6 py-5 space-y-5">
+            {/* Process Name */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Process Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => { if (!isActiveProcess && !isUsedInRecordings) { setForm((f) => ({ ...f, name: e.target.value })); setError(""); } }}
+                readOnly={isActiveProcess || isUsedInRecordings}
+                placeholder="e.g. Raw Material Intake, Transformation, Packaging…"
+                className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isActiveProcess || isUsedInRecordings ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
+              />
             </div>
 
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as "ACTIVE" | "INACTIVE" }))}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Action Steps */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="text-xs font-semibold text-gray-700">Action Steps</p>
-                <p className="text-xs text-gray-400">PROCESS_START and PROCESS_END are automatic.</p>
-              </div>
-              <button
-                type="button"
-                onClick={addActionStep}
-                disabled={nonSystemActions.length === 0}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition disabled:opacity-40"
-              >
-                <Plus size={12} /> Add Step
-              </button>
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+              <textarea
+                value={form.description}
+                onChange={(e) => { if (!isActiveProcess && !isUsedInRecordings) setForm((f) => ({ ...f, description: e.target.value })); }}
+                readOnly={isActiveProcess || isUsedInRecordings}
+                rows={2}
+                placeholder="Brief description of this process…"
+                className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${isActiveProcess || isUsedInRecordings ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}`}
+              />
             </div>
 
-            {/* Always show system start */}
-            <div className="flex items-center gap-3 px-3 py-2 bg-red-50 border border-red-100 rounded-lg mb-1.5">
-              <span className="text-xs font-mono font-semibold text-red-600 w-6 text-center">S</span>
-              <span className="text-xs font-semibold text-red-700">PROCESS_START</span>
-              <span className="ml-auto text-xs text-red-400">system · auto</span>
-            </div>
-
-            {form.action_steps.map((step, i) => {
-              const action = actions.find((a) => a.id === step.action_id);
-              return (
-                <div key={i} className="flex items-center gap-2 mb-1.5">
-                  <span className="text-xs text-gray-400 font-mono w-6 text-center">{i + 1}</span>
-                  <select
-                    value={step.action_id}
-                    onChange={(e) => updateActionStep(i, "action_id", e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {nonSystemActions.map((a) => (
-                      <option key={a.id} value={a.id}>{a.name} ({a.category})</option>
-                    ))}
-                  </select>
-                  {action && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${CATEGORY_COLORS[action.category] ?? "bg-gray-100 text-gray-600"}`}>
-                      {action.produces_output ? "→ output" : "no output"}
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeActionStep(i)}
-                    className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <X size={13} />
-                  </button>
+            {/* ── Action Steps (moved ABOVE Final Process / Status) ─────────── */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">Action Steps</p>
+                  <p className="text-xs text-gray-400">PROCESS_START and PROCESS_END are automatic.</p>
                 </div>
-              );
-            })}
+                <button
+                  type="button"
+                  onClick={addActionStep}
+                  disabled={nonSystemActions.length === 0 || !canEditSteps}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={!canEditSteps ? "Set status to Inactive to add steps" : "Add step"}
+                >
+                  <Plus size={12} /> Add Step
+                </button>
+              </div>
 
-            {form.action_steps.length === 0 && (
-              <p className="text-xs text-gray-400 italic text-center py-3 border border-dashed border-gray-200 rounded-lg">
-                No action steps added. Add steps between PROCESS_START and PROCESS_END.
-              </p>
+              {/* System START */}
+              <div className="flex items-center gap-3 px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg mb-1.5">
+                <span className="text-xs font-mono font-semibold text-gray-500 w-6 text-center">S</span>
+                <span className="text-xs font-semibold text-gray-600">PROCESS_START</span>
+                <span className="ml-auto text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">system</span>
+                <span className="text-xs text-gray-400">auto</span>
+              </div>
+
+              {form.action_steps.map((step, i) => {
+                const action = actions.find((a) => a.id === step.action_id);
+                const rowEditable = canEditSteps;
+                const vd = step.variable_details ?? { what: false, who: false, when: false, where: false };
+                const VD_LABELS: { key: keyof ActionStepVariableDetails; label: string; color: string }[] = [
+                  { key: "what",  label: "What",  color: "orange" },
+                  { key: "who",   label: "Who",   color: "blue"   },
+                  { key: "when",  label: "When",  color: "green"  },
+                  { key: "where", label: "Where", color: "purple" },
+                ];
+                return (
+                  <div
+                    key={i}
+                    className={`mb-1.5 rounded-lg border transition ${
+                      rowEditable ? "bg-white border-gray-200" : "bg-gray-50 border-gray-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 px-2 py-1.5">
+                      <span className="text-xs text-gray-400 font-mono w-6 text-center shrink-0">{i + 1}</span>
+                      {rowEditable ? (
+                        <select
+                          value={step.action_id}
+                          onChange={(e) => updateActionStep(i, "action_id", e.target.value)}
+                          className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          {nonSystemActions.map((a) => (
+                            <option key={a.id} value={a.id}>{a.name} ({a.category})</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="flex-1 text-xs text-gray-700 font-medium truncate">
+                          {action?.name ?? "Unknown action"}
+                        </span>
+                      )}
+                      {action && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium shrink-0 ${CATEGORY_COLORS[action.category] ?? "bg-gray-100 text-gray-600"}`}>
+                          {action.produces_output ? "→ output" : "no output"}
+                        </span>
+                      )}
+                      {getStepIcons(i)}
+                    </div>
+                    {/* Variable Details: What / Who / When / Where */}
+                    <div className="flex items-center gap-1.5 px-3 pb-2">
+                      <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mr-1">Attributes:</span>
+                      {VD_LABELS.map(({ key, label, color }) => {
+                        const active = vd[key];
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => rowEditable && toggleVariableDetail(i, key)}
+                            disabled={!rowEditable}
+                            title={rowEditable ? `Toggle ${label}` : "Set Inactive to edit"}
+                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border transition ${
+                              active
+                                ? color === "orange"
+                                  ? "bg-orange-100 text-orange-700 border-orange-300"
+                                  : color === "blue"
+                                  ? "bg-blue-100 text-blue-700 border-blue-300"
+                                  : color === "green"
+                                  ? "bg-green-100 text-green-700 border-green-300"
+                                  : "bg-purple-100 text-purple-700 border-purple-300"
+                                : "bg-gray-50 text-gray-400 border-gray-200"
+                            } disabled:cursor-not-allowed`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {form.action_steps.length === 0 && (
+                <p className="text-xs text-gray-400 italic text-center py-3 border border-dashed border-gray-200 rounded-lg">
+                  No action steps added. Add steps between PROCESS_START and PROCESS_END.
+                </p>
+              )}
+
+              {/* System END */}
+              <div className="flex items-center gap-3 px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg mt-1.5">
+                <span className="text-xs font-mono font-semibold text-gray-500 w-6 text-center">E</span>
+                <span className="text-xs font-semibold text-gray-600">PROCESS_END</span>
+                <span className="ml-auto text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-medium">system</span>
+                <span className="text-xs text-gray-400">issues QR if final</span>
+              </div>
+            </div>
+
+            {/* ── Final Process + Status (moved BELOW action steps) ─────────── */}
+            <div className="flex gap-6">
+              <div className="flex items-center justify-between flex-1">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">Final Process?</p>
+                  <p className="text-xs text-gray-400">Issues QR code at completion.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, is_final: !f.is_final }))}
+                  className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${form.is_final ? "bg-blue-600" : "bg-gray-300"}`}
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${form.is_final ? "translate-x-5" : "translate-x-0.5"}`} />
+                </button>
+              </div>
+
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
+                <select
+                  value={form.status}
+                  onChange={(e) => handleStatusChange(e.target.value as "ACTIVE" | "INACTIVE")}
+                  disabled={isUsedInRecordings}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="INACTIVE">Inactive</option>
+                  <option value="ACTIVE">Active</option>
+                </select>
+                {statusChangedToActive && form.status === "ACTIVE" && isActiveProcess && (
+                  <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                    <AlertTriangle size={10} /> Set to Inactive to edit steps.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Minimum steps warning — only relevant when editing/creating (not for read-only Active) */}
+            {!canSave && !isActiveProcess && (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+                <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+                <p className="text-xs text-amber-700">
+                  Minimum 3 steps required (START + END + 1 action). Add at least one action step.
+                </p>
+              </div>
             )}
 
-            {/* Always show system end */}
-            <div className="flex items-center gap-3 px-3 py-2 bg-red-50 border border-red-100 rounded-lg mt-1.5">
-              <span className="text-xs font-mono font-semibold text-red-600 w-6 text-center">E</span>
-              <span className="text-xs font-semibold text-red-700">PROCESS_END</span>
-              <span className="ml-auto text-xs text-red-400">system · issues QR if final</span>
-            </div>
+            {isActiveProcess && !isUsedInRecordings && (
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2.5">
+                <AlertCircle size={14} className="text-blue-500 shrink-0" />
+                <p className="text-xs text-blue-700">
+                  This process is <strong>Active</strong> and is read-only. Set status to <strong>Inactive</strong> to edit name, description, or action steps.
+                </p>
+              </div>
+            )}
+
+            {!isActiveProcess && statusChangedToActive && form.status === "ACTIVE" && !isUsedInRecordings && (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+                <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+                <p className="text-xs text-amber-700">
+                  Status set to <strong>Active</strong>. Click <strong>Save Changes</strong> to apply. Once saved, name, description, and steps will be read-only.
+                </p>
+              </div>
+            )}
+
+            {isUsedInRecordings && (
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5">
+                <Eye size={14} className="text-gray-500 shrink-0" />
+                <p className="text-xs text-gray-600">
+                  This process has been used in recordings and is <strong>read-only</strong>.
+                </p>
+              </div>
+            )}
+
+            {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
-        </div>
-
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition">Cancel</button>
-          <button
-            onClick={handleSave}
-            className="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition"
-          >
-            {isEdit ? "Save Changes" : "Create Process"}
-          </button>
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+            <button onClick={onClose} disabled={saving} className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition disabled:opacity-40">
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!canSave || isUsedInRecordings || saving}
+              title={!canSave ? "Add at least 1 action step to save" : ""}
+              className="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {saving ? "Saving..." : isEdit ? "Save Changes" : "Create Process"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -531,11 +616,27 @@ const SuperAdminProcesses: React.FC = () => {
 
       // Load processes
       if (supabase) {
-        const { data, error } = await supabase.from("tc_processes").select("*").order("sort_order");
-        if (!error && data) {
-          const procs = data.map((r) => ({
+        const [{ data: pData, error: pErr }, { data: sData }] = await Promise.all([
+          supabase.from("tc_processes").select("*").order("sort_order"),
+          supabase.from("tc_process_action_steps").select("id, process_id, action_id, step_order, notes, variable_details").order("step_order"),
+        ]);
+        if (!pErr && pData) {
+          const stepsMap: Record<string, any[]> = {};
+          (sData ?? []).forEach((s: any) => {
+            if (!stepsMap[s.process_id]) stepsMap[s.process_id] = [];
+            stepsMap[s.process_id].push(s);
+          });
+          const procs = pData.map((r) => ({
             id: r.id, name: r.name, description: r.description,
-            is_final: r.is_final, sort_order: r.sort_order, status: r.status,
+            is_final: r.is_final, sort_order: r.sort_order,
+            status: (r.status as "ACTIVE" | "INACTIVE") ?? "INACTIVE",
+            is_used: r.is_used ?? false,
+            action_steps: (stepsMap[r.id] ?? []).map((s: any) => ({
+              action_id: s.action_id,
+              step_order: s.step_order,
+              notes: s.notes ?? "",
+              variable_details: s.variable_details ?? { what: false, who: false, when: false, where: false },
+            })),
           }));
           setProcesses(procs);
           localStorage.setItem(LS_PROCESSES_KEY, JSON.stringify(procs));
@@ -550,22 +651,30 @@ const SuperAdminProcesses: React.FC = () => {
   }, []);
 
   // ── Action CRUD ──────────────────────────────────────────────────────────────
+  // Accepts payload from NewActionModal wizard (action_key replaces "short")
 
-  const handleSaveAction = async (a: Partial<ActionLibraryItem> & { id?: string }) => {
+  const handleSaveAction = async (a: {
+    id?: string;
+    name: string;
+    action_key: string;
+    category: ActionCategory;
+    description: string;
+    is_active: boolean;
+  }) => {
     const isNew = !a.id;
     const newId = a.id ?? `act_custom_${Date.now()}`;
     const maxOrder = Math.max(0, ...actions.filter((x) => !x.is_system).map((x) => x.sort_order));
 
     const fullAction: ActionLibraryItem = {
       id: newId,
-      action_key: a.action_key ?? newId,
-      name: a.name ?? "",
-      category: a.category ?? "Movement",
-      description: a.description ?? "",
-      produces_output: a.produces_output ?? false,
-      custom_param_example: a.custom_param_example ?? "",
+      action_key: a.action_key,
+      name: a.name,
+      category: a.category,
+      description: a.description,
+      produces_output: false,           // Removed from Action – now lives on Process
+      custom_param_example: "",         // Removed from Action UI per brief v3.1
       is_system: false,
-      is_active: a.is_active ?? true,
+      is_active: a.is_active,
       sort_order: isNew ? maxOrder + 1 : (actions.find((x) => x.id === a.id)?.sort_order ?? 0),
     };
 
@@ -574,15 +683,14 @@ const SuperAdminProcesses: React.FC = () => {
         const { error } = await supabase.from("tc_action_library").insert({
           id: fullAction.id, action_key: fullAction.action_key, name: fullAction.name,
           category: fullAction.category, description: fullAction.description,
-          produces_output: fullAction.produces_output, custom_param_example: fullAction.custom_param_example,
+          produces_output: false, custom_param_example: "",
           is_system: false, is_active: fullAction.is_active, sort_order: fullAction.sort_order,
         });
         if (error) { console.error("Insert action_library:", error.message); return; }
       } else {
         const { error } = await supabase.from("tc_action_library").update({
           name: fullAction.name, category: fullAction.category,
-          description: fullAction.description, produces_output: fullAction.produces_output,
-          custom_param_example: fullAction.custom_param_example, is_active: fullAction.is_active,
+          description: fullAction.description, is_active: fullAction.is_active,
         }).eq("id", fullAction.id);
         if (error) { console.error("Update action_library:", error.message); return; }
       }
@@ -595,6 +703,8 @@ const SuperAdminProcesses: React.FC = () => {
       localStorage.setItem(LS_ACTIONS_KEY, JSON.stringify(next));
       return next;
     });
+    setShowActionModal(false);
+    setEditingAction(null);
   };
 
   const handleDeleteAction = async (id: string) => {
@@ -631,21 +741,84 @@ const SuperAdminProcesses: React.FC = () => {
 
     if (supabase) {
       if (isNew) {
-        const { error } = await supabase.from("tc_processes").insert({
-          id: newId, name: p.name, description: p.description,
-          is_final: p.is_final, sort_order: p.sort_order, status: p.status,
+        // Don't pass id — let the DB auto-generate via DEFAULT gen_random_uuid()::text
+        const { data: inserted, error } = await supabase.from("tc_processes").insert({
+          name: p.name, description: p.description,
+          is_final: p.is_final, sort_order: p.sort_order,
+          status: p.status ?? "INACTIVE",
+          is_used: false,
+        }).select().single();
+        if (error) {
+          console.error("Insert process error:", error.message, error.details, error.hint);
+          alert(`Failed to create process: ${error.message}`);
+          return;
+        }
+        // Insert action steps
+        if (p.action_steps && p.action_steps.length > 0) {
+          const steps = p.action_steps.map((s, idx) => ({
+            process_id: inserted.id,
+            action_id: s.action_id,
+            step_order: s.step_order ?? idx + 1,
+            notes: s.notes ?? "",
+            variable_details: s.variable_details ?? { what: false, who: false, when: false, where: false },
+          }));
+          const { error: stepsError } = await supabase.from("tc_process_action_steps").insert(steps);
+          if (stepsError) console.error("Insert process steps:", stepsError.message);
+        }
+        const full: ProcessRecord = {
+          id: inserted.id, name: inserted.name, description: inserted.description,
+          is_final: inserted.is_final, sort_order: inserted.sort_order, status: inserted.status,
+          is_used: inserted.is_used ?? false,
+          action_steps: p.action_steps,
+        };
+        setProcesses((prev) => {
+          const next = [full, ...prev];
+          localStorage.setItem(LS_PROCESSES_KEY, JSON.stringify(next));
+          return next;
         });
-        if (error) { console.error("Insert process:", error.message); return; }
+        return;
       } else {
         const { error } = await supabase.from("tc_processes").update({
           name: p.name, description: p.description,
-          is_final: p.is_final, status: p.status,
+          is_final: p.is_final, status: p.status ?? "INACTIVE",
         }).eq("id", p.id!);
-        if (error) { console.error("Update process:", error.message); return; }
+        if (error) {
+          console.error("Update process error:", error.message);
+          alert(`Failed to update process: ${error.message}`);
+          return;
+        }
+        // Re-insert action steps: delete old ones first
+        if (p.action_steps !== undefined) {
+          await supabase.from("tc_process_action_steps").delete().eq("process_id", p.id!);
+          if (p.action_steps.length > 0) {
+            const steps = p.action_steps.map((s, idx) => ({
+              process_id: p.id!,
+              action_id: s.action_id,
+              step_order: s.step_order ?? idx + 1,
+              notes: s.notes ?? "",
+              variable_details: s.variable_details ?? { what: false, who: false, when: false, where: false },
+            }));
+            const { error: stepsError } = await supabase.from("tc_process_action_steps").insert(steps);
+            if (stepsError) console.error("Update process steps:", stepsError.message);
+          }
+        }
+        // Update local state immediately after successful edit
+        const full: ProcessRecord = { ...p, id: p.id!, is_used: p.is_used ?? false, action_steps: p.action_steps };
+        setProcesses((prev) => {
+          const next = prev.map((x) => (x.id === full.id ? full : x));
+          localStorage.setItem(LS_PROCESSES_KEY, JSON.stringify(next));
+          return next;
+        });
+        // Notify parent about status change (previously done via auto-save, now done here)
+        if (p.status) {
+          handleProcessStatusUpdated(p.id!, p.status as "ACTIVE" | "INACTIVE");
+        }
+        return;
       }
     }
 
-    const full: ProcessRecord = { ...p, id: newId, action_steps: p.action_steps };
+    // Fallback: no supabase (localStorage only)
+    const full: ProcessRecord = { ...p, id: newId, is_used: p.is_used ?? false, action_steps: p.action_steps };
     setProcesses((prev) => {
       const next = isNew ? [full, ...prev] : prev.map((x) => (x.id === full.id ? full : x));
       localStorage.setItem(LS_PROCESSES_KEY, JSON.stringify(next));
@@ -662,6 +835,14 @@ const SuperAdminProcesses: React.FC = () => {
     }
     setProcesses((prev) => {
       const next = prev.filter((p) => p.id !== id);
+      localStorage.setItem(LS_PROCESSES_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleProcessStatusUpdated = (id: string, status: "ACTIVE" | "INACTIVE") => {
+    setProcesses((prev) => {
+      const next = prev.map((p) => p.id === id ? { ...p, status } : p);
       localStorage.setItem(LS_PROCESSES_KEY, JSON.stringify(next));
       return next;
     });
@@ -813,9 +994,8 @@ const SuperAdminProcesses: React.FC = () => {
                           <thead className="bg-gray-50">
                             <tr>
                               <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Name</th>
-                              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Key</th>
+                              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Short</th>
                               <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Description</th>
-                              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Output</th>
                               <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                               <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Actions</th>
                             </tr>
@@ -836,11 +1016,6 @@ const SuperAdminProcesses: React.FC = () => {
                                 </td>
                                 <td className="px-4 py-2.5 text-gray-500 text-xs max-w-xs truncate hidden lg:table-cell">
                                   {action.description || "—"}
-                                </td>
-                                <td className="px-4 py-2.5">
-                                  <span className={`text-xs px-2 py-0.5 rounded font-medium ${action.produces_output ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                                    {action.produces_output ? "Yes" : "No"}
-                                  </span>
                                 </td>
                                 <td className="px-4 py-2.5">
                                   {action.is_system ? (
@@ -957,14 +1132,24 @@ const SuperAdminProcesses: React.FC = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${proc.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                              {proc.status}
-                            </span>
+                            {proc.status === "INACTIVE" ? (
+                              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-gray-100 text-gray-500">
+                                Inactive
+                              </span>
+                            ) : proc.is_used ? (
+                              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700">
+                                Active – Used
+                              </span>
+                            ) : (
+                              <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-blue-100 text-blue-700">
+                                Active – Unused
+                              </span>
+                            )}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-2">
                               <button
-                                onClick={() => { setEditingProcess(proc); setShowProcessModal(true); }}
+                                onClick={() => { setEditingProcess(processes.find((p) => p.id === proc.id) ?? proc); setShowProcessModal(true); }}
                                 className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
                                 title="Edit"
                               >
@@ -992,11 +1177,11 @@ const SuperAdminProcesses: React.FC = () => {
 
       {/* Modals */}
       {showActionModal && (
-        <ActionModal
+        <NewActionModal
           action={editingAction}
+          existingActions={actions}
           onClose={() => { setShowActionModal(false); setEditingAction(null); }}
           onSave={handleSaveAction}
-          existingActions={actions}
         />
       )}
       {showProcessModal && (
@@ -1005,6 +1190,7 @@ const SuperAdminProcesses: React.FC = () => {
           actions={actions}
           onClose={() => { setShowProcessModal(false); setEditingProcess(null); }}
           onSave={handleSaveProcess}
+          onStatusUpdated={handleProcessStatusUpdated}
         />
       )}
     </div>

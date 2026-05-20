@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ClientSettingsModal from "@/components/admin/ClientSettingsModal";
 
 interface Customer {
   id: string;
@@ -64,6 +65,7 @@ export default function TVAdminDashboard() {
   const [editTarget, setEditTarget] = useState<Customer | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [search, setSearch] = useState("");
+  const [settingsTarget, setSettingsTarget] = useState<Customer | null>(null);
 
   const [form, setForm] = useState<Partial<Customer> & { tcIdInput?: string }>({});
   const [formError, setFormError] = useState("");
@@ -229,6 +231,14 @@ export default function TVAdminDashboard() {
                       <button onClick={() => openEdit(c)} className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline">Edit</button>
                       <span className="text-gray-300">|</span>
                       <button onClick={() => setDeleteTarget(c)} className="text-xs text-red-500 hover:text-red-700 font-medium hover:underline">Delete</button>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        onClick={() => setSettingsTarget(c)}
+                        className="text-xs text-gray-500 hover:text-gray-800 font-medium hover:underline flex items-center gap-1"
+                        title="Manage Action Categories"
+                      >
+                        ⚙️ Settings
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -326,6 +336,15 @@ export default function TVAdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Client Settings Modal */}
+      {settingsTarget && (
+        <ClientSettingsModal
+          clientId={settingsTarget.id}
+          clientName={settingsTarget.name}
+          onClose={() => setSettingsTarget(null)}
+        />
       )}
     </div>
   );

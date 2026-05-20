@@ -97,6 +97,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tc_client_action_categories: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tc_locations: {
         Row: {
           city: string
@@ -210,6 +243,7 @@ export type Database = {
           notes: string
           process_id: string
           step_order: number
+          variable_details: Json
         }
         Insert: {
           action_id: string
@@ -218,6 +252,7 @@ export type Database = {
           notes?: string
           process_id: string
           step_order?: number
+          variable_details?: Json
         }
         Update: {
           action_id?: string
@@ -226,6 +261,7 @@ export type Database = {
           notes?: string
           process_id?: string
           step_order?: number
+          variable_details?: Json
         }
         Relationships: [
           {
@@ -277,6 +313,7 @@ export type Database = {
           description: string
           id: string
           is_final: boolean
+          is_used: boolean
           name: string
           sort_order: number
           status: string
@@ -287,6 +324,7 @@ export type Database = {
           description?: string
           id?: string
           is_final?: boolean
+          is_used?: boolean
           name: string
           sort_order?: number
           status?: string
@@ -297,6 +335,7 @@ export type Database = {
           description?: string
           id?: string
           is_final?: boolean
+          is_used?: boolean
           name?: string
           sort_order?: number
           status?: string
@@ -333,6 +372,68 @@ export type Database = {
           storage_requirement_id?: string | null
         }
         Relationships: []
+      }
+      tc_recordings: {
+        Row: {
+          batch_lot_number: string | null
+          created_at: string | null
+          data: Json
+          expiry_date: string | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          locked_by_name: string | null
+          process_id: string
+          record_name: string
+          recorded_at: string | null
+          recorded_by: string
+          status: string
+          updated_at: string | null
+          user_name: string
+        }
+        Insert: {
+          batch_lot_number?: string | null
+          created_at?: string | null
+          data?: Json
+          expiry_date?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          locked_by_name?: string | null
+          process_id: string
+          record_name: string
+          recorded_at?: string | null
+          recorded_by: string
+          status?: string
+          updated_at?: string | null
+          user_name: string
+        }
+        Update: {
+          batch_lot_number?: string | null
+          created_at?: string | null
+          data?: Json
+          expiry_date?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          locked_by_name?: string | null
+          process_id?: string
+          record_name?: string
+          recorded_at?: string | null
+          recorded_by?: string
+          status?: string
+          updated_at?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tc_recordings_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "tc_processes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tc_settings_customers: {
         Row: {

@@ -21,6 +21,14 @@ interface ActionItem {
   produces_output: boolean;
   is_system: boolean;
   is_active: boolean;
+  action_key?: string;
+}
+
+interface ActionStep {
+  action_id: string;
+  step_order: number;
+  is_required?: boolean;
+  notes?: string;
 }
 
 interface ProcessRecord {
@@ -29,8 +37,9 @@ interface ProcessRecord {
   description: string;
   is_final: boolean;
   status: string;
+  is_used: boolean;
   sort_order: number;
-  action_steps?: { action_id: string; step_order: number }[];
+  action_steps?: ActionStep[];
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -43,18 +52,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Control": "bg-red-100 text-red-700",
 };
 
-const LS_ACTIONS_KEY = "tc_action_library";
-const LS_PROCESSES_KEY = "tc_processes";
-
-function loadFromLS<T>(key: string, fallback: T): T {
-  try {
-    const r = localStorage.getItem(key);
-    return r ? (JSON.parse(r) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const ViewProcesses: React.FC = () => {
@@ -66,25 +63,49 @@ const ViewProcesses: React.FC = () => {
 
   useEffect(() => {
     const load = async () => {
-      // Load actions
-      if (supabase) {
-        const { data: aData } = await supabase
-          .from("tc_action_library")
-          .select("id,name,category,description,produces_output,is_system,is_active")
-          .order("sort_order");
-        if (aData) setActions(aData as ActionItem[]);
-        else setActions(loadFromLS<ActionItem[]>(LS_ACTIONS_KEY, []));
+      if (!supabase) { setLoading(false); return; }
 
-        const { data: pData } = await supabase
-          .from("tc_processes")
-          .select("*")
-          .order("sort_order");
-        if (pData) setProcesses(pData as ProcessRecord[]);
-        else setProcesses(loadFromLS<ProcessRecord[]>(LS_PROCESSES_KEY, []));
-      } else {
-        setActions(loadFromLS<ActionItem[]>(LS_ACTIONS_KEY, []));
-        setProcesses(loadFromLS<ProcessRecord[]>(LS_PROCESSES_KEY, []));
+      // Load action library
+      const { data: aData } = await supabase
+        .from("tc_action_library")
+        .select("id,name,category,description,produces_output,is_system,is_active,action_key")
+        .order("sort_order");
+      if (aData) setActions(aData as ActionItem[]);
+
+      // Load processes
+      const { data: pData } = await supabase
+        .from("tc_processes")
+        .select("id,name,description,is_final,status,is_used,sort_order")
+        .order("sort_order");
+
+      if (!pData) { setLoading(false); return; }
+
+      // Load all action steps at once
+      const { data: stepsData } = await supabase
+        .from("tc_process_action_steps")
+        .select("process_id,action_id,step_order,is_required,notes")
+        .order("step_order");
+
+      // Group steps by process_id
+      const stepsByProcess: Record<string, ActionStep[]> = {};
+      if (stepsData) {
+        for (const step of stepsData as any[]) {
+          if (!stepsByProcess[step.process_id]) stepsByProcess[step.process_id] = [];
+          stepsByProcess[step.process_id].push({
+            action_id: step.action_id,
+            step_order: step.step_order,
+            is_required: step.is_required,
+            notes: step.notes,
+          });
+        }
       }
+
+      const merged: ProcessRecord[] = (pData as any[]).map((p) => ({
+        ...p,
+        action_steps: stepsByProcess[p.id] ?? [],
+      }));
+
+      setProcesses(merged);
       setLoading(false);
     };
     load();
@@ -92,10 +113,47 @@ const ViewProcesses: React.FC = () => {
 
   const filtered = processes.filter((p) => {
     const q = search.toLowerCase();
-    return p.status === "ACTIVE" && (!q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+    const upperStatus = p.status?.toUpperCase();
+    return (
+      upperStatus === "ACTIVE" &&
+      (!q || p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q))
+    );
   });
 
   const getAction = (id: string) => actions.find((a) => a.id === id);
+
+  const statusBadge = (p: ProcessRecord) => {
+    const s = p.status?.toUpperCase();
+    if (s !== "ACTIVE") {
+      return (
+        <span className="text-xs bg-gray-100 text-gray-500 border border-gray-200 rounded-full px-2.5 py-0.5 font-medium">
+          Inactive
+        </span>
+      );
+    }
+    if (p.is_used) {
+      return (
+        <span className="text-xs bg-red-100 text-red-700 border border-red-200 rounded-full px-2.5 py-0.5 font-medium">
+          Active – Used
+        </span>
+      );
+    }
+    return (
+      <span className="text-xs bg-blue-100 text-blue-700 border border-blue-200 rounded-full px-2.5 py-0.5 font-medium">
+        Active – Unused
+      </span>
+    );
+  };
+
+  const behaviorBadge = (p: ProcessRecord) => (
+    <span className={`text-xs rounded-full px-2.5 py-0.5 font-medium border ${
+      p.is_final
+        ? "bg-purple-100 text-purple-700 border-purple-200"
+        : "bg-gray-100 text-gray-500 border-gray-200"
+    }`}>
+      {p.is_final ? "Full" : "Partial"}
+    </span>
+  );
 
   return (
     <div className="space-y-4">
@@ -146,6 +204,7 @@ const ViewProcesses: React.FC = () => {
           {filtered.map((proc) => {
             const isOpen = expandedProcess === proc.id;
             const steps = proc.action_steps ?? [];
+            const totalSteps = steps.length + 2; // +2 for START and END
 
             return (
               <div key={proc.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -157,9 +216,11 @@ const ViewProcesses: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-gray-900">{proc.name}</span>
+                      {behaviorBadge(proc)}
+                      {statusBadge(proc)}
                       {proc.is_final && (
-                        <span className="text-xs bg-blue-100 text-blue-700 rounded-full px-2.5 py-0.5 font-medium">
-                          Final · Issues QR
+                        <span className="text-xs bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 font-medium">
+                          Issues QR
                         </span>
                       )}
                     </div>
@@ -168,7 +229,7 @@ const ViewProcesses: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs text-gray-400">{steps.length + 2} steps</span>
+                    <span className="text-xs text-gray-400">{totalSteps} steps</span>
                     {isOpen ? (
                       <ChevronDown size={15} className="text-gray-400" />
                     ) : (
@@ -180,12 +241,19 @@ const ViewProcesses: React.FC = () => {
                 {/* Expanded steps */}
                 {isOpen && (
                   <div className="border-t border-gray-100 px-5 py-4 space-y-2 bg-gray-50/50">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Process Steps (read-only)</p>
+                    {/* Meta row */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Process Steps (read-only)</p>
+                      <div className="flex items-center gap-2">
+                        {behaviorBadge(proc)}
+                        {statusBadge(proc)}
+                      </div>
+                    </div>
 
                     {/* PROCESS_START */}
                     <div className="flex items-center gap-3 px-3 py-2 bg-red-50 border border-red-100 rounded-lg">
                       <span className="text-xs font-mono font-bold text-red-600 w-6 text-center shrink-0">S</span>
-                      <div>
+                      <div className="flex-1">
                         <span className="text-xs font-semibold text-red-700">PROCESS_START</span>
                         <span className="ml-2 text-xs text-red-400">auto · system</span>
                       </div>
@@ -195,6 +263,7 @@ const ViewProcesses: React.FC = () => {
                       <p className="text-xs text-gray-400 italic text-center py-2">No action steps defined.</p>
                     ) : (
                       steps
+                        .slice()
                         .sort((a, b) => a.step_order - b.step_order)
                         .map((step, i) => {
                           const action = getAction(step.action_id);
@@ -202,7 +271,9 @@ const ViewProcesses: React.FC = () => {
                             <div key={i} className="flex items-center gap-3 px-3 py-2 bg-white border border-gray-200 rounded-lg">
                               <span className="text-xs font-mono text-gray-400 w-6 text-center shrink-0">{i + 1}</span>
                               <div className="flex-1 min-w-0">
-                                <span className="text-sm font-medium text-gray-800">{action?.name ?? step.action_id}</span>
+                                <span className="text-sm font-medium text-gray-800">
+                                  {action?.name ?? step.action_id}
+                                </span>
                                 {action?.description && (
                                   <p className="text-xs text-gray-400 mt-0.5 truncate">{action.description}</p>
                                 )}
@@ -217,6 +288,11 @@ const ViewProcesses: React.FC = () => {
                                       → output
                                     </span>
                                   )}
+                                  {step.is_required === false && (
+                                    <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-medium">
+                                      optional
+                                    </span>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -227,12 +303,17 @@ const ViewProcesses: React.FC = () => {
                     {/* PROCESS_END */}
                     <div className="flex items-center gap-3 px-3 py-2 bg-red-50 border border-red-100 rounded-lg">
                       <span className="text-xs font-mono font-bold text-red-600 w-6 text-center shrink-0">E</span>
-                      <div>
+                      <div className="flex-1">
                         <span className="text-xs font-semibold text-red-700">PROCESS_END</span>
                         <span className="ml-2 text-xs text-red-400">
                           {proc.is_final ? "issues QR code · locks product" : "destination carries to next process"}
                         </span>
                       </div>
+                      {proc.is_final && (
+                        <span className="text-xs bg-amber-100 text-amber-700 border border-amber-200 rounded px-2 py-0.5 font-medium shrink-0">
+                          Issues QR if final
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}

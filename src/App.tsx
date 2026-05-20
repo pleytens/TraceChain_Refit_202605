@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Toaster } from "sonner";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ProductsProvider } from "@/context/ProductsContext";
 import { ProcessesProvider } from "@/context/ProcessesContext";
@@ -12,7 +13,7 @@ import UserManagement from "@/pages/UserManagement";
 import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
 import Suppliers from "@/pages/Suppliers";
-import Recording from "@/pages/Recording";
+import RecordingsDashboard from "@/pages/RecordingsDashboard";
 import Process from "@/pages/Process";
 import ProfileSettings from "@/pages/ProfileSettings";
 import PlaceholderPage from "@/pages/PlaceholderPage";
@@ -76,7 +77,7 @@ function AppInner() {
       case "suppliers":
         return <Suppliers />;
       case "recording":
-        return <Recording />;
+        return <RecordingsDashboard />;
       case "process":
         return <Process />;
       case "profile":
@@ -141,6 +142,7 @@ function App() {
           </SuppliersProvider>
         </ProductsProvider>
       </UnitsProvider>
+      <Toaster position="bottom-right" richColors />
     </AuthProvider>
   );
 }
