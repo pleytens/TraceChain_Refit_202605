@@ -1,5 +1,4 @@
-# TraceFarm
-
+# TraceChain
 
 
 ## Getting started
